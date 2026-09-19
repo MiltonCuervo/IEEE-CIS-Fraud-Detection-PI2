@@ -1,16 +1,39 @@
-# Datos IEEE-CIS
+# Datos y artefactos grandes o sensibles
 data/raw/*
 data/interim/*
 data/processed/*
-data/external/*
-
-# Mantener las carpetas vacías en GitHub
 !data/raw/.gitkeep
 !data/interim/.gitkeep
 !data/processed/.gitkeep
-!data/external/.gitkeep
+results/figures/*
+results/tables/*
+results/models/*
+!results/figures/.gitkeep
+!results/tables/.gitkeep
+!results/models/.gitkeep
 
-# Credenciales
+# Credenciales y configuración local
 .env
-kaggle.json
 .kaggle/
+kaggle.json
+access_token
+
+# Python / Jupyter
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+.pytest_cache/
+.coverage
+
+# Editores y sistema operativo
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Archivos del espacio de trabajo de Codex, no del proyecto académico
+AGENTS.md
+sources/
