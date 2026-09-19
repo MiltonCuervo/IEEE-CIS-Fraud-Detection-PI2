@@ -1,0 +1,16 @@
+# Datos IEEE-CIS
+data/raw/*
+data/interim/*
+data/processed/*
+data/external/*
+
+# Mantener las carpetas vacías en GitHub
+!data/raw/.gitkeep
+!data/interim/.gitkeep
+!data/processed/.gitkeep
+!data/external/.gitkeep
+
+# Credenciales
+.env
+kaggle.json
+.kaggle/
