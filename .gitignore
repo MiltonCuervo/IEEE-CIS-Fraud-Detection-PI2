@@ -5,11 +5,7 @@ data/processed/*
 !data/raw/.gitkeep
 !data/interim/.gitkeep
 !data/processed/.gitkeep
-results/figures/*
-results/tables/*
 results/models/*
-!results/figures/.gitkeep
-!results/tables/.gitkeep
 !results/models/.gitkeep
 
 # Credenciales y configuración local

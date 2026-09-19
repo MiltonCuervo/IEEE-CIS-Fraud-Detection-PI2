@@ -1,0 +1,12 @@
+,resultado_observado
+transacciones,590540.0
+variables_unidas,434.0
+fraudes,20663.0
+tasa_fraude,0.03499000914417313
+cobertura_identity,0.2442391709283029
+duracion_dias,181.99920138888888
+monto_total,79738948.735
+monto_fraudulento,3083844.8600000003
+columnas_con_ausencia,414.0
+columnas_con_mas_90pct_ausencia,12.0
+columnas_constantes,0.0
