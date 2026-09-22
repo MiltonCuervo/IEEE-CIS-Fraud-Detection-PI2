@@ -23,7 +23,6 @@ El proyecto compara tres estrategias de decisión sobre probabilidades calibrada
 │   ├── figures/      # Figuras finales exportadas
 │   ├── tables/       # Métricas y tablas finales
 │   └── models/       # Modelos y calibradores serializados
-├── tests/            # Pruebas de invariantes críticos
 └── requirements.txt
 ```
 
@@ -54,10 +53,6 @@ El proyecto compara tres estrategias de decisión sobre probabilidades calibrada
 |---|---|---|
 | `01_exploracion_datos.ipynb` | Validar estructura, objetivo, monto, tiempo y ausencia | Evidencia para decisiones de preparación |
 | `02_particion_temporal.ipynb` | Congelar train/validación/test y gaps | Manifiesto de particiones |
-| `03_preparacion_atributos.ipynb` | Ajustar transformaciones solo con train | Datos procesados sin fuga |
-| `04_modelado_calibracion.ipynb` | Entrenar XGBoost y calibrar con validación | Probabilidades fuera de muestra |
-| `05_reglas_decision.ipynb` | Comparar las tres estrategias con el mismo test | Tabla principal de costos y métricas |
-| `06_sensibilidad_costos.ipynb` | Variar el costo administrativo | Curvas y rangos de dominancia |
 
 Los notebooks muestran preguntas, decisiones, llamadas principales y resultados. La carga, validaciones, métricas y reglas repetibles viven en `src/`.
 
