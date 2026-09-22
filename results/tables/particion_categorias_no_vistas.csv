@@ -1,0 +1,7 @@
+variable,bloque,observaciones,observaciones_no_vistas,proporcion_no_vista
+tarjeta_compuesta,validation,84093,1253,0.014900170049825788
+tarjeta_compuesta,test,84233,1822,0.021630477366352853
+direccion_compuesta,validation,84093,42,0.0004994470407762834
+direccion_compuesta,test,84233,24,0.00028492396091793005
+dominio_correo,validation,84093,0,0.0
+dominio_correo,test,84233,0,0.0
