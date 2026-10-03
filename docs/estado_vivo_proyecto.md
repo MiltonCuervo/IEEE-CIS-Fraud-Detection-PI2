@@ -17,7 +17,7 @@ Comparar reglas de decisión para bloquear transacciones sospechosas del conjunt
 ### Contexto, fase y avance
 
 - **Observado:** proyecto académico de Ingeniería de Sistemas; documentación y código cubren EDA y partición temporal.
-- **Inferido:** la exploración inicial y la partición son reproducibles en este checkout; el pipeline base está escrito, pero aún no ejecutado.
+- **Inferido:** EDA y partición se reproducen en este checkout; baseline y sensibilidad hipotética se ejecutaron solo sobre validation. El protocolo económico real y la evaluación de test siguen pendientes.
 - **Fase actual:** EDA/partición ejecutadas; notebook de modelado implementado; métricas predictivas de validation calculadas; pendientes los costos aprobados para la etapa económica.
 - **Nivel de avance:** etapa de preparación experimental; no se asigna porcentaje porque no hay un plan de entregables cuantificado.
 
@@ -43,7 +43,9 @@ Los datos se esperan en `data/raw/`; el manifiesto se espera en `data/interim/`.
 - `notebooks/01_exploracion_datos.ipynb`: EDA y exportación de resultados.
 - `notebooks/02_particion_temporal.ipynb`: compara gaps de 1, 3 y 7 días y guarda el manifiesto.
 - `notebooks/03_modelado_y_decisiones_costos.ipynb`: baseline XGBoost, calibración temporal, métricas predictivas y evaluación parametrizada con gates para costos/test.
+- `notebooks/04_sensibilidad_hipotetica_validation.ipynb`: sensibilidad hipotética reproducible con scores guardados de validation; no consulta test.
 - `scripts/setup.ps1` y `scripts/download_data.ps1`: preparación del entorno y descarga desde Kaggle.
+- `scripts/escenarios_hipoteticos_validation.py`: compara umbral fijo y BMR binario en scores guardados de validation con supuestos etiquetados como hipotéticos; no carga test.
 
 ### Trabajo completado
 
@@ -55,7 +57,9 @@ Los datos se esperan en `data/raw/`; el manifiesto se espera en `data/interim/`.
 - Los artefactos regenerados no producen diferencias rastreables en Git frente a los resultados versionados; CSV y Parquet siguen ignorados.
 - Agentes Profiler, Auditor y Validador revisaron previamente la situación; un Validador adicional contrastó las métricas del ciclo ejecutado.
 - Se creó el notebook 03 con preprocesamiento ajustado solo en train, predictor fijo, calibración Platt en ventana temprana de validation, métricas en la ventana posterior, BMR binario parametrizado, revisión opcional, ahorro frente al umbral fijo y test cerrado por defecto.
-- Se actualizó el README para incluir el tercer notebook y enlazar el protocolo.
+- Se creó y ejecutó el notebook 04 para la sensibilidad hipotética; su esquema es válido y sus 24 filas (12 escenarios × 2 políticas) coinciden con el CSV producido por el script.
+- Se actualizó el README para incluir los notebooks 03/04 y enlazar el protocolo y análisis.
+- Se analizaron 12 escenarios hipotéticos BMR en validation (`λ=0,25/0,50/1,00`; `B=0,25/0,50/1/2 × mediana 65` unidades; `C_block_fraud=0`; sin revisión). BMR redujo el costo proxy entre 14,49% y 52,89% frente al corte 0,5 dentro de esta muestra. Ver `docs/04_sensibilidad_hipotetica_validation.md` y `results/tables/escenarios_hipoteticos_validation.csv`.
 
 ### Trabajo parcial
 
@@ -68,7 +72,7 @@ Los datos se esperan en `data/raw/`; el manifiesto se espera en `data/interim/`.
 
 1. Registrar procedencia/hash de los CSV y decidir el entorno Python oficialmente soportado.
 2. Acordar `λ`, costo de bloqueo de legítimas, costo residual de fraude bloqueado y unidad compatible con `TransactionAmt`; revisión puede permanecer deshabilitada.
-3. Completar el `COST_CONFIG` del notebook con aprobación registrada y ejecutar comparación económica únicamente en validation.
+3. Revisar si los rangos hipotéticos sirven como escenarios exploratorios; sustituirlos por costos aprobados/sustentados y ejecutar una comparación económica separada únicamente en validation.
 4. Acordar por separado costo/calidad/capacidad de revisión si se desea habilitarla.
 5. Congelar configuración aprobada y reservar test para una sola evaluación final; completar trazabilidad y pruebas citadas.
 
@@ -87,7 +91,7 @@ Estas hipótesis no se consideran demostradas para test/despliegue; existe un ba
 - **Ejecutado y observado:** partición de 7 días reporta 380.815 train, 84.093 validation, 84.233 test y 41.399 filas excluidas en gaps; validation tiene 3.075 fraudes y test 2.960.
 - **Validado:** manifiesto con 590.540 filas e IDs únicos; bloques completos y en orden estricto. Las tablas regeneradas coinciden con las cifras guardadas.
 - **Observado en validation posterior (42.047 filas, 1.517 fraudes):** AP 0,4671; recall fijo 0,5 = 0,2657; precisión = 0,7589; Brier = 0,02518; log-loss = 0,10184; tasa de legítimas bloqueadas = 0,003158.
-- **Sin resultado económico:** no hay parámetros aprobados; no se calculó costo/ahorro ni comparación BMR, revisión o árbol. Test no se consultó.
+- **Resultado económico solo hipotético:** BMR redujo el costo proxy entre 14,49% y 52,89% en los 12 escenarios descritos en `docs/04_sensibilidad_hipotetica_validation.md`. No se consideran ahorros reales; parámetros no aprobados. No se evaluaron revisión/árbol ni se consultó test.
 
 ### Evidencia clasificada
 
@@ -102,7 +106,7 @@ Estas hipótesis no se consideran demostradas para test/despliegue; existe un ba
 
 ### Problemas, riesgos y bloqueos
 
-- **Bloqueo principal actual:** las métricas predictivas están ejecutadas, pero costos/ahorros siguen bloqueados hasta aprobar costos; test requiere además protocolo congelado.
+- **Bloqueo principal actual:** solo se tienen escenarios de costos hipotéticos; para conclusiones económicas hacen falta valores sustentados/aprobados. Test requiere además congelar el protocolo.
 - El setup del README requiere Python 3.11 y el script invoca `py -3.11`; esta corrida usó Python 3.13.2 del `.venv` existente. Conviene alinear el setup para reproducir en otros equipos.
 - El notebook EDA sobrescribe las tablas/figuras versionadas; el notebook de partición también escribe tablas/figura y el manifiesto Parquet. El primer notebook carga y une el dataset ancho completo, con uso de memoria potencialmente alto. Revisar el diff antes de aceptar regeneraciones.
 - La ausencia de versión/hash impide asociar los resultados a una copia determinada de datos.
@@ -123,13 +127,13 @@ Los roles disponibles en el ciclo son: Orquestador, Explorador, Profiler de Dato
 
 ## Siguiente paso
 
-- **Acción:** registrar/aprobar `λ`, costo de bloqueo de una operación legítima, costo residual de fraude bloqueado y unidad compatible; después ejecutar BMR binario solo en validation.
-- **Agente responsable:** equipo del proyecto para los valores económicos; Experimentador para ejecutar; Validador para revisar la comparación.
-- **Por qué ahora:** las métricas predictivas ya se calcularon, pero una afirmación de ahorro requiere costos aprobados.
-- **Entrada necesaria:** valores con fuente/unidad o autorización explícita para una sensibilidad etiquetada como hipotética.
-- **Resultado esperado:** comparación fixed vs BMR y ahorro proxy en validation, sin revisión si aún no tiene parámetros y sin consultar test.
-- **Criterio de éxito:** parámetros y procedencia documentados; el mismo bloque validation evaluado bajo ambas reglas; `RUN_FINAL_TEST=False`.
-- **Decisión que permitirá tomar:** evaluar si BMR reduce costo proxy y qué escenarios justifican pasar a revisión o a una evaluación final.
+- **Acción:** revisar los escenarios hipotéticos documentados y, cuando existan, reemplazarlos por `λ`, costo de bloqueo de legítimas, residual de fraude bloqueado y unidad sustentados/aprobados.
+- **Agente responsable:** equipo del proyecto para validar supuestos; Experimentador/Validador para comparar resultados.
+- **Por qué ahora:** la sensibilidad muestra que las decisiones cambian con la relación entre costos; no establece ahorros reales.
+- **Entrada necesaria:** fuentes/costos reales o aprobación formal de un rango hipotético para el informe académico.
+- **Resultado esperado:** comparación económica de validation con parámetros trazables, todavía sin revisión si sus costos operativos no están disponibles.
+- **Criterio de éxito:** supuestos y unidad documentados; mantener `RUN_FINAL_TEST=False` hasta congelar la política.
+- **Decisión que permitirá tomar:** elegir escenarios operativamente defendibles antes de la evaluación final reservada en test.
 
 ## Historial de acciones
 
@@ -140,4 +144,5 @@ Los roles disponibles en el ciclo son: Orquestador, Explorador, Profiler de Dato
 - **2026-10-03 — Ejecución según README tras carga de datos:** se ejecutaron el EDA y la partición con `.venv` Python 3.13.2 y kernel `python3`; se regeneraron artefactos y manifiesto. Se validaron cobertura, unicidad y orden estricto. No hubo diferencias rastreables en tablas/figuras versionadas. No se ejecutaron pruebas unitarias ni modelos.
 - **2026-10-03 — Diseño metodológico:** se añadió propuesta paramétrica de matriz de costos, BMR, comparación de estrategias, métricas y protocolo temporal en `docs/03_protocolo_costos_y_evaluacion.md`; el README ahora enlaza el documento. La revisión independiente confirmó fórmulas bajo los supuestos declarados y pidió ajustes para compatibilidad de calibración, revisión, árbol y unidades, que fueron incorporados. Los valores económicos siguen pendientes de aprobación humana.
 - **2026-10-03 — Implementación del notebook 03:** creado `notebooks/03_modelado_y_decisiones_costos.ipynb` con baseline XGBoost, calibración en ventanas temporales de validation, preprocesamiento ajustado en train, métricas predictivas, políticas/costos parametrizados y gates para costos/test. README y protocolo enlazan el notebook.
-- **2026-10-03 — Corrida del usuario revisada:** observadas métricas predictivas de validation posterior y artefactos guardados; no hay comparación económica, revisión ni test. Valores registrados en la sección de experimentos y en la tabla `results/tables/modelo_metricas_validation.csv`.
+- **2026-10-03 — Corrida del usuario revisada:** observadas métricas predictivas de validation posterior y artefactos guardados; no se evaluó revisión ni test.
+- **2026-10-03 — Sensibilidad hipotética:** se agregó y ejecutó `scripts/escenarios_hipoteticos_validation.py` y el notebook 04 sobre el Parquet de scores existente. Evaluaron 12 escenarios de BMR binario y umbral fijo, guardaron tabla y gráfico; la salida del notebook coincide con la del script. Se mantuvieron sin cambios la aprobación económica y el gate de test.

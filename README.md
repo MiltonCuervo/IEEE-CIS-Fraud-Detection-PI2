@@ -54,6 +54,7 @@ El proyecto compara tres estrategias de decisión sobre probabilidades calibrada
 | `01_exploracion_datos.ipynb` | Validar estructura, objetivo, monto, tiempo y ausencia | Evidencia para decisiones de preparación |
 | `02_particion_temporal.ipynb` | Congelar train/validación/test y gaps | Manifiesto de particiones |
 | `03_modelado_y_decisiones_costos.ipynb` | Baseline calibrado en validation y comparación parametrizada de políticas | Métricas predictivas; costos/test bloqueados hasta completar aprobaciones |
+| `04_sensibilidad_hipotetica_validation.ipynb` | Sensibilidad exploratoria de BMR binario sobre scores guardados | Tabla/gráfica hipotéticas; no modifica gates de aprobación/test |
 
 Los notebooks muestran preguntas, decisiones, llamadas principales y resultados. La carga, validaciones, métricas y reglas repetibles viven en `src/`.
 
@@ -69,4 +70,4 @@ Los notebooks muestran preguntas, decisiones, llamadas principales y resultados.
 
 ## Trazabilidad
 
-Cada cifra del informe final debe poder rastrearse a: versión de datos, partición temporal, configuración, notebook y archivo exportado en `results/`. La propuesta de matriz de costos y protocolo de evaluación está en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md); los parámetros económicos todavía requieren aprobación del equipo.
+Cada cifra del informe final debe poder rastrearse a: versión de datos, partición temporal, configuración, notebook y archivo exportado en `results/`. La propuesta de matriz de costos y protocolo de evaluación está en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md). Los escenarios hipotéticos ejecutados en validation están documentados en [`docs/04_sensibilidad_hipotetica_validation.md`](docs/04_sensibilidad_hipotetica_validation.md); no son costos aprobados y test sigue cerrado.
