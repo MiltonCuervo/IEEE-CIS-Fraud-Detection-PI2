@@ -17,13 +17,13 @@ Estos hechos están descritos en [README.md](../README.md), [informe EDA](01_inf
 
 ## 2. Unidad de decisión y parámetros económicos
 
-La unidad es una transacción `i`, con etiqueta real `y_i` (`1` fraude, `0` legítima), monto `A_i = TransactionAmt_i` y probabilidad calibrada `p_i`. Todos los términos monetarios (`λ A_i`, `B_i`, `R_i`, `C_block_fraud`) deben estar expresados en unidades compatibles. Los informes actuales llaman USD a los montos, pero falta confirmar la unidad en la fuente/metadatos del dataset; hasta entonces los resultados se rotulan como monto proxy en la escala declarada por los informes.
+La unidad es una transacción `i`, con etiqueta real `y_i` (`1` fraude, `0` legítima), monto `A_i = TransactionAmt_i` y probabilidad calibrada `p_i`. Todos los términos monetarios (`λ A_i`, `B_i`, `R_i`, `C_block_fraud`) deben estar expresados en unidades compatibles. La unidad/moneda de `TransactionAmt` no está confirmada por la fuente/metadatos disponibles; hasta confirmarla, los informes usan “unidades del dataset” y “monto/costo proxy”, nunca USD.
 
 Parámetros que el equipo debe fijar antes de comparar estrategias:
 
 | Símbolo | Significado | Estado |
 |---|---|---|
-| `λ` | Fracción de `A_i` que representa pérdida al aprobar fraude. `λ = 1` equivale a tratar todo el monto como exposición perdida. | Supuesto de modelado; falta evidencia de recuperación/pérdida neta. |
+| `λ` | Fracción de `A_i` que representa pérdida al aprobar fraude, con `0 ≤ λ ≤ 1`. `λ = 1` equivale a tratar todo el monto como exposición perdida. | Supuesto de modelado; falta evidencia de recuperación/pérdida neta. |
 | `B_i` | Costo de bloquear una transacción legítima: margen perdido, fricción, abandono, soporte u otro concepto acordado. Puede ser constante `B` si el equipo no dispone de estimación por transacción. | Dato requerido; no equivale automáticamente a `A_i`. |
 | `C_block_fraud` | Costo residual al bloquear una transacción fraudulenta. | Puede aproximarse a cero si se justifica prevención completa y costo residual despreciable; acuerdo requerido. |
 | `R_i` | Costo administrativo de revisar la transacción, incluyendo los componentes que el equipo decida contabilizar. `R` si es constante. | Dato requerido; motiva el análisis de sensibilidad. |
@@ -32,6 +32,8 @@ Parámetros que el equipo debe fijar antes de comparar estrategias:
 | `K_R` | Capacidad máxima de revisiones en el periodo, si existe. | Dato requerido solo si la operación tiene cupo limitado. |
 
 No se asignan valores monetarios a `B`, `R`, `s_R`, `q_R` o `K_R` porque las fuentes revisadas no los proporcionan. Si no hay estimaciones de `s_R` y `q_R`, la revisión perfecta podrá usarse únicamente como **escenario idealizado** (`s_R = q_R = 1`), nunca como hecho observado.
+
+En el gate de costos del notebook 03, `amount_unit` identifica la escala de `TransactionAmt` y `cost_unit` la escala de `B`, `R` y `C_block_fraud`; el código exige que ambas etiquetas coincidan. Si las fuentes están en unidades distintas, convierta los importes primero y documente la conversión; el gate no hace conversiones automáticas.
 
 ## 3. Matriz de costo propuesta
 
@@ -68,10 +70,10 @@ BMR selecciona por transacción la acción con menor costo esperado. En empates 
 Como comprobación para el caso binario sin revisión y `C_block_fraud=0`, el umbral económico de bloqueo depende del monto:
 
 ```text
-p_i >= B_i / (B_i + λ A_i)
+p_i > B_i / (B_i + λ A_i)
 ```
 
-Por eso un único umbral 0,5 y una política sensible al costo pueden tomar decisiones distintas incluso con la misma probabilidad.
+El código conserva aprobar en empate (`riesgo_aprobar <= riesgo_bloquear`); por eso la condición de bloqueo es estricta (`>`). Un único umbral 0,5 y una política sensible al costo pueden tomar decisiones distintas incluso con la misma probabilidad.
 
 ## 5. Estrategias que se compararán
 
@@ -81,7 +83,7 @@ Por eso un único umbral 0,5 y una política sensible al costo pueden tomar deci
 
 El peso por transacción es una aproximación para errores binarios: ponderar impurezas del árbol no equivale exactamente a optimizar la matriz completa, no representa una acción de revisión y puede alterar la escala de sus scores. El README ya exige declarar esta limitación. Si se requiere calibrar el score del árbol, se hará fuera de muestra y con la prevalencia natural. No se debe volver a ponderar el costo en la evaluación: la matriz se aplica una sola vez a las acciones finales.
 
-La comparación principal del árbol usa acciones binarias aprobar/bloquear. Añadir revisión como tercera acción al árbol queda como extensión, posterior a definir y documentar el mecanismo de asignación y cualquier límite de capacidad. Las tres estrategias principales se evalúan sobre las mismas filas de test y con la misma matriz.
+La comparación principal del árbol usa acciones binarias aprobar/bloquear. Añadir revisión como tercera acción al árbol queda como extensión, posterior a definir y documentar el mecanismo de asignación y cualquier límite de capacidad. En una evaluación final condicionada, las estrategias deberán evaluarse sobre las mismas filas y matriz; el test actual no debe describirse como holdout estrictamente independiente.
 
 ## 6. Protocolo temporal y prevención de leakage
 
@@ -90,8 +92,8 @@ La comparación principal del árbol usa acciones binarias aprobar/bloquear. Añ
 3. Elegir hiperparámetros del predictor mediante validación cruzada temporal dentro de train o fijarlos antes de mirar validation. No hacer tuning de hiperparámetros en validation.
 4. Para el protocolo inicial, ajustar preprocesador y predictor con train y mantener ese predictor fijo. Dividir validation cronológicamente en una ventana temprana para ajustar el calibrador y otra posterior para comparar configuraciones de calibración/política. El modelo que generó los scores de calibración debe ser el mismo que produce scores posteriores de validation y test.
 5. Si más adelante se decide reajustar el predictor con train+validation, no reutilizar sin más un calibrador aprendido con scores de otro modelo. En ese caso se necesita calibración temporal cross-fit compatible con el procedimiento de reajuste, documentada antes de ejecutarse.
-6. Fijar matriz, valores/rango de sensibilidad, predictor, calibrador, baseline, regla BMR, desempate y métricas antes de consultar test.
-7. Evaluar test una sola vez para los tres enfoques y los escenarios de costos predeclarados. No ajustar hiperparámetros, calibración, umbrales, costos o alcance de revisión a partir de los resultados de test.
+6. Fijar matriz, unidades compatibles, valores/rango de sensibilidad, predictor, calibrador, baseline, regla BMR, desempate y métricas antes de consultar un holdout independiente.
+7. El bloque `test` actual ya fue consultado solo en forma agregada al comparar candidatos de gap. Puede usarse como evaluación final condicionada y claramente declarada, pero no como evidencia confirmatoria estrictamente independiente. Para esta última se necesita un nuevo periodo/dataset etiquetado cuyas etiquetas no intervengan en la partición ni en el diseño. Cualquier evaluación se limita a un protocolo congelado y no se usa para ajustar hiperparámetros, calibración, umbrales, costos o revisión.
 
 El tamaño de la subdivisión de validation se debe decidir y registrar en el notebook de modelado antes de ejecutarlo; el informe de partición identifica esta decisión como pendiente.
 
@@ -130,7 +132,7 @@ El protocolo queda listo para implementar cuando el equipo responda y registre:
 5. ¿Existe capacidad máxima `K_R` por día/periodo?
 6. ¿Se acepta mantener fijo el baseline convencional en 0,5?
 7. ¿Se acepta dividir validation en orden temporal para calibración y selección/evaluación de políticas?
-8. ¿Se confirma la unidad/moneda de `TransactionAmt` con metadatos/fuente? Mientras tanto, usar la denominación neutral “monto proxy” y anotar que los informes actuales lo etiquetan USD.
+8. ¿Se confirma la unidad/moneda de `TransactionAmt` con metadatos/fuente? Mientras tanto, usar la denominación neutral “monto proxy en unidades del dataset”.
 
 Hasta resolver estas decisiones se pueden desarrollar componentes con parámetros configurables, pero no reportar una cifra de ahorro como resultado del proyecto.
 
@@ -138,6 +140,6 @@ Hasta resolver estas decisiones se pueden desarrollar componentes con parámetro
 
 El primer notebook de modelado se implementa como pipeline parametrizado en [`notebooks/03_modelado_y_decisiones_costos.ipynb`](../notebooks/03_modelado_y_decisiones_costos.ipynb). Puede producir métricas predictivas en la ventana posterior de validation con costos pendientes; mantiene cerrados el bloque económico y la evaluación de test hasta que se completen y aprueben sus parámetros.
 
-Después de aprobar los costos, el mismo notebook puede comparar la política fija y BMR, incorporar el árbol con `sample_weight` y ejecutar test una sola vez tras congelar el protocolo.
+Después de aprobar los costos, el mismo notebook puede comparar la política fija y BMR e incorporar el árbol con `sample_weight`. Si se evalúa el test actual, se debe declarar que sus etiquetas agregadas se consultaron durante el diseño de los gaps; una evaluación independiente estricta requiere un periodo/dataset nuevo.
 
 **Criterio de éxito:** el mismo manifiesto y filas alimentan todas las políticas; la calibración no usa test; cada costo es rastreable a una fuente o supuesto aprobado; y la tabla final muestra costo, ahorro, AUC-PR, recall, legítimas bloqueadas y revisión para cada estrategia.

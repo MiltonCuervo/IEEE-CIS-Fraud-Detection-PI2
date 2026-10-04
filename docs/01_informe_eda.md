@@ -27,7 +27,7 @@ La evaluación predictiva deberá incluir AUC-PR y recall. Sin embargo, la compa
 
 ### 3.2 Monto de las transacciones
 
-El monto mediano observado fue USD 68,50 en transacciones legítimas y USD 75,00 en fraudulentas. Los promedios fueron USD 134,51 y USD 149,24, respectivamente. La distancia entre promedio y mediana muestra que la distribución es asimétrica y contiene montos altos.
+El monto mediano observado fue 68,50 unidades de `TransactionAmt` en transacciones legítimas y 75,00 en fraudulentas. Los promedios fueron 134,51 y 149,24 unidades, respectivamente. La distancia entre promedio y mediana muestra que la distribución es asimétrica y contiene montos altos. **La unidad/moneda no está confirmada por la fuente consultada**, por lo que no se interpreta como USD.
 
 ![Distribución de los montos](../results/figures/eda_distribucion_montos.png)
 
@@ -67,7 +67,7 @@ Con base en la evidencia anterior acordamos:
 
 ## 5. Limitaciones de esta etapa
 
-- `TransactionAmt` no es una pérdida bancaria neta confirmada: el dataset no informa recuperaciones ni contracargos.
+- `TransactionAmt` no es una pérdida bancaria neta confirmada: el dataset no informa recuperaciones ni contracargos. La unidad/moneda también debe confirmarse antes de asignarle interpretación financiera.
 - `TransactionDT` no tiene un origen calendario público; las horas y días derivados son relativos.
 - Las asociaciones categóricas no implican causalidad.
 - El EDA utiliza el conjunto etiquetado completo para descripción. Ninguna estadística global se reutilizará para ajustar transformaciones o seleccionar modelos.

@@ -17,7 +17,7 @@ $MissingFiles = @($ExpectedFiles | Where-Object {
 })
 
 if ($MissingFiles.Count -eq 0) {
-    Write-Host "Los cinco archivos esperados ya están en data\raw. No se descargará nada."
+    Write-Host "Los dos archivos esperados ya están en data\raw. No se descargará nada."
     exit 0
 }
 
