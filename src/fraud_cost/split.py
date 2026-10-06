@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 
 
@@ -62,8 +63,14 @@ def summarize_temporal_split(
     split: pd.Series,
     *,
     start_time: float | None = None,
+    hide_label_splits: tuple[str, ...] = (),
 ) -> pd.DataFrame:
-    """Resume tamaño, fraude, monto y límites temporales de cada bloque."""
+    """Resume bloques; opcionalmente omite métricas de etiqueta en algunos.
+
+    ``hide_label_splits`` evita agregar ``isFraud`` para bloques reservados,
+    por ejemplo un test cuyas etiquetas no se deben consultar durante diseño.
+    El resumen aún puede incluir su tamaño, monto y ventana temporal.
+    """
     required = {"TransactionDT", "TransactionAmt", "isFraud"}
     missing = required.difference(frame.columns)
     if missing:
@@ -74,14 +81,22 @@ def summarize_temporal_split(
     base = frame.assign(split=split)
     origin = frame["TransactionDT"].min() if start_time is None else start_time
     summary = base.groupby("split", observed=True).agg(
-        transacciones=("isFraud", "size"),
-        fraudes=("isFraud", "sum"),
-        tasa_fraude=("isFraud", "mean"),
         monto_mediano=("TransactionAmt", "median"),
         monto_total=("TransactionAmt", "sum"),
         tiempo_inicio=("TransactionDT", "min"),
         tiempo_fin=("TransactionDT", "max"),
     )
+    summary.insert(
+        0,
+        "transacciones",
+        base.groupby("split", observed=True).size().reindex(summary.index),
+    )
+    label_rows = base.loc[~base["split"].isin(hide_label_splits)]
+    label_summary = label_rows.groupby("split", observed=True).agg(
+        fraudes=("isFraud", "sum"),
+        tasa_fraude=("isFraud", "mean"),
+    )
+    summary = summary.join(label_summary)
     summary["dia_inicio_relativo"] = (summary["tiempo_inicio"] - origin) / 86_400
     summary["dia_fin_relativo"] = (summary["tiempo_fin"] - origin) / 86_400
     return summary.reindex([label for label in VALID_SPLITS if label in summary.index])
@@ -89,6 +104,10 @@ def summarize_temporal_split(
 
 def validate_temporal_split(frame: pd.DataFrame, split: pd.Series) -> None:
     """Comprueba cobertura, exclusividad y orden estricto de los bloques."""
+    if not frame.index.equals(split.index):
+        raise ValueError("Los índices de frame y split deben coincidir")
+    if "TransactionDT" not in frame:
+        raise KeyError("Falta la columna temporal TransactionDT")
     if len(frame) != len(split):
         raise AssertionError("Cada transacción debe tener exactamente una asignación")
     if split.isna().any():
@@ -97,6 +116,12 @@ def validate_temporal_split(frame: pd.DataFrame, split: pd.Series) -> None:
         raise AssertionError("La partición contiene etiquetas desconocidas")
 
     time = frame["TransactionDT"]
+    if time.isna().any():
+        raise AssertionError("TransactionDT contiene valores ausentes")
+    if not pd.api.types.is_numeric_dtype(time):
+        raise AssertionError("TransactionDT debe ser numérico")
+    if not np.isfinite(time.to_numpy(dtype=float)).all():
+        raise AssertionError("TransactionDT debe contener solo valores finitos")
     ordered = [label for label in VALID_SPLITS if split.eq(label).any()]
     for previous, current in zip(ordered, ordered[1:]):
         if time[split.eq(previous)].max() >= time[split.eq(current)].min():

@@ -2,7 +2,7 @@
 
 Proyecto Integrador II — Ingeniería de Sistemas, Universidad de Antioquia, 2026-2.
 
-El proyecto compara tres estrategias de decisión sobre probabilidades calibradas de fraude en IEEE-CIS: decisión convencional, Bayes Minimum Risk y un árbol sensible al costo. El objetivo principal es reducir el costo económico fuera de muestra; no maximizar aisladamente una métrica de clasificación.
+El proyecto prepara una comparación de tres estrategias sobre probabilidades calibradas de fraude IEEE-CIS: umbral convencional, Bayes Minimum Risk (BMR) y un árbol sensible al costo. Actualmente hay un baseline predictivo y un análisis exploratorio BMR en validation. Los costos de negocio no están aprobados y el test temporal no se ha puntuado; por ello no existe todavía una conclusión económica fuera de muestra.
 
 ## Pregunta de investigación
 
@@ -26,16 +26,16 @@ El proyecto compara tres estrategias de decisión sobre probabilidades calibrada
 └── requirements.txt
 ```
 
-`data/` y los artefactos de `results/` conservan su estructura mediante archivos `.gitkeep`, pero su contenido no se sube al repositorio.
+Los CSV originales y artefactos intermedios/modelos se mantienen localmente e ignorados por Git. Las tablas y figuras seleccionadas de `results/` sí están versionadas como evidencia de las corridas documentadas; al regenerarlas, revisar el diff antes de confirmarlo.
 
 ## Preparación reproducible
 
-1. Crear y activar un entorno virtual con Python 3.11.
-2. Instalar dependencias y el paquete local en modo editable:
+1. Ejecutar `scripts/setup.ps1`, que crea `.venv` con Python 3.12 o, si no está disponible, Python 3.11; instala dependencias y el paquete local en modo editable.
+2. Si se requiere reinstalar manualmente, usar el intérprete del entorno:
 
-   ```bash
-   python -m pip install -r requirements.txt
-   python -m pip install -e .
+   ```powershell
+   .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+   .\.venv\Scripts\python.exe -m pip install -e .
    ```
 
 3. Descargar desde Kaggle los archivos de la competencia IEEE-CIS Fraud Detection y ubicarlos sin modificar en `data/raw/`:
@@ -44,7 +44,8 @@ El proyecto compara tres estrategias de decisión sobre probabilidades calibrada
    - `train_identity.csv`
 
 4. No escribir credenciales en notebooks. Configurar la API de Kaggle fuera del repositorio siguiendo su documentación oficial o descargar los datos manualmente.
-5. Abrir Jupyter desde la raíz del repositorio y ejecutar los notebooks en orden.
+5. Registrar hash SHA-256 de los CSV, versiones de dependencias y commit con `.\.venv\Scripts\python.exe scripts\data_provenance.py`. El manifiesto local se escribe en `data/interim/data_provenance.json` y no se versiona.
+6. Abrir Jupyter desde la raíz del repositorio y ejecutar los notebooks en orden.
 
 
 ## Secuencia experimental
@@ -53,13 +54,15 @@ El proyecto compara tres estrategias de decisión sobre probabilidades calibrada
 |---|---|---|
 | `01_exploracion_datos.ipynb` | Validar estructura, objetivo, monto, tiempo y ausencia | Evidencia para decisiones de preparación |
 | `02_particion_temporal.ipynb` | Congelar train/validación/test y gaps | Manifiesto de particiones |
+| `03_modelado_y_decisiones_costos.ipynb` | Baseline calibrado en validation y comparación parametrizada de políticas | Métricas predictivas; costos/test bloqueados hasta completar aprobaciones |
+| `04_sensibilidad_hipotetica_validation.ipynb` | Sensibilidad exploratoria de BMR binario sobre scores guardados | Tabla/gráfica hipotéticas; usa `src/fraud_cost/scenarios.py`; no modifica gates de aprobación/test |
 
-Los notebooks muestran preguntas, decisiones, llamadas principales y resultados. La carga, validaciones, métricas y reglas repetibles viven en `src/`.
+Los notebooks presentan el flujo experimental. La carga/unión, la partición y la evaluación compartida de escenarios viven en `src/fraud_cost/`; el script y el notebook 04 llaman a la misma función de escenarios.
 
 ## Reglas metodológicas
 
 - La clasificación y la decisión económica son etapas distintas. El corte clasificatorio de 0.5 no se optimiza en este proyecto.
-- La evaluación final utiliza una partición temporal fuera de muestra. El test no participa en selección, transformación ni calibración.
+- El diseño temporal usa un bloque denominado test y el modelado no lo puntúa ni reporta métricas. **Limitación conocida:** el EDA inicial recorrió todo el conjunto etiquetado y la comparación histórica de gaps consultó conteos agregados de fraude del candidato a test; por tanto, este bloque no es un holdout estrictamente intocado. El código actual del notebook 02 ya oculta etiquetas de test en los resúmenes futuros. Consultar `docs/02_particion_temporal.md` antes de describirlo como evaluación independiente.
 - No se remuestrea automáticamente: alterar la prevalencia puede deteriorar la interpretación probabilística.
 - La calibración se evalúa y documenta antes de aplicar Bayes Minimum Risk.
 - Todas las estrategias se comparan sobre las mismas observaciones y con la misma matriz de costos.
@@ -68,4 +71,4 @@ Los notebooks muestran preguntas, decisiones, llamadas principales y resultados.
 
 ## Trazabilidad
 
-Cada cifra del informe final debe poder rastrearse a: versión de datos, partición temporal, configuración, notebook y archivo exportado en `results/`. Las decisiones no triviales se registran en [`docs/decisiones_tecnicas.md`](docs/decisiones_tecnicas.md).
+Cada cifra del informe final debe poder rastrearse a versión/hash de datos, partición, configuración, commit, notebook y archivo exportado en `results/`. La matriz propuesta está en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md). Los escenarios en [`docs/04_sensibilidad_hipotetica_validation.md`](docs/04_sensibilidad_hipotetica_validation.md) son retrospectivos e hipotéticos, no costos aprobados. El test permanece sin puntuar.

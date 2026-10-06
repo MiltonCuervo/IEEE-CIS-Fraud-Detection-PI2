@@ -20,7 +20,9 @@ data/raw/
 └── train_identity.csv
 ```
 
-El proyecto académico utiliza `train_transaction.csv` y `train_identity.csv`, porque contienen o complementan las observaciones etiquetadas. Los archivos `test_*` de Kaggle no tienen `isFraud` y **no son** el test temporal del experimento, por lo que no se almacenan en este repositorio local. Train, validación y test temporal se obtendrán de los datos etiquetados y se documentarán en un notebook posterior.
+El proyecto académico utiliza `train_transaction.csv` y `train_identity.csv`, porque contienen o complementan las observaciones etiquetadas. Los archivos `test_*` de Kaggle no tienen `isFraud` y **no son** el test temporal del experimento, por lo que no se almacenan en este repositorio local. Los bloques temporales se generan desde los datos etiquetados y sus IDs se registran en `data/interim/split_manifest.parquet`.
+
+El bloque temporal denominado test se obtiene de los CSV etiquetados de entrenamiento. El EDA original recorrió el conjunto completo antes de definir ese bloque y la comparación inicial de gaps consultó sus conteos agregados de fraude; no se han calculado scores de modelo ni costos sobre ese bloque. Por esa exposición, no es un holdout estrictamente intocado. El código actual de la partición omite las etiquetas test en los resúmenes futuros.
 
 ## Obtención
 
@@ -40,6 +42,14 @@ Después de preparar el entorno y autenticar la CLI fuera del repositorio:
 ```
 
 Nunca se deben escribir tokens o contraseñas en notebooks, scripts versionados o archivos `.env` publicados.
+
+Después de obtener los dos CSV y antes de generar resultados, registrar hashes y versiones locales:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\data_provenance.py
+```
+
+El manifiesto se guarda en `data/interim/data_provenance.json`. Incluye SHA-256, tamaños, commit, versión de Python y versiones de paquetes; permanece local junto con los datos intermedios.
 
 ## Reglas
 
