@@ -1,54 +1,46 @@
-# Sensibilidad hipotética de costos en validation
+# Sensibilidad del costo administrativo en validación
 
-**Estado:** análisis exploratorio de escenarios; ningún costo está aprobado como dato del negocio.
-**Datos usados:** 42.047 scores guardados de la ventana `validation_policy` (1.517 fraudes).
-**Alcance:** BMR binario vs. umbral fijo 0,5; sin revisión, sin árbol y sin cargar/puntuar test.
+## Propósito
 
-## Supuestos de escenario
+Exploramos la matriz definida en el anteproyecto: intervenir cuesta Ca en ambas clases; aprobar fraude cuesta su monto y aprobar legítimas cuesta cero. Usamos probabilidades calibradas de la ventana posterior de validación. No entrenamos aquí el predictor ni accedemos a test.
 
-- `TransactionAmt` conserva su unidad del dataset; **no se denomina USD** porque la fuente/unidad aún no se verificó.
-- La mediana de monto de `validation_policy` (la mitad posterior de validation), sin filtrar por etiqueta, es **65 unidades**. Se usa solo como referencia descriptiva para construir `B` hipotético; no es una referencia fijada antes de observar esta ventana.
-- `λ ∈ {0,25; 0,50; 1,00}`: fracción hipotética del monto que se perdería al aprobar fraude.
-- `B ∈ {0,25; 0,50; 1,00; 2,00} × 65`, es decir **16,25; 32,50; 65,00; 130,00** unidades como costo hipotético de bloquear legítimas.
-- `C_block_fraud = 0`: escenario idealizado de bloqueo perfecto, no hecho observado.
-- No se simula revisión: no hay estimaciones de su costo, sensibilidad, especificidad ni capacidad.
+## Escenarios e interpretación
 
-La política BMR binaria bloquea cuando el costo esperado de bloquear es menor que el de aprobar; el costo realizado se calcula después con las etiquetas reales de validation. Las cifras son proxies de estos supuestos, no dinero ahorrado observado ni una estimación generalizable.
+Variamos Ca en 1, 5, 10, 20, 50 y 100 unidades del dataset. Son valores ilustrativos, no costos observados ni escenarios finales aprobados. La grilla es absoluta y no depende de la mediana de la ventana evaluada. Una vez justificado el rango operativo, podremos sustituirla sin alterar la matriz.
 
-## Resultados
+BMR interviene si `p_i A_i > Ca`; la política fija conserva el corte 0,5. Para cada Ca medimos el costo administrativo de todas las intervenciones y el monto fraudulento aprobado. Reportamos ahorro respecto al menor costo entre aprobar todo e intervenir todo, y por separado mejora respecto a la política fija.
 
-| λ hipotético | B / mediana | B (unidades) | Ahorro proxy vs. fijo | Recall fraude BMR | Legítimas bloqueadas |
+Al elevar Ca, BMR reduce las intervenciones y su recall no aumenta. La regla fija conserva sus acciones, pero también cambia su costo administrativo. El costo total y el ahorro no necesariamente son monótonos: dependen de los montos de fraude y de la referencia, que cambia con Ca.
+
+## Evidencia reproducible
+
+El notebook `04_sensibilidad_hipotetica_validation.ipynb` y `scripts/escenarios_hipoteticos_validation.py` utilizan el mismo evaluador en `src/fraud_cost/scenarios.py`. La entrada es `data/interim/validation_scores.parquet`, producida por notebook 03. Exportamos únicamente la tabla `results/tables/escenarios_hipoteticos_validation.csv` y la figura `results/figures/ahorro_hipotetico_validation.png`.
+
+Las cifras antiguas de ahorro entre 14,49% y 52,89% correspondían a otra matriz y se retiran de este informe. La tabla actual se interpreta por Ca y estrategia; no contiene λ ni B.
+
+## Resultados de la corrida del 5 de octubre de 2026
+
+Ejecutamos de nuevo 03 y 04 sobre los CSV locales y el manifiesto existente. La ventana posterior de validación contiene 42.047 transacciones y 1.517 fraudes. Su monto fraudulento total es 254.536,81 unidades. El modelo calibrado obtiene AP 0,4681, Brier 0,02500 y recall 27,55% al corte 0,5. Estas cifras corresponden al modelo de referencia de esta corrida, no a una búsqueda final de hiperparámetros.
+
+| Ca ilustrativo | Costo BMR | Ahorro BMR vs. referencia trivial | Reducción BMR vs. fijo | Recall BMR | Legítimas intervenidas |
 |---:|---:|---:|---:|---:|---:|
-| 0,25 | 0,25× | 16,25 | 25,46% | 32,10% | 0,95% |
-| 0,25 | 0,50× | 32,50 | 18,80% | 26,17% | 0,45% |
-| 0,25 | 1,00× | 65,00 | 14,49% | 20,17% | 0,20% |
-| 0,25 | 2,00× | 130,00 | 14,94% | 13,65% | 0,10% |
-| 0,50 | 0,25× | 16,25 | 40,83% | 40,41% | 2,09% |
-| 0,50 | 0,50× | 32,50 | 25,46% | 32,10% | 0,95% |
-| 0,50 | 1,00× | 65,00 | 18,80% | 26,17% | 0,45% |
-| 0,50 | 2,00× | 130,00 | 14,49% | 20,17% | 0,20% |
-| 1,00 | 0,25× | 16,25 | 52,89% | 50,82% | 4,41% |
-| 1,00 | 0,50× | 32,50 | 40,83% | 40,41% | 2,09% |
-| 1,00 | 1,00× | 65,00 | 25,46% | 32,10% | 0,95% |
-| 1,00 | 2,00× | 130,00 | 18,80% | 26,17% | 0,45% |
+| 1 | 25.946,72 | 38,29% | 86,92% | 85,43% | 37,07% |
+| 5 | 66.807,82 | 68,22% | 66,69% | 64,40% | 11,77% |
+| 10 | 88.439,28 | 65,25% | 56,50% | 53,66% | 6,23% |
+| 20 | 117.791,22 | 53,72% | 43,57% | 38,76% | 2,99% |
+| 50 | 163.253,10 | 35,86% | 27,46% | 19,38% | 0,88% |
+| 100 | 192.356,93 | 24,43% | 23,75% | 10,22% | 0,32% |
 
-BMR redujo el costo proxy frente al umbral fijo en los 12 puntos de la grilla: el rango fue **14,49%–52,89%**. Como las decisiones dependen de `λ/B` cuando `C=0` y no hay revisión, los 12 puntos producen seis políticas distintas; las repeticiones son esperadas, no observaciones independientes. El mayor ahorro hipotético ocurrió con `λ=1`, `B=16,25`: recall 50,82% y bloqueo de 4,41% de legítimas. Con `λ=0,25`, `B=65`, el ahorro fue 14,49%, recall 20,17% y bloqueo de legítimas 0,20%.
+Con Ca=10, BMR interviene 3.339 operaciones: 814 fraudes y 2.525 legítimas. Su costo administrativo es 33.390 y el monto de los fraudes aprobados es 55.049,28. La suma produce 88.439,28. La política fija interviene 544 operaciones y cuesta 203.296,60. La referencia trivial es aprobar todo, cuyo costo es 254.536,81; intervenir todo costaría 420.470.
 
-## Interpretación y límites
+La reducción de 56,50% frente al fijo y el ahorro de 65,25% frente a la referencia describen comparaciones diferentes. El mayor ahorro porcentual de esta cuadrícula aparece con Ca=5, pero no significa que debamos elegir ese costo administrativo: Ca representa un supuesto operativo externo, no un hiperparámetro que ajustamos para maximizar el porcentaje obtenido.
 
-El resultado muestra que BMR responde a la relación entre pérdida hipotética por fraude y perjuicio hipotético de bloquear legítimas. Cuanto mayor es `λ/B`, la política acepta bloquear más operaciones: sube el recall y también la tasa de legítimas bloqueadas. No hay una configuración “mejor” sin una función de costos validada por el equipo.
+Con Ca=1, la política fija cuesta más que intervenir todo y su ahorro frente a la referencia es negativo (-371,85%). Esto no es un error de cálculo: muestra por qué conviene mantener visible la referencia trivial y no reportar exclusivamente mejora contra el clasificador.
 
-Este es un análisis retrospectivo sobre `validation_policy`, la misma ventana donde se miden los resultados; además, su mediana se usa para escalar `B`. Sirve para sensibilidad y depuración metodológica, no para afirmar ahorro fuera de muestra. Los porcentajes dependen de `λ`, `B` y del supuesto ideal `C_block_fraud=0`; también dependen de la calibración observada. No se probó sensibilidad a `C_block_fraud>0`, revisión, cambios temporales ni incertidumbre estadística. El script/notebook no cargan ni puntúan test. La selección histórica de la partición sí consultó conteos agregados de fraude del candidato a test; por eso el bloque actual no es estrictamente ciego (ver informe de partición).
+Las versiones y hashes de los CSV se registraron en `data/interim/data_provenance.json`. Los hashes de notebooks ejecutados y módulos económicos, la grilla y la confirmación de test no evaluado están en `data/interim/validation_run_metadata.json`. Ambos son artefactos locales ignorados por Git. Se utilizó un entorno temporal de Python 3.12 porque el intérprete al que apunta la `.venv` existente no está disponible; ese entorno local del proyecto sigue pendiente de reparación.
 
-## Reproducibilidad
+## Límites
 
-- Notebook reproducible: [`notebooks/04_sensibilidad_hipotetica_validation.ipynb`](../notebooks/04_sensibilidad_hipotetica_validation.ipynb)
-- Script equivalente: [`scripts/escenarios_hipoteticos_validation.py`](../scripts/escenarios_hipoteticos_validation.py)
-- Tabla completa fixed/BMR: [`results/tables/escenarios_hipoteticos_validation.csv`](../results/tables/escenarios_hipoteticos_validation.csv)
-- Gráfica: [`results/figures/ahorro_hipotetico_validation.png`](../results/figures/ahorro_hipotetico_validation.png)
-- Entrada: `data/interim/validation_scores.parquet`, producido por notebook 03.
-- Ejecución en Jupyter: abrir el notebook 04 con kernel `python3` después de ejecutar notebook 03. También se puede ejecutar el script con `.venv\Scripts\python.exe scripts/escenarios_hipoteticos_validation.py`.
-- La función de validación/cálculo vive en `src/fraud_cost/scenarios.py` y se comparte entre notebook y script.
-- Tras extraer esa lógica compartida, se limpiaron los outputs del notebook para evitar mostrar una corrida asociada al código anterior. La tabla y figura versionadas son resultados de la implementación previa y deben regenerarse para vincularlos a la versión actual.
+Este análisis es exploratorio en validación. Sus costos son simulados y la unidad monetaria sigue por confirmar. La matriz supone que intervenir evita la pérdida fraudulenta. La calibración imperfecta puede producir ahorro realizado negativo incluso cuando BMR elige el riesgo esperado menor. La mejora frente a una política fija no garantiza mejora frente a la mejor política trivial.
 
-El `COST_CONFIG` de notebook 03 permanece sin aprobar y el gate de test permanece cerrado. Para una evaluación final, el equipo debe reemplazar estos escenarios por costos sustentados/aprobados, congelar la política y ejecutar test una sola vez.
+El árbol requiere entrenamiento por Ca y se compara en notebook 03 al acordar escenarios finales. La consulta histórica de etiquetas agregadas del periodo test se declara en el protocolo; el notebook 04 no accede a ese bloque.

@@ -2,7 +2,9 @@
 
 Proyecto Integrador II — Ingeniería de Sistemas, Universidad de Antioquia, 2026-2.
 
-El proyecto prepara una comparación de tres estrategias sobre probabilidades calibradas de fraude IEEE-CIS: umbral convencional, Bayes Minimum Risk (BMR) y un árbol sensible al costo. Actualmente hay un baseline predictivo y un análisis exploratorio BMR en validation. Los costos de negocio no están aprobados y el test temporal no se ha puntuado; por ello no existe todavía una conclusión económica fuera de muestra.
+El proyecto prepara una comparación de tres estrategias sobre probabilidades calibradas de fraude IEEE-CIS: umbral convencional, Bayes Minimum Risk (BMR) y un árbol sensible al costo. Actualmente contamos con un modelo predictivo de referencia y un análisis exploratorio BMR en validación. Los costos de negocio no están aprobados y el test temporal no se ha puntuado; por ello no existe todavía una conclusión económica fuera de muestra.
+
+Aplicamos la matriz del anteproyecto: intervenir (bloquear y revisar) cuesta `Ca` tanto en fraude como en operaciones legítimas; aprobar fraude cuesta su monto y aprobar legítimas cuesta cero. BMR interviene cuando `p_i × TransactionAmt_i > Ca`. Calculamos ahorro frente al menor costo entre aprobar todo e intervenir todo y, por separado, mejora frente a la política fija.
 
 ## Pregunta de investigación
 
@@ -54,10 +56,10 @@ Los CSV originales y artefactos intermedios/modelos se mantienen localmente e ig
 |---|---|---|
 | `01_exploracion_datos.ipynb` | Validar estructura, objetivo, monto, tiempo y ausencia | Evidencia para decisiones de preparación |
 | `02_particion_temporal.ipynb` | Congelar train/validación/test y gaps | Manifiesto de particiones |
-| `03_modelado_y_decisiones_costos.ipynb` | Baseline calibrado en validation y comparación parametrizada de políticas | Métricas predictivas; costos/test bloqueados hasta completar aprobaciones |
-| `04_sensibilidad_hipotetica_validation.ipynb` | Sensibilidad exploratoria de BMR binario sobre scores guardados | Tabla/gráfica hipotéticas; usa `src/fraud_cost/scenarios.py`; no modifica gates de aprobación/test |
+| `03_modelado_y_decisiones_costos.ipynb` | Baseline calibrado en validation y comparación parametrizada de políticas | Métricas predictivas; comparación con la matriz original; escenarios finales de Ca pendientes |
+| `04_sensibilidad_hipotetica_validation.ipynb` | Sensibilidad exploratoria de Ca sobre probabilidades guardadas | Tabla/gráfica hipotéticas; usa `src/fraud_cost/scenarios.py`; mantiene los controles de aprobación y reserva de test |
 
-Los notebooks presentan el flujo experimental. La carga/unión, la partición y la evaluación compartida de escenarios viven en `src/fraud_cost/`; el script y el notebook 04 llaman a la misma función de escenarios.
+Los notebooks presentan el flujo experimental. La carga/unión, la partición, los costos, la ponderación del árbol y la evaluación compartida de escenarios viven en `src/fraud_cost/`; el script y el notebook 04 llaman a la misma función de escenarios.
 
 ## Reglas metodológicas
 
@@ -71,4 +73,4 @@ Los notebooks presentan el flujo experimental. La carga/unión, la partición y 
 
 ## Trazabilidad
 
-Cada cifra del informe final debe poder rastrearse a versión/hash de datos, partición, configuración, commit, notebook y archivo exportado en `results/`. La matriz propuesta está en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md). Los escenarios en [`docs/04_sensibilidad_hipotetica_validation.md`](docs/04_sensibilidad_hipotetica_validation.md) son retrospectivos e hipotéticos, no costos aprobados. El test permanece sin puntuar.
+Cada cifra del informe final debe poder rastrearse a versión/hash de datos, partición, configuración, commit, notebook y archivo exportado en `results/`. La matriz del anteproyecto y su implementación están en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md). Los escenarios en [`docs/04_sensibilidad_hipotetica_validation.md`](docs/04_sensibilidad_hipotetica_validation.md) son retrospectivos e hipotéticos, no costos aprobados. El test permanece sin puntuar.

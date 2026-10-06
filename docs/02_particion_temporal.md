@@ -51,7 +51,7 @@ Las unidades corresponden a la escala de `TransactionAmt`; no se verificó moned
 
 Los gaps excluyen 41.399 transacciones y 1.617 fraudes del ajuste y de la evaluación. No interpretamos esto como un error ni ocultamos su costo: es la consecuencia de imponer separación temporal. Las observaciones permanecen identificadas en el manifiesto como `gap_1` y `gap_2`, pero no participarán en entrenamiento, selección, calibración o prueba.
 
-La diferencia de prevalencia entre bloques confirma que una partición aleatoria habría producido conjuntos artificialmente parecidos. En particular, el primer gap contiene 4,83% de fraude, mientras que el segundo contiene 2,95%.
+La diferencia de prevalencia entre bloques muestra variación temporal. Una partición aleatoria tendería a mezclar estos periodos y reducir sus diferencias de composición, aunque no cuantificamos aquí ese efecto. En particular, el primer gap contiene 4,83% de fraude, mientras que el segundo contiene 2,95%.
 
 ## 5. Categorías no observadas durante entrenamiento
 
@@ -82,7 +82,7 @@ Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El noteb
 ## 7. Uso permitido de cada bloque
 
 - **Train:** ajuste de imputadores, codificadores, ingeniería de atributos y modelo base.
-- **Validación:** selección de hiperparámetros, comparación de configuraciones y ajuste/selección del calibrador según el protocolo definido.
+- **Validación:** en el protocolo implementado, usamos la mitad temprana para ajustar el calibrador y la mitad posterior para diagnosticar el modelo y explorar políticas. Los hiperparámetros del predictor se mantienen fijos; una búsqueda posterior deberá realizarse dentro de train mediante validación temporal.
 - **Test:** bloque temporal reservado y aún no puntuado por el modelo. Debido a la consulta histórica de etiquetas agregadas durante el diseño de gaps, una evaluación en este bloque debe declararse como holdout condicionado; para una afirmación estrictamente independiente se requiere reservar datos/periodo nuevo sin consultar sus etiquetas durante el diseño.
 - **Gaps:** no se utilizan para aprender ni evaluar; solo preservan la separación.
 
@@ -96,4 +96,3 @@ El test no podrá utilizarse repetidamente para corregir el modelo. Si una decis
 - La estrategia exacta para atributos históricos todavía debe definirse. Ningún agregado podrá utilizar observaciones futuras respecto a la transacción que representa.
 - La partición test se construyó usando conteos agregados de sus etiquetas para comparar gaps; no se han calculado predicciones ni costos del modelo en ese bloque. No describirlo como completamente ciego.
 - El calibrador deberá ajustarse sin acceder al test; el notebook de modelado usa una mitad temprana de validation y reporta métricas en la mitad posterior.
-
