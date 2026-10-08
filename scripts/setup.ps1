@@ -1,43 +1,60 @@
-$ErrorActionPreference = "Stop"
+param(
+    [string]$PythonExecutable,
+    [string]$BrokenEnvironmentBackupDirectory
+)
 
-$ProjectRoot = Split-Path -Parent $PSScriptRoot
+$ErrorActionPreference = "Stop"
+$ProjectRoot = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $VenvPath = Join-Path $ProjectRoot ".venv"
 $PythonPath = Join-Path $VenvPath "Scripts\python.exe"
 
-if (-not (Test-Path -LiteralPath $PythonPath)) {
-    $Launcher = Get-Command py -ErrorAction SilentlyContinue
-    if (-not $Launcher) {
-        throw "No se encontró el lanzador 'py'. Instale Python 3.11 o 3.12 y habilite el Python Launcher."
-    }
-
-    $SelectedVersion = $null
-    foreach ($Version in @("3.12", "3.11")) {
-        & $Launcher.Source "-$Version" -c "import sys; print(sys.version)" *> $null
-        if ($LASTEXITCODE -eq 0) {
-            $SelectedVersion = $Version
-            break
-        }
-    }
-    if (-not $SelectedVersion) {
-        throw "No se encontró Python 3.11 ni 3.12. Instale una de esas versiones y vuelva a ejecutar el setup."
-    }
-
-    Write-Host "Creando entorno virtual en .venv con Python $SelectedVersion..."
-    & $Launcher.Source "-$SelectedVersion" -m venv $VenvPath
-    if ($LASTEXITCODE -ne 0) { throw "No se pudo crear el entorno virtual." }
+function Invoke-Checked {
+    param([string]$Executable, [string[]]$Arguments)
+    & $Executable @Arguments
+    if ($LASTEXITCODE -ne 0) { throw "Falló: $Executable $($Arguments -join ' ')" }
 }
 
-Write-Host "Actualizando pip e instalando dependencias..."
-& $PythonPath -m pip install --upgrade pip
-if ($LASTEXITCODE -ne 0) { throw "Falló la actualización de pip." }
-& $PythonPath -m pip install -r (Join-Path $ProjectRoot "requirements.txt")
-if ($LASTEXITCODE -ne 0) { throw "Falló la instalación de requirements.txt." }
-& $PythonPath -m pip install --editable $ProjectRoot
-if ($LASTEXITCODE -ne 0) { throw "Falló la instalación editable del paquete local." }
+$HealthyEnvironment = $false
+if (Test-Path -LiteralPath $PythonPath) {
+    & $PythonPath -c "import sys; print(sys.version)" *> $null
+    $HealthyEnvironment = $LASTEXITCODE -eq 0
+}
 
-Write-Host "Registrando kernel de Jupyter..."
-& $PythonPath -m ipykernel install --user --name ieee-cis-pi2 --display-name "Python (IEEE-CIS PI2)"
-if ($LASTEXITCODE -ne 0) { throw "No se pudo registrar el kernel de Jupyter." }
+if (-not $HealthyEnvironment) {
+    if ($PythonExecutable) {
+        $BasePython = (Resolve-Path -LiteralPath $PythonExecutable).Path
+        Invoke-Checked $BasePython @("-c", "import sys; assert (3,11) <= sys.version_info[:2] <= (3,12), 'Use Python 3.11 o 3.12'")
+    } else {
+        $Launcher = Get-Command py -ErrorAction SilentlyContinue
+        if (-not $Launcher) { throw "Instale Python 3.11/3.12 o indique -PythonExecutable con su ruta." }
+        $BasePython = $null
+        foreach ($Version in @("3.12", "3.11")) {
+            $FoundPython = & $Launcher.Source "-$Version" -c "import sys; print(sys.executable)" 2>$null
+            if ($LASTEXITCODE -eq 0) { $BasePython = $FoundPython.Trim(); break }
+        }
+        if (-not $BasePython) { throw "No se encontró Python 3.11/3.12." }
+    }
+    if (Test-Path -LiteralPath $VenvPath) {
+        # Resolvemos y comprobamos ambos destinos antes de mover el entorno.
+        $ResolvedVenv = (Resolve-Path -LiteralPath $VenvPath).Path
+        if ($ResolvedVenv -ne [System.IO.Path]::GetFullPath((Join-Path $ProjectRoot '.venv'))) {
+            throw "La ruta de .venv no coincide con el proyecto."
+        }
+        if (-not $BrokenEnvironmentBackupDirectory) {
+            $BrokenEnvironmentBackupDirectory = Join-Path $ProjectRoot ('.venv.backup.' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
+        }
+        $BackupPath = [System.IO.Path]::GetFullPath($BrokenEnvironmentBackupDirectory)
+        if ($BackupPath.StartsWith($ResolvedVenv + [System.IO.Path]::DirectorySeparatorChar) -or $BackupPath -eq $ResolvedVenv -or (Test-Path -LiteralPath $BackupPath)) {
+            throw "El respaldo debe ser un destino nuevo y estar fuera del entorno original."
+        }
+        Move-Item -LiteralPath $ResolvedVenv -Destination $BackupPath
+        Write-Host "Entorno anterior conservado en $BackupPath"
+    }
+    Invoke-Checked $BasePython @("-m", "venv", $VenvPath)
+}
 
-Write-Host "Entorno preparado. Para abrir Jupyter ejecute:"
-Write-Host ".\.venv\Scripts\python.exe -m jupyter lab"
+Invoke-Checked $PythonPath @("-m", "pip", "install", "--upgrade", "pip")
+Invoke-Checked $PythonPath @("-m", "pip", "install", "-r", (Join-Path $ProjectRoot 'requirements.txt'))
+Invoke-Checked $PythonPath @("-m", "pip", "install", "--editable", $ProjectRoot)
+Invoke-Checked $PythonPath @("-m", "ipykernel", "install", "--user", "--name", "ieee-cis-pi2", "--display-name", "Python (IEEE-CIS PI2)")
+Write-Host "Entorno preparado: .\.venv\Scripts\python.exe -m jupyter lab"

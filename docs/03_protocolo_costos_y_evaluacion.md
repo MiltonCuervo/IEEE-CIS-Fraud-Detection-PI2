@@ -56,7 +56,9 @@ El costo de cualquier acción equivale al mínimo por fila más el peso cuando l
 
 ## 5. Protocolo temporal
 
-Conservamos train, gaps, validación y test del manifiesto. Ajustamos preprocesamiento y predictor solo con train. El primer modelo tiene hiperparámetros fijos; la búsqueda de hiperparámetros prometida está pendiente y deberá reservar ventanas temporales apropiadas sin reutilizar las mismas filas para todos los ajustes.
+Conservamos train, gaps, validación y test del manifiesto. Ajustamos preprocesamiento y predictor solo con train. El primer modelo tiene hiperparámetros fijos. El notebook 05 compara atributos y cuatro configuraciones en dos ventanas expansivas internas de train, con preprocesamiento propio por fold y siete días de separación. Selecciona por AP media, sin consultar validación externa ni test; su diseño y resultados se explican en `docs/05_preparacion_y_seleccion_temporal.md`.
+
+Esa selección no reemplaza automáticamente la línea base del 03: falta reajustar el predictor elegido con todo train y ajustar un calibrador nuevo sobre sus propias puntuaciones. No reutilizamos un calibrador entrenado para otro predictor ni mezclamos las métricas internas con las de validación posterior.
 
 Usamos validación temprana para calibrar y la posterior para diagnóstico y exploración de políticas. El predictor que genera ambas puntuaciones permanece fijo. Los gaps no participan en entrenamiento ni evaluación. El test no se puntúa mientras `RUN_FINAL_TEST=False`; antes de habilitarlo fijamos predictor, calibrador, escenarios de Ca y árboles correspondientes.
 

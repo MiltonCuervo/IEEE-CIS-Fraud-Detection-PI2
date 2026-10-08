@@ -1,0 +1,5 @@
+fold,features,input_columns,transformed_columns,matrix_dtype,missing_columns,empty_columns,card_proxy_zero_history_rate,device_proxy_zero_history_rate,email_domain_zero_history_rate
+1,base,432,2146,float32,336,0,,,
+1,history,447,2167,float32,342,0,0.04068235507904779,0.8446529165909504,0.13951481010357986
+2,base,432,2382,float32,336,0,,,
+2,history,447,2403,float32,342,0,0.02988311322186802,0.865677791512155,0.17170862880315746

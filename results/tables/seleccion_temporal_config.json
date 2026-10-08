@@ -1,0 +1,120 @@
+{
+  "created_at_utc": "2026-10-08T17:28:17.254806+00:00",
+  "criterion": "mean_average_precision_internal_train_folds",
+  "selected_candidate": {
+    "candidate": "history_deeper",
+    "features": "history",
+    "params": {
+      "max_depth": 8,
+      "min_child_weight": 10,
+      "reg_lambda": 5
+    }
+  },
+  "selected_params": {
+    "n_estimators": 250,
+    "max_depth": 8,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 10,
+    "tree_method": "hist",
+    "objective": "binary:logistic",
+    "eval_metric": "aucpr",
+    "n_jobs": 4,
+    "random_state": 42,
+    "verbosity": 0,
+    "reg_lambda": 5
+  },
+  "candidates": [
+    {
+      "candidate": "reference",
+      "features": "base",
+      "params": {}
+    },
+    {
+      "candidate": "history",
+      "features": "history",
+      "params": {}
+    },
+    {
+      "candidate": "history_regularized",
+      "features": "history",
+      "params": {
+        "max_depth": 4,
+        "min_child_weight": 20,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "candidate": "history_deeper",
+      "features": "history",
+      "params": {
+        "max_depth": 8,
+        "min_child_weight": 10,
+        "reg_lambda": 5
+      }
+    }
+  ],
+  "test_evaluated": false,
+  "external_validation_evaluated": false,
+  "train_rows": 380815,
+  "train_end": 9521218,
+  "folds": [
+    {
+      "fold": 1,
+      "train_rows": 242198,
+      "eval_rows": 44024,
+      "train_frauds": 7879,
+      "eval_frauds": 1677,
+      "train_end": 5747276,
+      "eval_start": 6352100,
+      "eval_end": 7634011,
+      "gap_days": 7
+    },
+    {
+      "fold": 2,
+      "train_rows": 307224,
+      "eval_rows": 46113,
+      "train_frauds": 10406,
+      "eval_frauds": 1703,
+      "train_end": 7634011,
+      "eval_start": 8239468,
+      "eval_end": 9521218,
+      "gap_days": 7
+    }
+  ],
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.2.0"
+  },
+  "source_sha256": {
+    "src\\fraud_cost\\features.py": "7a40e12a7b4c03401ca39fc184ce6384c4e79f2b65d564ee30453f0dc001a34a",
+    "src\\fraud_cost\\selection.py": "822945b18d5f17f3bf6a59f3de2b0cb900ebac97c74b9df2456820e178bffcff",
+    "notebooks\\05_preparacion_y_seleccion_temporal.ipynb": "7d4e0e4b8e6ceef577112d647478f31d33ed1ec64fb402f11e2b871e6da6ca29",
+    "data\\interim\\split_manifest.parquet": "12fe07ee14adb6bb9dfb97dbafe5d756f64aa2613b0265d74efb9332a917f7a4",
+    "data\\raw\\train_transaction.csv": "3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642",
+    "data\\raw\\train_identity.csv": "b63c725d8377be90a995268d97f347c17d456b95db45807adcf9f59cd603c37c"
+  },
+  "notebook_hash_method": "JSON de tipo y fuente por celda; excluye salidas y conteos de ejecución",
+  "git_uncommitted": [
+    " M .gitignore",
+    " M README.md",
+    " M docs/03_protocolo_costos_y_evaluacion.md",
+    " M scripts/setup.ps1",
+    "?? docs/05_preparacion_y_seleccion_temporal.md",
+    "?? notebooks/05_preparacion_y_seleccion_temporal.ipynb",
+    "?? results/figures/seleccion_temporal_ap.png",
+    "?? results/tables/preparacion_diagnostico.csv",
+    "?? results/tables/seleccion_temporal_config.json",
+    "?? results/tables/seleccion_temporal_folds.csv",
+    "?? results/tables/seleccion_temporal_resumen.csv",
+    "?? results/tables/seleccion_temporal_ventanas.csv",
+    "?? src/fraud_cost/features.py",
+    "?? src/fraud_cost/selection.py",
+    "?? tests/test_features_selection.py"
+  ],
+  "git_commit": "6ab9351f8cf02e2aedd9595583dc8a9bccccc0e3",
+  "note": "Selección dentro de train; falta refit y nueva calibración. Commit puede tener cambios locales; hashes identifican fuentes."
+}
