@@ -1,0 +1,136 @@
+{
+  "created_at_utc": "2026-10-09T22:19:39.233803+00:00",
+  "test_evaluated": false,
+  "base_predictor_refitted": false,
+  "platt_refitted": false,
+  "selected_calibrator": null,
+  "calibrator_approved": false,
+  "costs_approved": false,
+  "experiment": "Platt_vs_isotonic_development",
+  "isotonic_params": {
+    "increasing": true,
+    "out_of_bounds": "clip",
+    "y_max": 1.0,
+    "y_min": 0.0
+  },
+  "diagnostics": {
+    "calibration_rows": 42046,
+    "calibration_frauds": 1558,
+    "isotonic_knots": 92,
+    "calibration_raw_min": 0.000643856474198401,
+    "calibration_raw_max": 0.9959734082221985,
+    "policy_below_calibration_raw_min": 1,
+    "policy_above_calibration_raw_max": 0,
+    "predictor_unchanged_joblib_hash": "e43010c84e2efb5e5710595153401479"
+  },
+  "comparison_protocol": "log-loss global como lectura principal, Brier y grupos como complementos; sin selección automática ni por Ca",
+  "log_loss_probability_dtype": "float64; clipping interno sklearn con epsilon de máquina, sin suavizado adicional",
+  "group_protocol": "mismas bandas de monto/riesgo Platt y cuatro subperiodos que el 08",
+  "ca_grid": [
+    1.0,
+    2.5,
+    5.0,
+    10.0,
+    20.0,
+    50.0,
+    100.0
+  ],
+  "literature_inspired_ca": [
+    1.0,
+    2.5,
+    5.0,
+    10.0
+  ],
+  "extended_ca": [
+    20.0,
+    50.0,
+    100.0
+  ],
+  "scenario_status": "HIPOTETICO_NO_COSTO_OBSERVADO_IEEE_CIS",
+  "cost_units": "unidades_del_dataset_moneda_no_verificada",
+  "literature_sources": [
+    {
+      "doi": "10.1109/ICMLA.2013.68",
+      "original_ca_eur": [
+        1,
+        2.5,
+        5
+      ]
+    },
+    {
+      "doi": "10.1137/1.9781611973440.78",
+      "original_ca_eur": [
+        10
+      ]
+    }
+  ],
+  "note": "Desarrollo adicional motivado por 06/08; validación posterior reutilizada, no confirmación independiente. No cambia la comparación principal del 07.",
+  "source_sha256": {
+    "src/fraud_cost/calibration.py": "1e8d2daf6e9e2932e2b86ba2a195816ebadd4595418ec523712684206fd14f9a",
+    "src/fraud_cost/diagnostics.py": "e4f9fab130318cfde4037ab2626a03a815974d1b1756572011581d6e38e1f2a4",
+    "src/fraud_cost/economics.py": "a6db221b526c3366be199e86d0227ea1e13d369d68609f1fe339a08b337baa09",
+    "src/fraud_cost/refit.py": "3c2349753066ec096f77cb820cd32620f2d5d1983003bc35a72694ed83489fc2",
+    "src/fraud_cost/costs.py": "e8e087cfdb79b0813164dd03fe33a3dca00ef3f4e76a61d1c9a85d8155d807eb",
+    "src/fraud_cost/features.py": "7a40e12a7b4c03401ca39fc184ce6384c4e79f2b65d564ee30453f0dc001a34a",
+    "notebooks/09_comparacion_calibradores.ipynb": "f1ef31be62ed10c35cfc121d33dcce2bf861984c622d5856fe1ba9d419fe104f",
+    "results/tables/reajuste_config.json": "06501406ca6646ce482ec466079e89edd4314dcb06ecd11cf8d6f4c58927a55d",
+    "results/tables/seleccion_temporal_config.json": "72a76d67202d471fbe18421b37c0a4962f4edd7070e7af8206acd8f39afea979",
+    "results/models/selected_xgboost_platt.joblib": "615ab58ea2ae6af42758438cb3a7f0f87eacc32685df750e4ed8c7673ac7f693",
+    "data/interim/validation_scores_selected.parquet": "7792b77f699986aff85b605cf7e995b350892c257945056e64cb55daaad1098f"
+  },
+  "artifact_sha256": {
+    "results/tables/calibradores_metricas_validation.csv": "ad119d6e3d50aeaa530712dffc3a46676bd822d3a6f1e1bf9fd8b035421a9248",
+    "results/tables/calibradores_grupos_validation.csv": "77feb3120d8c16d80bb05750bfca16f55d37deeeb6da8fc7aa65284be7cfa933",
+    "results/tables/calibradores_bmr_sensibilidad.csv": "d785cf641a5a79283faff2e6d683304e942d6fc19bc2cadd098e8cb733fde375",
+    "results/tables/calibradores_cambios_bmr.csv": "eded59c08a37225107fdd425e3687b257fc6e711f67fbd1a4a4c77707e2d729a",
+    "results/models/candidate_isotonic_calibrator.joblib": "06478f25013035e6d6552938e7e863d94b44fa1dfaca2fb182c8c28c44977775",
+    "results/figures/comparacion_calibradores_validation.png": "07ad60095fb60a659890136da405b7f93454cbfecd5542a23930ade9b46de7ad",
+    "results/figures/calibradores_bmr_y_montos.png": "9636223b7d4e4add1605dc2b79e4e3d346e924deacdcf76060c7d78904577d08"
+  },
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.2.0",
+    "joblib": "1.6.0",
+    "matplotlib": "3.11.2"
+  },
+  "python_version": "3.11.9",
+  "python_executable": "C:\\Users\\Milton Cuervo\\Documents\\IEEE-CIS Fraud Detection-PI2\\.venv\\Scripts\\python.exe",
+  "git_commit": "ff1f763d4550787e33172aab142a0f12b6a5af1d",
+  "git_uncommitted": [
+    " M README.md",
+    " M docs/03_protocolo_costos_y_evaluacion.md",
+    " M docs/04_sensibilidad_hipotetica_validation.md",
+    " M docs/06_reajuste_y_calibracion.md",
+    "?? docs/07_comparacion_economica_validation.md",
+    "?? docs/08_diagnostico_y_estabilidad.md",
+    "?? notebooks/07_comparacion_economica_validation.ipynb",
+    "?? notebooks/08_diagnostico_y_estabilidad.ipynb",
+    "?? notebooks/09_comparacion_calibradores.ipynb",
+    "?? results/figures/calibradores_bmr_y_montos.png",
+    "?? results/figures/comparacion_calibradores_validation.png",
+    "?? results/figures/comparacion_economica_validation.png",
+    "?? results/figures/diagnostico_probabilistico_validation.png",
+    "?? results/figures/estabilidad_economica_validation.png",
+    "?? results/tables/arboles_costos_diagnostico.csv",
+    "?? results/tables/calibradores_bmr_sensibilidad.csv",
+    "?? results/tables/calibradores_cambios_bmr.csv",
+    "?? results/tables/calibradores_grupos_validation.csv",
+    "?? results/tables/calibradores_metricas_validation.csv",
+    "?? results/tables/comparacion_economica_config.json",
+    "?? results/tables/comparacion_economica_validation.csv",
+    "?? results/tables/diagnostico_bmr_calibracion.csv",
+    "?? results/tables/diagnostico_calibracion_condicional.csv",
+    "?? results/tables/diagnostico_costos_subperiodos.csv",
+    "?? results/tables/diagnostico_estabilidad_config.json",
+    "?? results/tables/diagnostico_frontera_bmr.csv",
+    "?? results/tables/diagnostico_subperiodos_validation.csv",
+    "?? src/fraud_cost/calibration.py",
+    "?? src/fraud_cost/diagnostics.py",
+    "?? src/fraud_cost/economics.py",
+    "?? tests/test_calibration.py",
+    "?? tests/test_diagnostics.py",
+    "?? tests/test_economics.py"
+  ]
+}

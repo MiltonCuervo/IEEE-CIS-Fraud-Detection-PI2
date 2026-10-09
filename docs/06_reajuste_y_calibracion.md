@@ -119,7 +119,7 @@ Las pruebas comprueban separación temporal y de IDs, exclusión de gaps/test, t
 
 Este resultado no demuestra ahorro ni completa la comparación de tres estrategias. La clasificación mantiene 0,5; la regla económica seguirá usando la matriz original con `Ca` tanto para fraude intervenido como para legítima intervenida. Los escenarios finales de Ca continúan pendientes de justificación acordada.
 
-El paso siguiente será usar estas probabilidades para comparar la política fija, BMR y el árbol ponderado bajo poblaciones y costos comunes. Los artefactos del 03/04 se mantienen como evidencia histórica, sin sobrescribirlos ni mezclar sus probabilidades con este calibrador. El script de sensibilidad anterior sigue apuntando a la línea base; no interpreta automáticamente las salidas del 06.
+La etapa 07, explicada en `docs/07_comparacion_economica_validation.md`, usa estas probabilidades para comparar la política fija, BMR y el árbol ponderado bajo poblaciones y costos comunes, con escenarios hipotéticos. Añade un diagnóstico separado del cambio de acciones BMR por calibración, sin seleccionar retrospectivamente otro mapeo. Los artefactos del 03/04 se mantienen como evidencia histórica, sin sobrescribirlos ni mezclar sus probabilidades con este calibrador. El script de sensibilidad anterior sigue apuntando a la línea base; no interpreta automáticamente las salidas del 06.
 
 No comparamos directamente AP interna del 05 con AP de esta ventana: corresponden a poblaciones y pasados distintos. Si un diagnóstico posterior motiva nuevas decisiones de modelo, deberán registrarse como otro experimento de desarrollo, no como confirmación independiente de esta corrida.
 

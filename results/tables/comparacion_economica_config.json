@@ -1,0 +1,155 @@
+{
+  "created_at_utc": "2026-10-09T20:42:14.286511+00:00",
+  "ca_grid": [
+    1.0,
+    5.0,
+    10.0,
+    20.0,
+    50.0,
+    100.0
+  ],
+  "scenario_status": "HIPOTETICO_CA_NO_APROBADO",
+  "cost_units": "unidades_del_dataset_moneda_no_verificada",
+  "matrix": {
+    "TP": "Ca",
+    "FP": "Ca",
+    "FN": "TransactionAmt",
+    "TN": 0
+  },
+  "strategies": [
+    "fixed_0_5",
+    "bmr",
+    "cost_sensitive_tree"
+  ],
+  "classification_threshold": 0.5,
+  "test_evaluated": false,
+  "predictor_or_calibrator_refitted": false,
+  "tree_parameters": {
+    "1.0": {
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
+      "max_depth": 12,
+      "max_features": null,
+      "max_leaf_nodes": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 250,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "random_state": 42,
+      "splitter": "best"
+    },
+    "5.0": {
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
+      "max_depth": 12,
+      "max_features": null,
+      "max_leaf_nodes": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 250,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "random_state": 42,
+      "splitter": "best"
+    },
+    "10.0": {
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
+      "max_depth": 12,
+      "max_features": null,
+      "max_leaf_nodes": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 250,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "random_state": 42,
+      "splitter": "best"
+    },
+    "20.0": {
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
+      "max_depth": 12,
+      "max_features": null,
+      "max_leaf_nodes": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 250,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "random_state": 42,
+      "splitter": "best"
+    },
+    "50.0": {
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
+      "max_depth": 12,
+      "max_features": null,
+      "max_leaf_nodes": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 250,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "random_state": 42,
+      "splitter": "best"
+    },
+    "100.0": {
+      "ccp_alpha": 0.0,
+      "class_weight": null,
+      "criterion": "gini",
+      "max_depth": 12,
+      "max_features": null,
+      "max_leaf_nodes": null,
+      "min_impurity_decrease": 0.0,
+      "min_samples_leaf": 250,
+      "min_samples_split": 2,
+      "min_weight_fraction_leaf": 0.0,
+      "monotonic_cst": null,
+      "random_state": 42,
+      "splitter": "best"
+    }
+  },
+  "expected_risk_note": "Mismas probabilidades del XGBoost para las tres acciones; ventaja BMR esperada es por construcción, no una prueba empírica.",
+  "raw_bmr_role": "diagnóstico de sensibilidad, no estrategia principal ni elección posterior de calibrador",
+  "source_sha256": {
+    "src/fraud_cost/economics.py": "a6db221b526c3366be199e86d0227ea1e13d369d68609f1fe339a08b337baa09",
+    "src/fraud_cost/costs.py": "e8e087cfdb79b0813164dd03fe33a3dca00ef3f4e76a61d1c9a85d8155d807eb",
+    "src/fraud_cost/scenarios.py": "891f9087c5fe308bb21205c79a1a657c0350d691a9d747cdc3c910c3640fe39b",
+    "src/fraud_cost/refit.py": "3c2349753066ec096f77cb820cd32620f2d5d1983003bc35a72694ed83489fc2",
+    "src/fraud_cost/features.py": "7a40e12a7b4c03401ca39fc184ce6384c4e79f2b65d564ee30453f0dc001a34a",
+    "notebooks/07_comparacion_economica_validation.ipynb": "8c4df48a81a35239bc0290f94fb532d8c290a48d2766d2dbdf0b485982dcf687",
+    "results/tables/reajuste_config.json": "06501406ca6646ce482ec466079e89edd4314dcb06ecd11cf8d6f4c58927a55d",
+    "results/models/selected_xgboost_platt.joblib": "615ab58ea2ae6af42758438cb3a7f0f87eacc32685df750e4ed8c7673ac7f693",
+    "data/interim/validation_scores_selected.parquet": "7792b77f699986aff85b605cf7e995b350892c257945056e64cb55daaad1098f"
+  },
+  "artifact_sha256": {
+    "results/models/cost_trees_hypothetical.joblib": "c5cd3c92a6415e76bf8433de8b02c08c9b8b365dc6a7075d7919bd73e2a30654",
+    "data/interim/decisiones_economicas_validation.parquet": "822168a3f15e36ab082e54e3c7d73679438d38c27e8ae300c425c4e497eb49e1"
+  },
+  "notebook_hash_method": "JSON de tipo y fuente de celdas de código; excluye Markdown, salidas y conteos",
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "scipy": "1.17.1",
+    "joblib": "1.6.0"
+  },
+  "git_commit": "ff1f763d4550787e33172aab142a0f12b6a5af1d",
+  "git_uncommitted": [
+    "?? notebooks/07_comparacion_economica_validation.ipynb",
+    "?? results/figures/comparacion_economica_validation.png",
+    "?? results/tables/arboles_costos_diagnostico.csv",
+    "?? results/tables/comparacion_economica_validation.csv",
+    "?? results/tables/diagnostico_bmr_calibracion.csv",
+    "?? src/fraud_cost/economics.py",
+    "?? tests/test_economics.py"
+  ],
+  "note": "Exploración retrospectiva en validation posterior. Árbol ponderado es aproximación; Ca no se optimiza a partir del ahorro."
+}

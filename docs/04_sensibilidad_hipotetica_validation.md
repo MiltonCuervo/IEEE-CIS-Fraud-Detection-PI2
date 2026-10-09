@@ -37,10 +37,10 @@ La reducción de 56,50% frente al fijo y el ahorro de 65,25% frente a la referen
 
 Con Ca=1, la política fija cuesta más que intervenir todo y su ahorro frente a la referencia es negativo (-371,85%). Esto no es un error de cálculo: muestra por qué conviene mantener visible la referencia trivial y no reportar exclusivamente mejora contra el clasificador.
 
-Las versiones y hashes de los CSV se registraron en `data/interim/data_provenance.json`. Los hashes de notebooks ejecutados y módulos económicos, la grilla y la confirmación de test no evaluado están en `data/interim/validation_run_metadata.json`. Ambos son artefactos locales ignorados por Git. Se utilizó un entorno temporal de Python 3.12 porque el intérprete al que apunta la `.venv` existente no está disponible; ese entorno local del proyecto sigue pendiente de reparación.
+Las versiones y hashes de los CSV se registraron en `data/interim/data_provenance.json`. Los hashes de notebooks ejecutados y módulos económicos, la grilla y la confirmación de test no evaluado están en `data/interim/validation_run_metadata.json`. Ambos son artefactos locales ignorados por Git. En aquella corrida se utilizó un entorno temporal de Python 3.12 por un problema del intérprete local. Las etapas posteriores verificaron y utilizaron la `.venv` del repositorio; la situación de aquella corrida no describe el estado actual del entorno.
 
 ## Límites
 
 Este análisis es exploratorio en validación. Sus costos son simulados y la unidad monetaria sigue por confirmar. La matriz supone que intervenir evita la pérdida fraudulenta. La calibración imperfecta puede producir ahorro realizado negativo incluso cuando BMR elige el riesgo esperado menor. La mejora frente a una política fija no garantiza mejora frente a la mejor política trivial.
 
-El árbol requiere entrenamiento por Ca y se compara en notebook 03 al acordar escenarios finales. La consulta histórica de etiquetas agregadas del periodo test se declara en el protocolo; el notebook 04 no accede a ese bloque.
+El árbol requiere entrenamiento por Ca. El notebook 07 lo incorpora a una comparación hipotética con el predictor seleccionado y calibrado del 06, manteniendo separadas las salidas de esta referencia histórica. Los escenarios finales siguen pendientes de acuerdo. La consulta histórica de etiquetas agregadas del periodo test se declara en el protocolo; el notebook 04 no accede a ese bloque.

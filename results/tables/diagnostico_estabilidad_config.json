@@ -1,0 +1,99 @@
+{
+  "created_at_utc": "2026-10-09T22:01:28.506962+00:00",
+  "evaluation_block": "validation_policy",
+  "purpose": "diagnostico_descriptivo_no_seleccion",
+  "test_evaluated": false,
+  "models_refitted": false,
+  "calibrator_selected": false,
+  "costs_approved": false,
+  "cost_units": "unidades_del_dataset_moneda_no_verificada",
+  "ca_grid": [
+    1.0,
+    5.0,
+    10.0,
+    20.0,
+    50.0,
+    100.0
+  ],
+  "amount_edges": [
+    0.0,
+    50.0,
+    100.0,
+    250.0,
+    500.0,
+    1000.0,
+    "inf"
+  ],
+  "risk_edges": [
+    0.0,
+    0.01,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0
+  ],
+  "margin_edges": [
+    0.0,
+    0.5,
+    0.9,
+    1.1,
+    2.0,
+    "inf"
+  ],
+  "near_boundary_definition": "0.9 <= p_calibrada*TransactionAmt/Ca < 1.1; banda descriptiva, no error garantizado",
+  "group_protocol": "cortes fijos; riesgo definido con p calibrada, mismos grupos para raw/cal",
+  "temporal_protocol": "4 intervalos de igual duración entre mínimo y máximo DT posterior; último extremo incluido; sin dividir simultáneas",
+  "uncertainty_note": "No hay intervalos ni pruebas inferenciales; filas temporalmente dependientes y validación reutilizada.",
+  "reference_note": "La referencia trivial se recalcula en cada subperiodo; no sumar sus mínimos como referencia global.",
+  "source_sha256": {
+    "src/fraud_cost/diagnostics.py": "e4f9fab130318cfde4037ab2626a03a815974d1b1756572011581d6e38e1f2a4",
+    "notebooks/08_diagnostico_y_estabilidad.ipynb": "edd11734c08c949c30ee02faf3fcb49719be7f4e5f848363862afe5971e3e75d",
+    "results/tables/reajuste_config.json": "06501406ca6646ce482ec466079e89edd4314dcb06ecd11cf8d6f4c58927a55d",
+    "results/tables/comparacion_economica_config.json": "f7141b1197e0b60426677c0b6ae486c36d4239d9f7cdd80d75aa267359065c10",
+    "data/interim/validation_scores_selected.parquet": "7792b77f699986aff85b605cf7e995b350892c257945056e64cb55daaad1098f",
+    "data/interim/decisiones_economicas_validation.parquet": "822168a3f15e36ab082e54e3c7d73679438d38c27e8ae300c425c4e497eb49e1"
+  },
+  "artifact_sha256": {
+    "results/tables/diagnostico_calibracion_condicional.csv": "11555d407f44f64ac1b40d57ac6d3f9bbddec4f9b40b3a41d17450b44106df09",
+    "results/tables/diagnostico_frontera_bmr.csv": "17c6b5c465650e72e3efdb6f412b9e9d05bb2d248e291c40fad6c03ccc12f9de",
+    "results/tables/diagnostico_subperiodos_validation.csv": "89fb37c82ac0f63e9c60ad01925f192cbde868be680ade342165bd1496209bf1",
+    "results/tables/diagnostico_costos_subperiodos.csv": "13ad7cd3d5294bcf846783ec7dc7366187ef27251055a5da485e2dd36239e562",
+    "results/figures/diagnostico_probabilistico_validation.png": "98ffe808b9eae0fc93e623c70548d1fb887f4b62505ea894ee9f4a008a4fb5cf",
+    "results/figures/estabilidad_economica_validation.png": "2d1a4b09658ce2021ccd04651de6887d93c6d50f87857e7da42df12be04144a9"
+  },
+  "python_version": "3.11.9",
+  "python_executable": "C:\\Users\\Milton Cuervo\\Documents\\IEEE-CIS Fraud Detection-PI2\\.venv\\Scripts\\python.exe",
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "matplotlib": "3.11.2"
+  },
+  "git_commit": "ff1f763d4550787e33172aab142a0f12b6a5af1d",
+  "git_uncommitted": [
+    " M README.md",
+    " M docs/03_protocolo_costos_y_evaluacion.md",
+    " M docs/04_sensibilidad_hipotetica_validation.md",
+    " M docs/06_reajuste_y_calibracion.md",
+    "?? docs/07_comparacion_economica_validation.md",
+    "?? docs/08_diagnostico_y_estabilidad.md",
+    "?? notebooks/07_comparacion_economica_validation.ipynb",
+    "?? notebooks/08_diagnostico_y_estabilidad.ipynb",
+    "?? results/figures/comparacion_economica_validation.png",
+    "?? results/figures/diagnostico_probabilistico_validation.png",
+    "?? results/figures/estabilidad_economica_validation.png",
+    "?? results/tables/arboles_costos_diagnostico.csv",
+    "?? results/tables/comparacion_economica_config.json",
+    "?? results/tables/comparacion_economica_validation.csv",
+    "?? results/tables/diagnostico_bmr_calibracion.csv",
+    "?? results/tables/diagnostico_calibracion_condicional.csv",
+    "?? results/tables/diagnostico_costos_subperiodos.csv",
+    "?? results/tables/diagnostico_estabilidad_config.json",
+    "?? results/tables/diagnostico_frontera_bmr.csv",
+    "?? results/tables/diagnostico_subperiodos_validation.csv",
+    "?? src/fraud_cost/diagnostics.py",
+    "?? src/fraud_cost/economics.py",
+    "?? tests/test_diagnostics.py",
+    "?? tests/test_economics.py"
+  ]
+}

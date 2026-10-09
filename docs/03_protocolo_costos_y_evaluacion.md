@@ -43,7 +43,7 @@ También reportamos `C_convencional-C_estrategia` y su proporción respecto al c
 
 ## 4. Estrategias y árbol ponderado
 
-Comparamos la política fija, BMR y el árbol sensible al costo sobre las mismas observaciones. La contingencia con ponderación está contemplada en la página 4 de la propuesta; declaramos que el árbol ajustado por impureza ponderada es una aproximación al método de costos por ejemplo.
+Comparamos la política fija, BMR y el árbol sensible al costo sobre las mismas observaciones. La contingencia con ponderación está contemplada en la página 4 de la propuesta; declaramos que el árbol ajustado por impureza ponderada es una aproximación al método de costos por ejemplo. La etapa 07 implementa una comparación exploratoria de las tres políticas con Ca ilustrativo y el predictor del 06; no equivale a aprobar escenarios finales.
 
 Para respetar esta matriz no basta ponderar fraudes por su monto. Con etiqueta conocida, la acción de menor costo es intervenir si `y_i A_i > Ca`. La diferencia entre costos es `|y_i A_i-Ca|`:
 
@@ -76,4 +76,4 @@ Reportamos costo, componentes, ahorro con ambas referencias, recall de fraude, t
 
 `src/fraud_cost/costs.py` concentra decisiones, costos, comparación y ponderación. `scenarios.py` valida scores y recorre Ca. Los notebooks conservan las preguntas, parámetros y lectura de salidas. Las pruebas en `tests/test_costs.py` verifican las cuatro celdas de la matriz, empates, montos cero, referencias de ahorro y equivalencia del error ponderado.
 
-Ejecutamos 03 antes de 04 para regenerar la referencia y su sensibilidad. La etapa 06 guarda `validation_scores_selected.parquet` y `selected_xgboost_platt.joblib`; la actualización económica deberá utilizar conjuntamente esas probabilidades y ese predictor, sin sobrescribir la referencia. Los CSV y figuras históricos de la matriz con B y λ no son evidencia del protocolo actual. Los valores finales de Ca siguen pendientes, por lo que la evaluación de test permanece cerrada.
+Ejecutamos 03 antes de 04 para regenerar la referencia y su sensibilidad. La etapa 06 guarda `validation_scores_selected.parquet` y `selected_xgboost_platt.joblib`; la etapa 07 los verifica y utiliza conjuntamente sin sobrescribir la referencia. Reconstruye atributos de train con pasado estricto, aplica el preprocesamiento ya aprendido y ajusta árboles solo con train. El diagnóstico raw/calibrado de BMR es separado y no elige retrospectivamente un calibrador. Los CSV y figuras históricos de la matriz con B y λ no son evidencia del protocolo actual. Los valores finales de Ca siguen pendientes, por lo que la evaluación de test permanece cerrada.
