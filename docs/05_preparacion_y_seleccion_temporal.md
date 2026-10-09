@@ -114,7 +114,7 @@ El hash del notebook se calcula con tipos y fuentes de celdas, excluyendo salida
 
 ## 8. Alcance de la decisión y siguiente etapa
 
-La configuración seleccionada deberá ajustarse de nuevo con todo train. Después ajustaremos un calibrador con puntuaciones de ese mismo predictor y diagnosticaremos probabilidades y acciones en validación posterior. No reutilizaremos el calibrador ni las probabilidades de la línea base anterior.
+La etapa siguiente, implementada en el notebook 06 y explicada en `docs/06_reajuste_y_calibracion.md`, reajusta la configuración seleccionada con todo train. Ajusta un calibrador con puntuaciones tempranas de ese mismo predictor y diagnostica probabilidades y clasificación en validación posterior, dejando la comparación económica para después. No reutiliza el calibrador ni las probabilidades de la línea base anterior.
 
 Las métricas internas de esta etapa no se comparan directamente con las métricas de validación externa publicadas en el informe 04: las poblaciones, ventanas y entorno son diferentes. El criterio económico sigue siendo costo/ahorro; AP es aquí el criterio de selección de un predictor antes de aplicar la matriz.
 

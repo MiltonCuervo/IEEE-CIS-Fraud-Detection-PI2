@@ -77,12 +77,12 @@ El notebook verifica automáticamente que:
 4. validation contiene ambas clases; el test se reserva sin comprobar su distribución de etiquetas en la corrida actual;
 5. el manifiesto puede guardarse y leerse sin perder filas ni asignaciones.
 
-Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. En el checkout revisado no existe `tests/test_split.py` ni carpeta `tests/`; `pyproject.toml` solo configura la ruta prevista para pytest.
+Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. En etapas posteriores incorporamos pruebas en `tests/test_features_selection.py` y `tests/test_refit.py` para las ventanas internas, exclusión de bloques externos, límites de calibración y garantías de pasado estricto. Estas pruebas complementan las comprobaciones del notebook; no sustituyen una prueba dedicada de toda la partición original.
 
 ## 7. Uso permitido de cada bloque
 
 - **Train:** ajuste de imputadores, codificadores, ingeniería de atributos y modelo base.
-- **Validación:** en el protocolo implementado, usamos la mitad temprana para ajustar el calibrador y la mitad posterior para diagnosticar el modelo y explorar políticas. Los hiperparámetros del predictor se mantienen fijos; una búsqueda posterior deberá realizarse dentro de train mediante validación temporal.
+- **Validación:** usamos la mitad temprana para ajustar el calibrador y la mitad posterior para diagnosticar el modelo y explorar políticas. El notebook 05 selecciona hiperparámetros dentro de train mediante validación temporal y el 06 reajusta ese predictor con un calibrador nuevo. Las operaciones simultáneas del límite entre mitades quedan juntas en calibración; el predictor no se reajusta con validation.
 - **Test:** bloque temporal reservado y aún no puntuado por el modelo. Debido a la consulta histórica de etiquetas agregadas durante el diseño de gaps, una evaluación en este bloque debe declararse como holdout condicionado; para una afirmación estrictamente independiente se requiere reservar datos/periodo nuevo sin consultar sus etiquetas durante el diseño.
 - **Gaps:** no se utilizan para aprender ni evaluar; solo preservan la separación.
 
@@ -93,6 +93,6 @@ El test no podrá utilizarse repetidamente para corregir el modelo. Si una decis
 - Los límites se expresan en tiempo relativo porque `TransactionDT` no tiene un origen calendario público.
 - Un gap reduce proximidad, pero no garantiza que una tarjeta o dispositivo nunca reaparezca después. Esa reaparición puede ser legítima en un escenario real.
 - La semana de separación es una decisión conservadora del proyecto, no un valor universal.
-- La estrategia exacta para atributos históricos todavía debe definirse. Ningún agregado podrá utilizar observaciones futuras respecto a la transacción que representa.
+- La etapa 05 define atributos históricos con pasado estrictamente anterior en train y estado de train congelado para periodos posteriores. La etapa 06 conserva esa convención al reajustar y calibrar. No utilizamos operaciones de gaps ni validation para actualizar el historial.
 - La partición test se construyó usando conteos agregados de sus etiquetas para comparar gaps; no se han calculado predicciones ni costos del modelo en ese bloque. No describirlo como completamente ciego.
 - El calibrador deberá ajustarse sin acceder al test; el notebook de modelado usa una mitad temprana de validation y reporta métricas en la mitad posterior.

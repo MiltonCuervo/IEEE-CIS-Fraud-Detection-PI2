@@ -1,0 +1,108 @@
+{
+  "created_at_utc": "2026-10-09T03:51:02.310903+00:00",
+  "selected_candidate": {
+    "candidate": "history_deeper",
+    "features": "history",
+    "params": {
+      "max_depth": 8,
+      "min_child_weight": 10,
+      "reg_lambda": 5
+    }
+  },
+  "predictor_params": {
+    "n_estimators": 250,
+    "max_depth": 8,
+    "learning_rate": 0.05,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "min_child_weight": 10,
+    "tree_method": "hist",
+    "objective": "binary:logistic",
+    "eval_metric": "aucpr",
+    "n_jobs": 4,
+    "random_state": 42,
+    "verbosity": 0,
+    "reg_lambda": 5
+  },
+  "diagnostics": {
+    "feature_mode": "history",
+    "input_columns": 447,
+    "transformed_columns": 2642,
+    "matrix_dtype": "float32",
+    "calibrator": "sigmoid_on_clipped_probability_logit",
+    "calibrator_C": 1000000.0,
+    "logit_clip_epsilon": 1e-06,
+    "slope": 1.0217993729142014,
+    "intercept": -0.024709714437332848,
+    "positive_slope": true,
+    "min_category_frequency": 50,
+    "elapsed_seconds": 132.09035820001736
+  },
+  "validation_calibration_fraction_requested": 0.5,
+  "validation_boundary_rule": "mitad por filas; lote del tiempo de corte completo en calibración",
+  "history_protocol": "strict_past_train_frozen_state_for_validation",
+  "classification_threshold": 0.5,
+  "test_evaluated": false,
+  "economic_policies_evaluated": false,
+  "windows": [
+    {
+      "block": "train",
+      "rows": 380815,
+      "frauds": 13011,
+      "fraud_rate": 0.03416619618449904,
+      "time_start": 86400,
+      "time_end": 9521218
+    },
+    {
+      "block": "validation_cal",
+      "rows": 42046,
+      "frauds": 1558,
+      "fraud_rate": 0.03705465442610474,
+      "time_start": 10126067,
+      "time_end": 11293017
+    },
+    {
+      "block": "validation_policy",
+      "rows": 42047,
+      "frauds": 1517,
+      "fraud_rate": 0.036078673864960636,
+      "time_start": 11293020,
+      "time_end": 12666174
+    }
+  ],
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.2.0",
+    "joblib": "1.6.0"
+  },
+  "source_sha256": {
+    "src/fraud_cost/refit.py": "3c2349753066ec096f77cb820cd32620f2d5d1983003bc35a72694ed83489fc2",
+    "src/fraud_cost/features.py": "7a40e12a7b4c03401ca39fc184ce6384c4e79f2b65d564ee30453f0dc001a34a",
+    "src/fraud_cost/costs.py": "e8e087cfdb79b0813164dd03fe33a3dca00ef3f4e76a61d1c9a85d8155d807eb",
+    "requirements.txt": "5e369aee623ee28b3a7973a26f46cab5f67647da621e5bd6874bb4ce76220fd9",
+    "notebooks/06_reajuste_y_calibracion.ipynb": "427b9b304895586ce4269494436302c42ff3bad751404014eb46e3fc0526c5d8",
+    "results/tables/seleccion_temporal_config.json": "72a76d67202d471fbe18421b37c0a4962f4edd7070e7af8206acd8f39afea979",
+    "data/interim/split_manifest.parquet": "12fe07ee14adb6bb9dfb97dbafe5d756f64aa2613b0265d74efb9332a917f7a4",
+    "data/raw/train_transaction.csv": "3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642",
+    "data/raw/train_identity.csv": "b63c725d8377be90a995268d97f347c17d456b95db45807adcf9f59cd603c37c"
+  },
+  "notebook_hash_method": "JSON de tipo y fuente de celdas de código; excluye Markdown, salidas y conteos",
+  "artifact_sha256": {
+    "results/models/selected_xgboost_platt.joblib": "615ab58ea2ae6af42758438cb3a7f0f87eacc32685df750e4ed8c7673ac7f693",
+    "data/interim/validation_scores_selected.parquet": "7792b77f699986aff85b605cf7e995b350892c257945056e64cb55daaad1098f"
+  },
+  "git_commit": "c3548ddee10bab136ad2d69797174f88737953d0",
+  "git_uncommitted": [
+    " M requirements.txt",
+    "?? notebooks/06_reajuste_y_calibracion.ipynb",
+    "?? results/figures/reajuste_calibracion_validation.png",
+    "?? results/tables/reajuste_calibracion_bins.csv",
+    "?? results/tables/reajuste_metricas_validation.csv",
+    "?? results/tables/reajuste_ventanas.csv",
+    "?? src/fraud_cost/refit.py",
+    "?? tests/test_refit.py"
+  ],
+  "note": "Predictor fijo después de calibrar. Validación posterior es desarrollo; Ca sigue pendiente. No cargar joblib de fuentes no confiables."
+}

@@ -2,7 +2,7 @@
 
 Proyecto Integrador II — Ingeniería de Sistemas, Universidad de Antioquia, 2026-2.
 
-El proyecto prepara una comparación de tres estrategias sobre probabilidades calibradas de fraude IEEE-CIS: umbral convencional, Bayes Minimum Risk (BMR) y un árbol sensible al costo. Contamos con una línea base calibrada, un análisis exploratorio BMR en validación y una selección de variables/configuración mediante ventanas internas de train. La configuración seleccionada todavía requiere reajuste y un calibrador nuevo. Los costos de negocio no están aprobados y el test temporal no se ha puntuado; por ello no existe todavía una conclusión económica fuera de muestra.
+El proyecto prepara una comparación de tres estrategias sobre probabilidades calibradas de fraude IEEE-CIS: umbral convencional, Bayes Minimum Risk (BMR) y un árbol sensible al costo. Contamos con una línea base calibrada, un análisis exploratorio BMR en validación, una selección de variables/configuración mediante ventanas internas de train y el reajuste de ese predictor con un calibrador nuevo. Los costos de negocio no están aprobados y falta actualizar la comparación económica con esas probabilidades. El test temporal no se ha puntuado; por ello no existe todavía una conclusión económica fuera de muestra.
 
 Aplicamos la matriz del anteproyecto: intervenir (bloquear y revisar) cuesta `Ca` tanto en fraude como en operaciones legítimas; aprobar fraude cuesta su monto y aprobar legítimas cuesta cero. BMR interviene cuando `p_i × TransactionAmt_i > Ca`. Calculamos ahorro frente al menor costo entre aprobar todo e intervenir todo y, por separado, mejora frente a la política fija.
 
@@ -53,8 +53,8 @@ Los CSV originales y artefactos intermedios/modelos se mantienen localmente e ig
    .\.venv\Scripts\python.exe -m jupyter lab
    ```
 
-   Ejecutar los notebooks en orden. El 05 necesita el manifiesto generado por el 02, pero no reutiliza las probabilidades ni el calibrador del 03.
-7. Verificar la lógica reutilizable con `.\.venv\Scripts\python.exe -m pytest -q`. Las versiones utilizadas en la selección quedan registradas en `results/tables/seleccion_temporal_config.json`; `requirements.txt` declara las dependencias, no constituye un lockfile exacto.
+   Ejecutar los notebooks en orden. El 05 necesita el manifiesto generado por el 02, pero no reutiliza las probabilidades ni el calibrador del 03. El 06 necesita la selección del 05 y verifica sus hashes antes de entrenar.
+7. Verificar la lógica reutilizable con `.\.venv\Scripts\python.exe -m pytest -q`. Las versiones utilizadas quedan registradas en `results/tables/seleccion_temporal_config.json` y `results/tables/reajuste_config.json`; `requirements.txt` declara las dependencias, no constituye un lockfile exacto.
 
 
 ## Secuencia experimental
@@ -66,10 +66,11 @@ Los CSV originales y artefactos intermedios/modelos se mantienen localmente e ig
 | `03_modelado_y_decisiones_costos.ipynb` | Baseline calibrado en validation y comparación parametrizada de políticas | Métricas predictivas; comparación con la matriz original; escenarios finales de Ca pendientes |
 | `04_sensibilidad_hipotetica_validation.ipynb` | Sensibilidad exploratoria de Ca sobre probabilidades guardadas | Tabla/gráfica hipotéticas; usa `src/fraud_cost/scenarios.py`; mantiene los controles de aprobación y reserva de test |
 | `05_preparacion_y_seleccion_temporal.ipynb` | Comparar atributos y cuatro configuraciones mediante dos folds internos de train | Métricas por ventana, diagnóstico de variables, figura y configuración seleccionada; no puntúa validación externa ni test |
+| `06_reajuste_y_calibracion.ipynb` | Reajustar la selección con todo train, calibrar en validación temprana y diagnosticar en posterior | Métricas raw/calibradas, curva y grupos de calibración, predictor completo y scores nuevos; sin evaluación económica ni test |
 
-Los notebooks presentan el flujo experimental. La carga/unión, la partición, los costos, la ponderación del árbol y la evaluación compartida de escenarios viven en `src/fraud_cost/`; el script y el notebook 04 llaman a la misma función de escenarios. `features.py` construye atributos disponibles antes de cada operación y el preprocesamiento por fold; `selection.py` carga exclusivamente train, define ventanas y registra la comparación. No mantenemos una segunda implementación de esa lógica dentro de las celdas.
+Los notebooks presentan el flujo experimental. La carga/unión, la partición, los costos, la ponderación del árbol y la evaluación compartida de escenarios viven en `src/fraud_cost/`; el script y el notebook 04 llaman a la misma función de escenarios. `features.py` construye atributos disponibles antes de cada operación y el preprocesamiento por fold; `selection.py` carga exclusivamente train, define ventanas y registra la comparación. `refit.py` verifica la selección, recupera desarrollo, reajusta el predictor y calibra sus probabilidades. No mantenemos una segunda implementación de esa lógica dentro de las celdas.
 
-El siguiente paso es reajustar la configuración seleccionada con todo train, calibrar ese predictor con validación temprana y diagnosticarlo con validación posterior. Los resultados 03/04 se conservan como línea base histórica; no se mezclan con las métricas internas del 05.
+El siguiente paso es actualizar la comparación de decisiones con el predictor del 06 y la matriz original, documentando los escenarios de Ca antes de la evaluación final. Los resultados 03/04 se conservan como línea base histórica; no se mezclan con las métricas internas del 05 ni se sobrescriben con probabilidades del 06. El notebook 04 sigue utilizando `validation_scores.parquet` de la referencia. Las nuevas probabilidades están en `data/interim/validation_scores_selected.parquet` y el predictor completo en `results/models/selected_xgboost_platt.joblib`, ambos locales e ignorados por Git.
 
 ## Reglas metodológicas
 
@@ -78,10 +79,11 @@ El siguiente paso es reajustar la configuración seleccionada con todo train, ca
 - No se remuestrea automáticamente: alterar la prevalencia puede deteriorar la interpretación probabilística.
 - La selección del 05 usa AP media de ventanas temporales dentro de train. Sus atributos históricos excluyen operaciones simultáneas y congelan el estado de entrenamiento al evaluar. AP interna no demuestra ahorro, calibración ni superioridad estadística.
 - La calibración se evalúa y documenta antes de aplicar Bayes Minimum Risk.
+- El calibrador pertenece al predictor que generó sus puntuaciones. Después de calibrar no se reajusta XGBoost ni se actualiza el historial con validation. Las dos mitades de validation no tienen un gap adicional y la posterior sigue siendo desarrollo, no test.
 - Todas las estrategias se comparan sobre las mismas observaciones y con la misma matriz de costos.
 - La métrica principal es costo total/ahorro. AUC-PR, recall y tasa de legítimas bloqueadas explican el comportamiento.
 - `sample_weight` es una aproximación sensible al costo, no un sustituto conceptualmente idéntico de un árbol con costos dependientes del ejemplo.
 
 ## Trazabilidad
 
-Cada cifra del informe final debe poder rastrearse a versión/hash de datos, partición, configuración, commit, notebook y archivo exportado en `results/`. La matriz del anteproyecto y su implementación están en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md). Los escenarios en [`docs/04_sensibilidad_hipotetica_validation.md`](docs/04_sensibilidad_hipotetica_validation.md) son retrospectivos e hipotéticos, no costos aprobados. El diseño y la interpretación de la selección están en [`docs/05_preparacion_y_seleccion_temporal.md`](docs/05_preparacion_y_seleccion_temporal.md). El test permanece sin puntuar.
+Cada cifra del informe final debe poder rastrearse a versión/hash de datos, partición, configuración, commit, notebook y archivo exportado en `results/`. La matriz del anteproyecto y su implementación están en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md). Los escenarios en [`docs/04_sensibilidad_hipotetica_validation.md`](docs/04_sensibilidad_hipotetica_validation.md) son retrospectivos e hipotéticos, no costos aprobados. La selección está documentada en [`docs/05_preparacion_y_seleccion_temporal.md`](docs/05_preparacion_y_seleccion_temporal.md) y su reajuste/calibración en [`docs/06_reajuste_y_calibracion.md`](docs/06_reajuste_y_calibracion.md). El test permanece sin puntuar.

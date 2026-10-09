@@ -58,7 +58,7 @@ El costo de cualquier acción equivale al mínimo por fila más el peso cuando l
 
 Conservamos train, gaps, validación y test del manifiesto. Ajustamos preprocesamiento y predictor solo con train. El primer modelo tiene hiperparámetros fijos. El notebook 05 compara atributos y cuatro configuraciones en dos ventanas expansivas internas de train, con preprocesamiento propio por fold y siete días de separación. Selecciona por AP media, sin consultar validación externa ni test; su diseño y resultados se explican en `docs/05_preparacion_y_seleccion_temporal.md`.
 
-Esa selección no reemplaza automáticamente la línea base del 03: falta reajustar el predictor elegido con todo train y ajustar un calibrador nuevo sobre sus propias puntuaciones. No reutilizamos un calibrador entrenado para otro predictor ni mezclamos las métricas internas con las de validación posterior.
+La etapa 06 reajusta el predictor elegido con todo train y ajusta un calibrador nuevo sobre sus propias puntuaciones tempranas. Conserva el estado histórico de train congelado para ambas mitades de validation y guarda artefactos con nombres distintos. El diagnóstico está en `docs/06_reajuste_y_calibracion.md`. No reutilizamos un calibrador entrenado para otro predictor ni mezclamos las métricas internas con las de validación posterior.
 
 Usamos validación temprana para calibrar y la posterior para diagnóstico y exploración de políticas. El predictor que genera ambas puntuaciones permanece fijo. Los gaps no participan en entrenamiento ni evaluación. El test no se puntúa mientras `RUN_FINAL_TEST=False`; antes de habilitarlo fijamos predictor, calibrador, escenarios de Ca y árboles correspondientes.
 
@@ -76,4 +76,4 @@ Reportamos costo, componentes, ahorro con ambas referencias, recall de fraude, t
 
 `src/fraud_cost/costs.py` concentra decisiones, costos, comparación y ponderación. `scenarios.py` valida scores y recorre Ca. Los notebooks conservan las preguntas, parámetros y lectura de salidas. Las pruebas en `tests/test_costs.py` verifican las cuatro celdas de la matriz, empates, montos cero, referencias de ahorro y equivalencia del error ponderado.
 
-Ejecutamos 03 antes de 04 para regenerar probabilidades y sensibilidad. Los CSV y figuras anteriores de la matriz con B y λ se sustituyen al completar esa ejecución; no deben mezclarse con la nueva. Los valores finales de Ca siguen pendientes, por lo que esta corrida mantiene cerrada la evaluación de test.
+Ejecutamos 03 antes de 04 para regenerar la referencia y su sensibilidad. La etapa 06 guarda `validation_scores_selected.parquet` y `selected_xgboost_platt.joblib`; la actualización económica deberá utilizar conjuntamente esas probabilidades y ese predictor, sin sobrescribir la referencia. Los CSV y figuras históricos de la matriz con B y λ no son evidencia del protocolo actual. Los valores finales de Ca siguen pendientes, por lo que la evaluación de test permanece cerrada.
