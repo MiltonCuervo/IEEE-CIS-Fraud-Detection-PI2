@@ -125,33 +125,6 @@ Las versiones utilizadas quedan registradas en:
 | `08_diagnostico_y_estabilidad.ipynb` | Examinar calibracion por monto/riesgo, frontera BMR y cuatro subperiodos posteriores | Cuatro tablas, dos figuras y configuracion |
 | `09_comparacion_calibradores.ipynb` | Contrastar raw, Platt e isotonica manteniendo el XGBoost del 06 y fundamentar Ca con literatura | Cuatro tablas, dos figuras, configuracion y candidato isotónico local |
 
-### Dependencias entre notebooks
-
-- El **05** necesita el manifiesto generado por el **02**, pero no reutiliza probabilidades ni calibrador del **03**.
-- El **06** necesita la seleccion del **05** y verifica sus hashes antes de entrenar.
-- El **07** verifica fuentes y artefactos del **06/07**; reutiliza preprocesamiento y ajusta solo los arboles por Ca.
-- El **08** verifica fuentes y artefactos del **06/07**; reutiliza scores/acciones. No entrena ni carga modelos, no puntua otros bloques, y requiere los dos Parquet locales de esas etapas (las tablas agregadas no bastan).
-- El **09** verifica la seleccion/reajuste, carga el predictor y los scores del **06**, y ajusta unicamente un candidato isotónico con validacion temprana. No reajusta XGBoost/Platt ni sobrescribe sus artefactos. Requiere datos originales y artefactos locales del **02/05/06**.
-
----
-
-## Diseño de la lógica reutilizable (`src/fraud_cost/`)
-
-La carga/union, particion, costos, ponderacion del arbol y evaluacion compartida de escenarios viven en `src/fraud_cost/`. El script del notebook **04** llama a la misma funcion de escenarios.
-
-| Modulo | Responsabilidad |
-|---|---|
-| `features.py` | Construye atributos disponibles antes de cada operacion; preprocesamiento por fold |
-| `selection.py` | Registra la seleccion dentro de train |
-| `refit.py` | Reajusta y calibra |
-| `economics.py` | Verifica artefactos y compara acciones mediante las funciones de costos, sin duplicar la matriz |
-| `diagnostics.py` | Describe probabilidades y acciones guardadas por grupos y subperiodos |
-| `calibration.py` | Contrasta calibradores sobre el mismo predictor/poblacion; conserva el candidato vinculado al modelo original |
-
-No se mantiene una segunda implementacion de esta logica dentro de las celdas de los notebooks.
-
----
-
 ## Matriz de costos
 
 Intervenir (bloquear y revisar) cuesta `Ca` tanto en fraude como en operaciones legitimas. Aprobar un fraude cuesta su monto; aprobar una operacion legitima cuesta cero. BMR interviene cuando `p_i x TransactionAmt_i > Ca`. Se calcula ahorro frente al menor costo entre aprobar todo e intervenir todo y, por separado, mejora frente a la politica fija.
