@@ -50,7 +50,7 @@ Los CSV originales y los artefactos intermedios/modelos se mantienen localmente 
 
 ---
 
-## Preparacion del entorno
+## Preparación del entorno
 
 **Paso 1 — Crear el entorno virtual**
 
@@ -66,7 +66,7 @@ El script crea `.venv` con Python 3.12 (o 3.11 si no esta disponible), instala l
 scripts/setup.ps1 -PythonExecutable <ruta-al-interprete>
 ```
 
-**Paso 2 — Reinstalacion manual (si se requiere)**
+**Paso 2 — Reinstalación manual (si se requiere)**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
@@ -93,7 +93,7 @@ Escribe el manifiesto local `data/interim/data_provenance.json` con hashes SHA-2
 
 Seleccionar el kernel `ieee-cis-pi2` y ejecutar los notebooks en orden (ver secuencia mas abajo).
 
-**Paso 6 — Verificar la logica reutilizable**
+**Paso 6 — Verificar la lógica reutilizable**
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest -q
@@ -135,7 +135,7 @@ Las versiones utilizadas quedan registradas en:
 
 ---
 
-## Diseno de la logica reutilizable (`src/fraud_cost/`)
+## Diseño de la lógica reutilizable (`src/fraud_cost/`)
 
 La carga/union, particion, costos, ponderacion del arbol y evaluacion compartida de escenarios viven en `src/fraud_cost/`. El script del notebook **04** llama a la misma funcion de escenarios.
 
@@ -160,7 +160,7 @@ La matriz completa esta en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_
 
 ---
 
-## Reglas metodologicas
+## Reglas metodológicas
 
 - La clasificacion y la decision economica son etapas distintas. El corte clasificatorio de 0.5 no se optimiza en este proyecto.
 - **Limitacion conocida sobre el test:** el EDA inicial recorrio todo el conjunto etiquetado y la comparacion historica de gaps consulto conteos agregados de fraude del candidato a test. Por tanto, este bloque no es un holdout estrictamente intocado. Ver [`docs/02_particion_temporal.md`](docs/02_particion_temporal.md) antes de describirlo como evaluacion independiente.
@@ -177,7 +177,7 @@ La matriz completa esta en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_
 
 ---
 
-## Trazabilidad y documentacion
+## Trazabilidad y documentación
 
 Cada cifra del informe final debe poder rastrearse a: version/hash de datos, particion, configuracion, commit, notebook y archivo exportado en `results/`.
 
