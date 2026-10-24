@@ -83,6 +83,16 @@ Algunas categorías presentan diferencias considerables. `ProductCD=C` registra 
 
 Estas cifras ayudan a comprender el conjunto, pero fueron calculadas con todos los datos y no se utilizarán directamente como codificaciones. Cualquier transformación basada en la etiqueta deberá aprenderse únicamente con el bloque de entrenamiento.
 
+### 3.6. Ampliaciones de la revisión de la profesora
+
+La revisión del 22 de octubre amplía la lectura de las celdas, el ratio legítimas/fraude, el resumen de ausencia por familias y las gráficas categóricas. Conservamos esos aportes como base del notebook e incorporamos después el diccionario completo. El ratio es aproximadamente 27,58 legítimas por fraude; se añade al resumen calculado junto con la fracción de monto fraudulento y su concentración superior.
+
+La nueva figura `eda_tasas_fraude_categoricas.png` compara las categorías de mayor volumen de ProductCD, card4, card6, P_emaildomain y DeviceType, con una referencia de prevalencia global. Es una presentación de asociaciones, no codificación supervisada: el predictor actual usa one-hot aprendido con train y no tasas de fraude como atributos.
+
+La figura `eda_señal_numericas.png` contrasta C1, D1, TransactionAmt y V258 entre clases. Son representantes ilustrativos, no una selección final ni un ranking de importancia. Las distribuciones se muestran sobre valores observados y se recortan al percentil 99 exclusivamente para visualizar; no truncamos los datos que alimentan modelos o costos. V258 tiene 77,91% de ausencia y se identifica como alta ausencia. Un histograma similar entre clases tampoco demuestra utilidad conjunta ni inutilidad: hace falta evaluación predictiva controlada.
+
+Para conciliar explicación y código distinguimos exactitud insuficiente de macro-F1, que pondera ambas clases por igual; mantenemos dispositivos separados de la familia D y exportamos todas las figuras versionadas. Estas precisiones no cambian datos, etiquetas, atributos del predictor ni matriz de costos.
+
 ## 4. Decisiones derivadas del EDA
 
 Con base en la evidencia anterior acordamos:
@@ -119,7 +129,9 @@ results/
 ├── figures/
 │   ├── eda_distribucion_objetivo.png
 │   ├── eda_distribucion_montos.png
-│   └── eda_evolucion_temporal.png
+│   ├── eda_evolucion_temporal.png
+│   ├── eda_tasas_fraude_categoricas.png
+│   └── eda_señal_numericas.png
 └── tables/
     ├── eda_cobertura_identidad_por_clase.csv
     ├── eda_distribucion_objetivo.csv

@@ -35,7 +35,7 @@ Los gaps comienzan después de cada límite y consumen parte del intervalo sigui
 | 3 días | 380.815 | 95.763 | 96.139 | 3.718 | 3.312 |
 | 7 días | 380.815 | 84.093 | 84.233 | 3.075 | 2.960 |
 
-El EDA anterior a esta partición recorrió todos los datos etiquetados, incluidos los periodos que después se asignaron a test. Además, **la selección histórica de 7 días consultó conteos agregados de fraude de los candidatos a test**, como muestra la tabla; estos conteos se usaron para verificar suficiencia de positivos junto con el criterio temporal de una semana y la separación más conservadora. La tabla versionada conserva esos conteos como evidencia histórica; el notebook actualizado ya no los agrega al regenerar sus resultados. Por eso el bloque test actual no es un holdout estrictamente intocado para una afirmación confirmatoria independiente. La selección no incluyó scores del modelo ni costos realizados sobre test. Las futuras ejecuciones de notebook 02 omiten las etiquetas test en sus resúmenes y comprobaciones.
+El EDA anterior a esta partición recorrió todos los datos etiquetados, incluidos los periodos que después se asignaron a test. Además, **la selección histórica de 7 días consultó conteos agregados de fraude de los candidatos a test**, como muestra la tabla; estos conteos se usaron para verificar suficiencia de positivos junto con el criterio temporal de una semana y la separación más conservadora. Este informe y la historia Git conservan esos conteos como evidencia histórica; los CSV actualizados y el notebook ya no los agregan al regenerar sus resultados. Por eso el bloque test actual no es un holdout estrictamente intocado para una afirmación confirmatoria independiente. La selección no incluyó scores del modelo ni costos realizados sobre test. Las futuras ejecuciones de notebook 02 omiten las etiquetas test en sus resúmenes y comprobaciones.
 
 ## 4. Partición seleccionada
 
@@ -95,6 +95,14 @@ Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El noteb
 - **Gaps:** no se utilizan para aprender ni evaluar; solo preservan la separación.
 
 El test no podrá utilizarse repetidamente para corregir el modelo. Si una decisión se toma después de observar sus resultados, esa evaluación deja de ser independiente y deberá declararse.
+
+### 7.1. Integración de la revisión de la profesora
+
+Conservamos la ampliación de las explicaciones y la presentación de resultados de los commits del 23 de octubre. La figura distingue el bloque reservado sin atribuirle una tasa ficticia y usa únicamente la prevalencia de train como línea de referencia. No representar una tasa test tampoco borra la consulta histórica descrita arriba.
+
+El manifiesto conserva TransactionID, TransactionDT y split. Si el archivo ya existe, el notebook compara la asignación completa, ordenada por ID, antes de reutilizarlo sin sobrescribir sus bytes. Si difiere, se detiene para revisar el diseño; un clon sin manifiesto puede generarlo. Así evitamos invalidar hashes posteriores por una serialización nueva cuando las filas son idénticas, sin ocultar cambios reales de partición.
+
+Las claves compuestas nuevas describen combinaciones no observadas, no el porcentaje exacto de bloques one-hot desconocidos: una combinación de tarjeta nueva puede usar niveles individuales ya conocidos. Tampoco interpretamos el gap de siete días como una medición del retraso de etiquetas, que el dataset no proporciona. La selección de hiperparámetros vigente sigue usando folds internos de train y la validación temprana ajusta el calibrador.
 
 ## 8. Limitaciones y decisiones pendientes
 
