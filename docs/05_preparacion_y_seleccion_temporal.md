@@ -18,6 +18,18 @@ El entrenamiento del segundo fold incorpora periodos posteriores al primero, inc
 
 La representación base conserva variables originales, señal de identidad y la preparación equivalente de categorías y ausencia. Excluimos identificador, etiqueta, bloque y marca temporal cruda de la entrada del clasificador. La referencia de esta etapa utiliza su propio ajuste por fold y matrices float32; no es una repetición de la corrida anterior de los notebooks 03 y 04.
 
+### 3.1. Inventario que antecede a la ingeniería
+
+La unión contiene 434 originales. TransactionID, TransactionDT e isFraud no entran directamente a X; se conservan para unión/alineación, tiempo y objetivo. Las 431 restantes se mantienen, incluyendo todas las V1–V339 y el monto original. Añadimos has_identity para llegar a 432 atributos base. Split es un control posterior y tampoco entra. No eliminamos columnas por ausencia, correlación, importancia, cardinalidad o PCA.
+
+La rama categórica actual utiliza ProductCD; card1–card6; addr1–addr2; P_emaildomain y R_emaildomain; M1–M9; DeviceType y DeviceInfo; e id_12, id_15, id_16, id_23, id_27, id_28, id_29, id_30, id_31, id_33–id_38. Son 37 columnas. El resto se trata numéricamente; esto no implica que todo número sea una magnitud semántica.
+
+La clasificación de Kaggle también declara categóricas id_13, id_14, id_17–id_22, id_24–id_26 e id_32. En esta implementación permanecieron numéricas por inferencia de dtype y ausencia en la lista explícita. Registramos la discrepancia en doce campos; no la presentamos como una decisión contrastada en la grilla ni afirmamos haberla corregido. Corregir esos tipos requiere otro experimento y propagación coherente de sus artefactos.
+
+El inventario completo y las transformaciones por columna están en [diccionario_variables_y_flujo_modelo.md](diccionario_variables_y_flujo_modelo.md) y los CSV asociados. El notebook 05 se conserva íntegro porque su hash incluye fuentes Markdown y código; enriquecemos aquí la explicación sin simular una repetición de la selección.
+
+### 3.2. Atributos creados y variables padre
+
 La representación ampliada añade:
 
 - `log1p(TransactionAmt)`, que conserva cero y comprime la escala de montos altos;
@@ -28,6 +40,8 @@ La representación ampliada añade:
 TransactionDT no tiene un origen calendario público. Por eso estas fases no se nombran hora local o día real de la semana. El monto original permanece disponible en los datos fuente; su transformación predictiva no cambia el costo del falso negativo.
 
 Las agrupaciones son una tarjeta compuesta (`card1`, `card2`, `card3`, `card5`), DeviceInfo y dominio del correo del comprador. Son proxies de agrupación: no identifican personas, tarjetas ni dispositivos físicos de forma verificada. Un dominio de correo puede reunir muchos usuarios y DeviceInfo puede representar información compartida entre equipos.
+
+Las quince entradas adicionales quedan enumeradas individualmente en `modelo_diccionario_variables.csv`: amount_log1p; missing_count; relative_day_sin/cos; relative_week_sin/cos; card_proxy_past_count/past_mean_amount/seconds_since_last; device_proxy_past_count/past_mean_amount/seconds_since_last; email_domain_past_count/past_mean_amount/seconds_since_last. Sus padres y fórmulas no se aprenden de y. Has_identity pertenece a la base, no a esos quince; las V originales tampoco se cuentan como ingeniería nuestra.
 
 ## 4. Historial estrictamente anterior
 
@@ -43,7 +57,11 @@ Reajustamos medianas, indicadores y vocabulario en cada ventana de entrenamiento
 
 Representamos las matrices en float32 y usamos salida dispersa cuando corresponde. Es una decisión de memoria, no un método de balanceo ni selección por etiqueta. En el cargador convertimos variables flotantes a float32, exceptuando el monto original; IDs y tiempos se conservan en sus tipos enteros.
 
+En categorías, una ausencia se representa con __MISSING__; si una categoría no existía en train, su bloque one-hot queda en ceros por handle_unknown='ignore'. No equivale necesariamente al grupo de categorías raras conocidas. En numéricas, el indicador se crea si hubo ausencia al ajustar, no si aparece por primera vez en el futuro. No aplicamos estandarización, min-max, target encoding, selección supervisada de columnas ni eliminación automática por ausencia. El perfil global del 01 describe, pero no proporciona estas estadísticas de ajuste.
+
 Las pruebas comprueban pasado estricto, empate temporal, conservación de índices, independencia de etiquetas, historial congelado, entidades nuevas, categorías desconocidas y exclusión de bloques externos. También recorren una búsqueda pequeña completa antes del experimento real.
+
+Esa comprobación corresponde a la corrida histórica documentada. En la organización del repositorio consultada el 24 de octubre la carpeta tests ya no está presente; no equivale a disponer hoy de aquella suite. La ampliación de diccionario verifica esquema y procedencia, sin volver a seleccionar candidatos ni sustituir esas pruebas históricas.
 
 ## 6. Comparación predeclarada
 

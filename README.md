@@ -54,7 +54,7 @@ Los CSV originales y artefactos intermedios/modelos se mantienen localmente e ig
    ```
 
    Ejecutar los notebooks en orden. El 05 necesita el manifiesto generado por el 02, pero no reutiliza las probabilidades ni el calibrador del 03. El 06 necesita la selección del 05 y verifica sus hashes antes de entrenar. El 07 verifica fuentes y artefactos del 06, reutiliza su preprocesamiento y ajusta solo los árboles por Ca. El 08 verifica fuentes y artefactos del 06/07 y reutiliza sus scores/acciones; no entrena ni carga modelos, y no puntúa otros bloques. No basta con las tablas agregadas para regenerarlo: necesita los dos Parquet locales de esas etapas. El 09 verifica la selección/reajuste, carga el predictor y los scores del 06 y ajusta únicamente un candidato isotónico con validación temprana; no reajusta XGBoost/Platt ni sobrescribe sus artefactos. Requiere los datos originales y artefactos locales del 02/05/06, no solo las tablas agregadas.
-7. Verificar la lógica reutilizable con `.\.venv\Scripts\python.exe -m pytest -q`. Las versiones utilizadas quedan registradas en `results/tables/seleccion_temporal_config.json`, `results/tables/reajuste_config.json`, `results/tables/comparacion_economica_config.json`, `results/tables/diagnostico_estabilidad_config.json` y `results/tables/comparacion_calibradores_config.json`; `requirements.txt` declara las dependencias, no constituye un lockfile exacto.
+7. Las versiones utilizadas quedan registradas en `results/tables/seleccion_temporal_config.json`, `results/tables/reajuste_config.json`, `results/tables/comparacion_economica_config.json`, `results/tables/diagnostico_estabilidad_config.json` y `results/tables/comparacion_calibradores_config.json`; `requirements.txt` declara dependencias, no un lockfile exacto. Las corridas históricas reportan sus pruebas, pero la carpeta `tests/` fue retirada de la organización actual: no presentar aquellos resultados como una suite disponible hoy. Se mantienen los controles ejecutables de notebooks y procedencia; antes de nuevos cambios algorítmicos conviene recuperar una suite versionada de pruebas.
 
 
 ## Secuencia experimental
@@ -96,6 +96,19 @@ El 09 guarda `results/models/candidate_isotonic_calibrator.joblib`, también loc
 
 Cada cifra del informe final debe poder rastrearse a versión/hash de datos, partición, configuración, commit, notebook y archivo exportado en `results/`. La matriz está en [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md), la referencia económica en [`docs/04_sensibilidad_hipotetica_validation.md`](docs/04_sensibilidad_hipotetica_validation.md), la selección en [`docs/05_preparacion_y_seleccion_temporal.md`](docs/05_preparacion_y_seleccion_temporal.md) y el reajuste en [`docs/06_reajuste_y_calibracion.md`](docs/06_reajuste_y_calibracion.md). La comparación de tres políticas y su diagnóstico de calibración están en [`docs/07_comparacion_economica_validation.md`](docs/07_comparacion_economica_validation.md). La calibración condicional, frontera económica y estabilidad temporal se documentan en [`docs/08_diagnostico_y_estabilidad.md`](docs/08_diagnostico_y_estabilidad.md). La comparación Platt/isotónica y el alcance de los antecedentes de Ca se desarrollan en [`docs/09_comparacion_calibradores_y_costos.md`](docs/09_comparacion_calibradores_y_costos.md). El test permanece sin puntuar.
 
-## Preparación de sustentación y continuación
+## Diccionario de variables y contrato del modelo
 
-La [guía de defensa técnica](docs/guia_defensa_tecnica.md) reúne explicación del dataset, técnicas, costos, métricas, hallazgos y respuestas a preguntas de la profesora. El [estado actual del proyecto](docs/estado_actual_proyecto.md), con corte al 12 de octubre de 2026, identifica los artefactos, decisiones pendientes y orden para retomar. Son documentos de apoyo; no sustituyen los informes de las corridas ni aprueban el protocolo final.
+El [diccionario y recorrido de variables](docs/diccionario_variables_y_flujo_modelo.md) detalla qué columnas existen, cuáles son categóricas semánticamente y en la implementación, qué se conserva, qué se excluye de X, qué ingeniería creamos y qué sale de cada modelo/política. Explicita la discrepancia pendiente de doce id tratados numéricamente, sin afirmar que se corrigió.
+
+Notebook 01 exporta `results/tables/eda_diccionario_variables.csv`, una fila por las 434 originales. Para el predictor del 06 ya disponible, ejecutar desde la raíz y el entorno del proyecto:
+
+```python
+from pathlib import Path
+from fraud_cost.schema import export_model_inventory
+
+catalogo, matriz, registro = export_model_inventory(Path.cwd())
+```
+
+Verifica las fuentes registradas en 05/06 y enumera el modelo existente, sin entrenamiento ni nuevas predicciones. Exporta `modelo_diccionario_variables.csv` (451 filas, 447 entradas directas), `modelo_matriz_variables.csv` (2.642 posiciones) e `inventario_variables_config.json`. Las 2.642 se componen de 410 numéricas, 342 indicadores y 1.890 one-hot. El diccionario EDA usa perfil global histórico descriptivo; las medianas y vocabularios del modelo proceden solo de train. No confundir esa descripción con una selección aprendida antes de partir.
+
+Los informes 01/02/03/05/06 y las explicaciones de notebooks 01/02/06 conectan esas salidas. No se modificaron las fuentes protegidas de notebooks 03/04/05 para mantener su procedencia histórica. Los documentos de apoyo retirados durante la limpieza no son requisitos para regenerar esta auditoría ni se recrean como una segunda fuente de estado.

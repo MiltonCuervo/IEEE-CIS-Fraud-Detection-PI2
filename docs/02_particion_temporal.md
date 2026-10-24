@@ -6,6 +6,14 @@ En esta etapa definimos los bloques de entrenamiento, validación y prueba que s
 
 El procedimiento reproducible está en [`notebooks/02_particion_temporal.ipynb`](../notebooks/02_particion_temporal.ipynb). La asignación individual se guarda en `data/interim/split_manifest.parquet`, archivo derivado que no se versiona porque puede regenerarse desde los datos originales.
 
+### 1.1. Separar observaciones no es seleccionar atributos
+
+La lista `usecols` carga once columnas para ordenar, resumir y describir novedades de tarjetas/direcciones/correos. **No significa que el modelo utilice solo once variables** ni que descartemos las demás originales. El manifiesto conserva TransactionID y split para recuperar luego todas las columnas de las operaciones permitidas.
+
+TransactionDT fija el orden; TransactionID conserva la correspondencia; isFraud permite resúmenes en los bloques autorizados, no un corte aprendido por etiqueta. Ninguna mediana ni categoría de este notebook se transfiere al entrenamiento. El EDA completo y el [diccionario por variable](diccionario_variables_y_flujo_modelo.md) son descriptivos; el ajuste se realiza dentro de cada pasado de entrenamiento.
+
+Train ajusta historial, imputación, vocabulario y modelo. Los gaps no contribuyen a ninguna de esas estadísticas. Validación temprana calibra el predictor fijo; validación posterior compara probabilidades y acciones. Ambas usan el historial final de train congelado, sin incorporar transacciones de validación. ID, etiqueta, tiempo crudo y split siguen disponibles como controles, pero no entran directamente a X. TransactionAmt mantiene su función predictiva y económica.
+
 ## 2. Justificación metodológica
 
 Una partición aleatoria mezclaría transacciones de los 182 días disponibles en los tres bloques. Esto haría que entrenamiento y evaluación compartieran simultáneamente periodos iniciales y finales, ocultando los cambios de prevalencia observados en el EDA.
@@ -77,7 +85,7 @@ El notebook verifica automáticamente que:
 4. validation contiene ambas clases; el test se reserva sin comprobar su distribución de etiquetas en la corrida actual;
 5. el manifiesto puede guardarse y leerse sin perder filas ni asignaciones.
 
-Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. En etapas posteriores incorporamos pruebas en `tests/test_features_selection.py` y `tests/test_refit.py` para las ventanas internas, exclusión de bloques externos, límites de calibración y garantías de pasado estricto. Estas pruebas complementan las comprobaciones del notebook; no sustituyen una prueba dedicada de toda la partición original.
+Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. Las corridas posteriores documentaron pruebas de ventanas internas, exclusión de bloques externos, límites de calibración y pasado estricto. La carpeta tests fue retirada en la organización actual del repositorio; esos resultados históricos no equivalen a una suite disponible hoy para ejecutar. Las verificaciones de procedencia y las comprobaciones de los notebooks permanecen; no sustituyen una prueba dedicada de toda la partición original.
 
 ## 7. Uso permitido de cada bloque
 

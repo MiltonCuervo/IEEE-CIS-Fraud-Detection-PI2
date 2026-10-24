@@ -1,0 +1,45 @@
+{
+  "created_at_utc": "2026-10-24T14:59:13.102693+00:00",
+  "model_refitted": false,
+  "test_evaluated": false,
+  "audit_scope": "esquema y transformaciones del predictor existente; sin nuevas predicciones ni estadísticas de etiquetas",
+  "source": "https://www.kaggle.com/competitions/ieee-fraud-detection/data",
+  "original_columns": 434,
+  "catalogue_rows": 451,
+  "original_direct_inputs": 431,
+  "model_inputs": 447,
+  "numeric_inputs": 410,
+  "categorical_inputs": 37,
+  "matrix_columns": 2642,
+  "matrix_operations": {
+    "mediana_train_y_float32": 410,
+    "indicador_ausencia_detectada_en_train": 342,
+    "one_hot_vocabulario_train": 1890
+  },
+  "categorical_discrepancies": [
+    "id_13",
+    "id_14",
+    "id_17",
+    "id_18",
+    "id_19",
+    "id_20",
+    "id_21",
+    "id_22",
+    "id_24",
+    "id_25",
+    "id_26",
+    "id_32"
+  ],
+  "model_sha256": "615ab58ea2ae6af42758438cb3a7f0f87eacc32685df750e4ed8c7673ac7f693",
+  "source_sha256": {
+    "src/fraud_cost/schema.py": "3ba494f9f8d1c5b72b74d4db8923ec544cbaf0591423b687930579623497aafb",
+    "src/fraud_cost/features.py": "7a40e12a7b4c03401ca39fc184ce6384c4e79f2b65d564ee30453f0dc001a34a",
+    "results/tables/eda_diccionario_variables.csv": "fb8c283150c66cb111e4ce6c77ef44a6d25280ba4f0b3c4a7b73b3be3cbe6f69",
+    "results/tables/reajuste_config.json": "06501406ca6646ce482ec466079e89edd4314dcb06ecd11cf8d6f4c58927a55d"
+  },
+  "artifact_sha256": {
+    "results/tables/modelo_diccionario_variables.csv": "ad015be3f9c655b7ffc2a55fec71ff71ec8f0a640f9b6a530bd5a1e5062889c8",
+    "results/tables/modelo_matriz_variables.csv": "3e718a641dd61a04028209b1fd4a25fcc9f145bfacb027714554e84cb72b3a95"
+  },
+  "profile_scope": "ausencia/cardinalidad originales son EDA global histórico, no estadísticas de ajuste; medianas e indicadores son de train"
+}
