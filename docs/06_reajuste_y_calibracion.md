@@ -54,6 +54,46 @@ La pendiente `a` y el intercepto `b` corrigen la escala de riesgo. Cuando `a>0`,
 
 El calibrador pertenece a este predictor. Después de ajustarlo no volvemos a entrenar XGBoost ni sustituimos el preprocesamiento. Si cambia ese conjunto, deberá revisarse y reajustarse la calibración. No reutilizamos el calibrador del notebook 03.
 
+### 4.1. Qué aprende cada componente y qué permanece fijo
+
+| Momento | Datos que puede utilizar | Qué ajustamos | Qué conservamos fijo después |
+|---|---|---|---|
+| Selección del 05 | Ventanas internas de train | Comparamos cuatro configuraciones por AP media; cada fold aprende su preparación | Configuración seleccionada para el reajuste |
+| Reajuste del 06 | 380.815 operaciones de train y sus etiquetas | Historial permitido, medianas, vocabulario, indicadores y 250 árboles | Todo el predictor y el estado final de su historial |
+| Platt del 06 | p_raw de las 42.046 operaciones tempranas y sus etiquetas | Pendiente a e intercepto b de la transformación logística | Predictor, a y b al diagnosticar el periodo posterior |
+| Diagnóstico del 06 | Probabilidades de las 42.047 operaciones posteriores; etiquetas solo para medir | Ningún parámetro predictivo; los grupos resumen resultados | Corte clasificatorio 0,5 y predictor calibrado |
+| Experimento posterior del 09 | p_raw tempranas del mismo predictor y sus etiquetas | Solo una isotónica candidata | XGBoost, preparación, historial y Platt del 06 |
+
+Cuando decimos que calibramos, no añadimos las etiquetas tempranas al entrenamiento de los árboles. El calibrador aprende una relación entre una puntuación ya obtenida y el resultado observado. No recibe las 447 características, TransactionID, TransactionAmt ni Ca como entradas separadas. Esas variables pueden participar antes en XGBoost o después en la política, pero esta transformación tiene una sola entrada por operación.
+
+### 4.2. Ejemplo numérico para explicar Platt
+
+Tomamos **p_raw=0,20 como ejemplo didáctico**, sin atribuirlo a una transacción del dataset. Aplicamos los coeficientes registrados en `reajuste_config.json`:
+
+```text
+q = clip(0,20; 0,000001; 0,999999) = 0,20
+z = ln(q / (1-q)) = -1,386294
+a = 1,0217993729; b = -0,0247097144
+u = a*z + b = -1,441224
+p_Platt = 1 / (1 + exp(-u)) = 0,191356
+```
+
+Pasar de 20% a aproximadamente 19,14% explica el mecanismo, no demuestra que la segunda probabilidad sea mejor. Para valorar la transformación usamos muchas operaciones posteriores con etiquetas conocidas. Una operación concreta solo termina teniendo y=0 o y=1; la correspondencia probabilística se estudia sobre grupos y mediante métricas.
+
+La interfaz de ajuste es `fit_sigmoid(p_raw_temprana, y_temprana)`: recibe probabilidades raw y etiquetas, llama internamente a `clipped_logit` y entrega los logits al estimador `LogisticRegression`. En inferencia, `FittedPredictor.predict_raw` entrega el vector p_raw; `calibrated_probabilities(calibrador, p_raw)` calcula internamente `clipped_logit` y aplica `calibrador.predict_proba`. El estimador logístico recibe logits; las dos funciones de nuestro paquete reciben probabilidades raw y realizan esa transformación internamente. El umbral 0,5 se aplica después de obtener la nueva probabilidad.
+
+### 4.3. Cómo leemos las métricas sin mezclarlas
+
+| Medida | Cálculo o significado | Qué podemos explicar |
+|---|---|---|
+| AP, Average Precision | Suma de precisión ponderada por incrementos de recall: Σ_k (R_k−R_(k−1))P_k | Calidad del ordenamiento sobre la clase fraude; mayor es mejor. No es accuracy ni precisión a un único corte |
+| Brier | Media de (p_i−y_i)² | Error cuadrático de las probabilidades; menor es mejor |
+| Log-loss | Media de −[y_i ln(p_i)+(1−y_i)ln(1−p_i)] | Penalización probabilística, especialmente fuerte ante errores muy confiados; menor es mejor |
+| Curva de confiabilidad | Probabilidad media y frecuencia real en grupos, acompañadas de sus tamaños | Dónde aparecen desajustes descriptivos y qué soporte tiene cada comparación |
+| Precision/recall a 0,5 | TP/(TP+FP) y TP/(TP+FN) después de fijar una clase | Efecto de convertir probabilidades en etiquetas con ese corte; no sustituyen los diagnósticos probabilísticos |
+
+En AP, R_k es recall y P_k precisión al recorrer puntuaciones. Nuestro cálculo usa `average_precision_score`; no equivale necesariamente al área obtenida integrando linealmente una curva precision-recall. Brier y log-loss son medidas de calidad probabilística y no aíslan únicamente calibración. Una curva agrupada tampoco valida cada probabilidad individual ni garantiza fiabilidad en una banda pequeña de monto o riesgo.
+
 ## 5. Resultados de la corrida
 
 ### 5.1. Ventanas efectivamente utilizadas
@@ -129,7 +169,13 @@ Los hashes de módulos y datos corresponden a sus bytes. En el notebook 06 ident
 
 La ampliación documental del 24 de octubre añade `modelo_diccionario_variables.csv`, `modelo_matriz_variables.csv` e `inventario_variables_config.json`. Los genera `fraud_cost.schema.export_model_inventory` a partir del diccionario EDA y el artefacto del 06 verificado, sin fit, sin actualizar historial y sin producir nuevas predicciones. No son salidas que atribuyamos retrospectivamente a save_refit de la corrida original. Las medianas e indicadores que muestran se leen del preprocesador ya ajustado con train.
 
-Las pruebas comprueban separación temporal y de IDs, exclusión de gaps/test, tratamiento de empates, validación de probabilidades, grupos con probabilidades repetidas y matriz de confusión al corte fijo. Verificamos además que cambiar etiquetas posteriores no altere predictor o calibrador, que la inferencia no actualice el historial y que guardar/cargar el artefacto conserve las probabilidades.
+Las pruebas de la corrida histórica comprobaron separación temporal y de IDs, exclusión de gaps/test, tratamiento de empates, validación de probabilidades, grupos con probabilidades repetidas y matriz de confusión al corte fijo. También se comprobó entonces que cambiar etiquetas posteriores no alterara predictor o calibrador, que la inferencia no actualizara el historial y que guardar/cargar el artefacto conservara las probabilidades. La carpeta `tests/` fue retirada posteriormente; esta ampliación documental no ejecuta ni reemplaza aquella suite.
+
+### 6.2. Qué permite consultar esta copia y qué hace falta para repetir el ajuste
+
+Las tablas, figuras y configuraciones versionadas permiten reconstruir la metodología y discutir sus resultados históricos. Para repetir el diagnóstico por operación se necesitan además los CSV fuente, el manifiesto y un entorno compatible con las versiones registradas. Las etapas posteriores requieren `selected_xgboost_platt.joblib` y `validation_scores_selected.parquet`; no pueden sustituirse por el modelo y los scores de la línea base.
+
+En la copia local consultada para esta ampliación, el modelo seleccionado y sus scores no están en sus rutas esperadas. No los cargamos, regeneramos ni entrenamos durante la revisión. Será necesario recuperarlos con procedencia comprobable o reproducir la cadena previa antes de volver a ejecutar 07–09. Conservar las salidas visibles de un notebook no garantiza por sí solo que todos sus artefactos locales estén disponibles.
 
 ## 7. Alcance y siguiente etapa
 
@@ -140,3 +186,21 @@ La etapa 07, explicada en `docs/07_comparacion_economica_validation.md`, usa est
 No comparamos directamente AP interna del 05 con AP de esta ventana: corresponden a poblaciones y pasados distintos. Si un diagnóstico posterior motiva nuevas decisiones de modelo, deberán registrarse como otro experimento de desarrollo, no como confirmación independiente de esta corrida.
 
 Test permanece sin puntuar. Su consulta histórica de etiquetas agregadas al diseñar gaps y en el EDA sigue siendo una limitación del proyecto; no la elimina entrenar o calibrar un modelo nuevo.
+
+## 8. Preguntas que debemos poder responder
+
+**¿Por qué calibrar si XGBoost ya devuelve probabilidades?** Porque estar entre cero y uno no demuestra correspondencia con la frecuencia de fraude. Evaluamos si una transformación aprendida en un periodo mejora esa representación en otro posterior.
+
+**¿Con qué entrenamos Platt?** Llamamos a `fit_sigmoid` con las probabilidades raw tempranas y el vector isFraud de esas mismas operaciones. Dentro de esa función transformamos a logits y ajustamos la regresión logística. La transformación aprende dos coeficientes; no modifica los árboles ni incorpora Ca.
+
+**¿Por qué no calibrar sobre train?** Sus puntuaciones son obtenidas sobre operaciones utilizadas para ajustar el predictor y pueden ser optimistas. En nuestro protocolo usamos un periodo posterior, manteniendo fijo el modelo que genera esas puntuaciones.
+
+**¿Por qué no usar la validación posterior para corregir el resultado?** La necesitamos para observar cómo se transfirió el ajuste temprano. Usar sus etiquetas para corregir el calibrador produciría otra decisión de desarrollo y exigiría declararla; no sería una confirmación independiente.
+
+**¿AP igual significa calibración igual?** No. Con pendiente positiva se conserva el orden y puede mantenerse AP mientras cambian probabilidades, Brier, log-loss y etiquetas al corte fijo. La corrida documentada muestra precisamente esa diferencia.
+
+**¿Platt empeoró de manera definitiva?** Observamos un empeoramiento pequeño en los dos scores globales de esta ventana. No estimamos incertidumbre ni demostramos una inferioridad general. La evidencia motiva el diagnóstico 08 y el experimento 09, sin borrar el resultado desfavorable.
+
+**¿Qué ocurriría al cambiar los doce tipos de identidad pendientes?** Cambiaría la representación y posiblemente el predictor y sus puntuaciones. Habría que registrar otro experimento y volver a ajustar/evaluar los calibradores correspondientes; sus coeficientes pertenecen al predictor que los originó.
+
+**Cómo lo explicamos en nuestras palabras.** «Primero entrenamos XGBoost con el pasado. Después dejamos ese predictor fijo y usamos un periodo temprano de validación para aprender cómo transformar sus probabilidades. Comprobamos la transformación en un periodo posterior. Aquí Platt mantuvo el ranking, pero no mejoró los scores probabilísticos globales; por eso la elección final sigue abierta».

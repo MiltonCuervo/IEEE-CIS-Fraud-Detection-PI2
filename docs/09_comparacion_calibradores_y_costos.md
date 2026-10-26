@@ -39,6 +39,18 @@ Platt utiliza una función sigmoide parametrizada sobre el logit de la probabili
 
 Isotónica aprende una transformación no decreciente más flexible, con mesetas que asignan una misma probabilidad a distintas puntuaciones. Nuestro estimador interpola entre puntos de la función ajustada y recorta al extremo correspondiente cuando la entrada queda fuera del rango aprendido. Puede crear empates y modificar AP sin invertir el orden de riesgo. La flexibilidad también puede producir probabilidades extremas. Estas propiedades se describen en la [documentación de calibración de scikit-learn](https://scikit-learn.org/stable/modules/calibration.html).
 
+| Componente | Qué recibe al ajustar | Qué aprende | Qué recibe al aplicar | Interfaz implementada |
+|---|---|---|---|---|
+| XGBoost del 06 | Matriz de train e isFraud | Árboles para estimar fraude | Matriz preparada con el esquema aprendido | `predict_proba(... )[:, 1]` produce p_raw |
+| Platt del 06, estimador logístico interno | logit de p_raw temprana recortada e isFraud temprana | a y b de sigmoid(a*z+b) | El mismo logit recortado de p_raw | `predict_proba(...)[:, 1]`; se reutiliza sin ajuste nuevo en 09 |
+| Isotónica candidata del 09 | p_raw temprana e isFraud temprana | Una función no decreciente f que aproxima las etiquetas | p_raw directamente | `predict(p_raw)` produce f(p_raw) |
+
+La tabla distingue las entradas del estimador logístico interno. Las funciones de nuestro paquete `fit_sigmoid(p_raw, y)` y `calibrated_probabilities(calibrador, p_raw)` reciben probabilidades raw y llaman internamente a `clipped_logit`; no debemos enviarles logits ya calculados.
+
+El ajuste isotónico busca aproximar las etiquetas mediante error cuadrático, sujeto a que f no disminuya al aumentar p_raw. No estima una pendiente e intercepto globales como Platt. En esta implementación hay 92 puntos de apoyo aprendidos; sus salidas posteriores producen 82 probabilidades distintas. La interpolación entre puntos y las mesetas explican por qué no debemos describirlo como una tabla de 82 umbrales fijados manualmente.
+
+Los extremos `y_min=0` y `y_max=1` delimitan la salida permitida; no garantizan ausencia de errores cuando se produce cero o uno. `out_of_bounds='clip'` utiliza el extremo de la función aprendida para una entrada fuera del rango de ajuste; no es un recorte posterior de probabilidades a [10⁻⁶,1−10⁻⁶]. Ese segundo recorte pertenece a la transformación logit de Platt. El recorte numérico que aplica `log_loss` al evaluar es otro procedimiento distinto y no cambia las probabilidades exportadas.
+
 Fijamos log-loss global como lectura principal de esta comparación antes de generar los resultados; Brier, grupos, AP y consecuencias económicas son complementos. Esto organiza la lectura de este experimento de desarrollo, no constituye un preregistro del proyecto ni una regla automática de selección. Brier y log-loss evalúan calidad probabilística y no aíslan por sí solos la calibración de todas las demás propiedades predictivas.
 
 Reutilizamos las bandas de monto, las bandas de riesgo **definidas con Platt** y los cuatro subperiodos del 08. Así, cada comparación por grupo utiliza exactamente las mismas operaciones. Exportamos 51 filas: total, seis bandas de monto, seis de riesgo y cuatro periodos, para tres versiones. Los grupos vacíos mantienen tasas no definidas; no se interpretan como ausencia de fraude.
@@ -48,6 +60,21 @@ Reutilizamos las bandas de monto, las bandas de riesgo **definidas con Platt** y
 La ventana posterior ya se utilizó para diagnóstico y comparación económica. El experimento surge de esos resultados: no es una confirmación independiente ni permite inferir superioridad estadística. No reportamos intervalos de confianza ni tratamos grupos o escenarios como réplicas independientes.
 
 El bloque temporal llamado test no se puntúa. Conservamos además la limitación documentada en el 02: el EDA inicial y la comparación histórica de gaps consultaron información agregada del candidato a test. No lo describiremos como un holdout estrictamente intocado.
+
+### 3.4. Qué decisiones conserva esta comparación
+
+| Elemento | Estado durante 09 | Razón |
+|---|---|---|
+| Predictor, 447 atributos y preprocesador | Fijos, procedentes del 06 | Aislar el cambio de transformación probabilística |
+| Historial | Estado final de train congelado | Mantener el mismo pasado permitido para todas las versiones |
+| Platt | Fijo; no se vuelve a ajustar | Conservar la referencia documentada del 06/07 |
+| Isotónica | Se ajusta únicamente con 42.046 operaciones tempranas | Usar el mismo periodo de calibración que Platt |
+| Diagnóstico | Las mismas 42.047 operaciones posteriores, con 1.517 fraudes | Comparar versiones sobre la misma población |
+| Bandas y periodos | Los grupos comunes del 08 | Evitar que cada transformación cambie las filas de sus propios grupos |
+| Corte clasificatorio | 0,5 en las tres versiones | Separar el cambio de escala de una búsqueda de umbral |
+| Test y aprobaciones | Sin puntuar; calibrador y costos sin aprobar | El análisis continúa siendo desarrollo |
+
+La columna isFraud posterior entra al cálculo de métricas una vez generadas las probabilidades y acciones. No alimenta los árboles ni los dos calibradores en esta comparación. Las medidas y la lectura probabilística se explican en [el informe 06, sección 4.3](06_reajuste_y_calibracion.md#43-cómo-leemos-las-métricas-sin-mezclarlas): AP resume ranking; Brier y log-loss evalúan probabilidades; precisión y recall requieren un corte.
 
 ## 4. Resultados probabilísticos
 
@@ -149,7 +176,9 @@ El notebook contiene cinco celdas de código. La implementación compartida est�
 
 El calibrador candidato se guarda localmente en `results/models/candidate_isotonic_calibrator.joblib`, ignorado por Git, vinculado al hash del predictor del 06. Recibe probabilidades raw y utiliza `predict`; no debe insertarse directamente en la interfaz Platt, que transforma a logit y utiliza `predict_proba`. No sobrescribimos el predictor del 06 ni exportamos otro Parquet por operación.
 
-Las 57 pruebas automatizadas pasan. Entre los controles nuevos verificamos que cambiar etiquetas posteriores no modifica el calibrador ni sus probabilidades/acciones, que no se permite test o solapamiento temporal, que la matriz conserva sus costos y que las versiones comparan la misma población. Recalculamos las cuatro tablas desde el calibrador candidato y los scores del 06; raw/Platt conservan las métricas del 06 y los costos comunes del 07. El notebook ejecutado no contiene errores; ambas figuras se revisaron visualmente.
+En la corrida histórica se documentaron 57 pruebas automatizadas satisfactorias. Sus controles incluyeron que cambiar etiquetas posteriores no modificara el calibrador ni sus probabilidades/acciones, que no se permitiera test o solapamiento temporal, que la matriz conservara sus costos y que las versiones compararan la misma población. Entonces se recalcularon las cuatro tablas desde el calibrador candidato y los scores del 06; raw/Platt conservaron las métricas del 06 y los costos comunes del 07, y se revisaron ambas figuras. La carpeta `tests/` fue retirada posteriormente: estos antecedentes no equivalen a una suite disponible y ejecutada durante esta ampliación documental.
+
+Para reproducir esta etapa hacen falta el predictor seleccionado y los scores del 06 verificados, los datos de desarrollo y las dependencias compatibles. En la copia revisada esos artefactos seleccionados no están en las rutas previstas, y tampoco está la isotónica candidata serializada. Las tablas y salidas versionadas permiten estudiar los resultados históricos, pero no sustituyen esos archivos ni prueban una nueva ejecución. Esta revisión no ha ajustado calibradores ni producido nuevas probabilidades.
 
 ## 7. Qué podemos concluir y qué queda pendiente
 
@@ -158,6 +187,22 @@ El experimento aporta evidencia para discutir isotónica, pero no una victoria u
 Conservamos isotónica como **candidata, no aprobada**. El registro mantiene `selected_calibrator=null`, `calibrator_approved=false`, `costs_approved=false` y `test_evaluated=false`. Platt continúa siendo la referencia histórica de la comparación del 07, no una alternativa validada automáticamente por permanencia.
 
 Antes de evaluar el bloque final debemos acordar el calibrador principal y los Ca que se reportarán, explicitar sus unidades/supuestos y congelar el protocolo de las tres políticas. Si cambiamos de calibrador, la comparación principal deberá actualizarse de forma coherente y trazable sobre desarrollo; no bastará con sustituir un archivo. La evaluación posterior deberá presentar costo total, ahorro y métricas explicativas, incluyendo los escenarios desfavorables.
+
+### 7.1. Preguntas para interpretar y defender el resultado
+
+**¿Por qué comparamos con raw si la propuesta contempla calibración?** Raw permite comprobar si agregar una transformación aporta mejora en datos posteriores. Es una referencia necesaria para interpretar el experimento, no una aprobación automática para omitir el procedimiento del protocolo final.
+
+**¿Isotónica tiene menor Brier, entonces es la mejor?** Tiene el menor Brier global en esta ventana, pero raw obtiene menor log-loss; isotónica reduce AP y produce probabilidades extremas. Debemos discutir un criterio de selección con todas esas evidencias y mantener su carácter de desarrollo reutilizado.
+
+**¿Por qué baja AP si isotónica no invierte el orden?** Puede colapsar puntuaciones diferentes en una misma salida. Esos empates modifican el recorrido de precisión y recall y, con ello, AP. Monotonía no decreciente no equivale a conservación estricta del ranking.
+
+**¿Una probabilidad cero significa certeza de que la operación es legítima?** No. En esta ventana una de las 819 operaciones con salida cero era fraude. La función aprendida admite extremos; el resultado observado muestra el riesgo de interpretarlos como certezas.
+
+**¿Por qué no suavizamos ese cero después?** Una corrección motivada por las etiquetas posteriores sería otra decisión metodológica. Debe registrarse y evaluarse bajo otro protocolo; no puede aplicarse silenciosamente para mejorar el resultado ya observado.
+
+**¿Cómo escogemos finalmente?** Con un criterio explícito y una revisión conjunta de calidad probabilística global, grupos con soporte, extremos, estabilidad y consecuencias económicas. Esta corrida no aprueba una alternativa ni permite escoger una distinta para cada Ca. Si cambia la preparación del predictor por la revisión de variables, los calibradores deberán pertenecer a ese nuevo predictor.
+
+**Cómo lo explicamos en nuestras palabras.** «Mantuvimos el mismo modelo y comparamos tres escalas de probabilidad. Platt ya estaba ajustado; solo aprendimos la isotónica con la validación temprana. La medimos en las mismas operaciones posteriores. Encontramos mejoras pequeñas en algunas medidas y empeoramientos en otras, por lo que conservamos la candidata y documentamos qué falta decidir».
 
 ## Referencias
 

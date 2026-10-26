@@ -14,6 +14,21 @@ TransactionDT fija el orden; TransactionID conserva la correspondencia; isFraud 
 
 Train ajusta historial, imputación, vocabulario y modelo. Los gaps no contribuyen a ninguna de esas estadísticas. Validación temprana calibra el predictor fijo; validación posterior compara probabilidades y acciones. Ambas usan el historial final de train congelado, sin incorporar transacciones de validación. ID, etiqueta, tiempo crudo y split siguen disponibles como controles, pero no entran directamente a X. TransactionAmt mantiene su función predictiva y económica.
 
+### 1.2. El contrato temporal que recibe el modelo
+
+Distinguimos la fila fuente, los atributos (`X`), la etiqueta (`y`) y los controles de seguimiento. Una transacción puede conservar TransactionID, TransactionDT e isFraud en una tabla de trabajo sin que esas tres columnas entren directamente al predictor. Más adelante recuperamos las columnas completas por ID; el filtrado de filas define qué pasado está permitido, y el constructor de atributos define qué representación aprende el modelo.
+
+| Momento | Qué información utilizamos | Qué obtenemos |
+|---|---|---|
+| Train e interiores de train | Atributos de su pasado y etiquetas de ese entrenamiento | Historial, medianas, vocabulario y XGBoost; selección de configuración en ventanas internas |
+| Validación temprana: 42.046 operaciones | Probabilidades del predictor fijo y sus etiquetas tempranas | Parámetros de Platt o isotónica; no un nuevo ajuste de XGBoost |
+| Validación posterior: 42.047 operaciones | Atributos posteriores, mismo historial/preprocesador y mapeo ajustado | Probabilidades; después se consultan sus etiquetas para diagnosticar y evaluar acciones |
+| Test temporal | Periodo reservado para el protocolo final | No se han producido scores ni costos finales en las etapas de desarrollo |
+
+El corte principal de 60/80% usa **duración**, mientras las dos mitades de validation se definen aproximadamente por **filas** y mantienen juntas las operaciones simultáneas. No hay otro gap experimental entre esas mitades. La frontera de tres segundos entre sus registros límite no es un retraso de confirmación del fraude medido.
+
+La inferencia se ubica después de recibir una operación y antes de conocer su etiqueta. Como varias variables originales están anonimizadas, el dataset no permite verificar por completo su disponibilidad en una autorización bancaria real. Tratamos este punto como dato requerido para una implementación operativa, sin atribuir esa garantía al orden temporal de nuestra evaluación.
+
 ## 2. Justificación metodológica
 
 Una partición aleatoria mezclaría transacciones de los 182 días disponibles en los tres bloques. Esto haría que entrenamiento y evaluación compartieran simultáneamente periodos iniciales y finales, ocultando los cambios de prevalencia observados en el EDA.
@@ -74,6 +89,8 @@ Medimos valores que aparecen por primera vez en validación o test respecto a tr
 La tarjeta compuesta combina `card1`, `card2`, `card3` y `card5`; la dirección combina `addr1` y `addr2`. Estos valores son descripciones operativas, no identificaciones verificadas de una persona.
 
 La presencia de tarjetas nuevas demuestra que los codificadores posteriores deben aceptar categorías desconocidas. No podemos construir un vocabulario con todo el dataset antes de separar, porque eso informaría al pipeline de valores que todavía no habían aparecido durante entrenamiento.
+
+La novedad aquí se mide sobre **claves compuestas**, mientras one-hot opera sobre columnas individuales. Una combinación card1+card2+card3+card5 nueva puede estar formada por códigos individuales ya vistos y no activar ningún bloque desconocido. Además, una clave es un proxy; no demostramos que cada una corresponda a una tarjeta física o persona. Este análisis no crea un vocabulario ni elimina las operaciones nuevas.
 
 ## 6. Comprobaciones realizadas
 

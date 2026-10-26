@@ -2,6 +2,22 @@
 
 Actualización documental: 24 de octubre de 2026. Describimos la preparación y el predictor ejecutados en las etapas 05/06 y utilizados en 07–09. Esta reconstrucción no vuelve predeclaradas las decisiones que se documentan ahora, no corrige retrospectivamente tipos y no produce un experimento nuevo de detección.
 
+### Cómo estudiar este recorrido
+
+Queremos poder explicar una operación desde sus columnas fuente hasta la probabilidad y la acción. Leemos este documento junto con los notebooks; los CSV permiten resolver preguntas sobre una columna concreta sin repetir el experimento.
+
+| Pregunta del equipo | Dónde está la evidencia |
+|---|---|
+| ¿Qué significa cada original y de qué tabla viene? | Sección 3 y `eda_diccionario_variables.csv` |
+| ¿Qué conservamos, excluimos y transformamos? | Secciones 2, 4 y 5; `modelo_diccionario_variables.csv` |
+| ¿Qué ingeniería hicimos y con qué pasado? | Sección 6; `features.py` |
+| ¿Qué recibe cada objeto y qué entrega? | Sección 7 y notebook 06 |
+| ¿Cómo se prepara una operación real? | Sección 11, con posiciones de la matriz |
+| ¿Qué hicimos en Platt e isotónica? | [Informe 06](06_reajuste_y_calibracion.md), [informe 09](09_comparacion_calibradores_y_costos.md) y sus notebooks |
+| ¿Cómo consultar una variable y responder en la asesoría? | Secciones 12 y 13 |
+
+Distinguimos **Observado** (columnas, código y resultados registrados), **Inferido** (interpretación sustentada, como la necesidad de evaluar categorías futuras), **Supuesto** (por ejemplo, intervención con prevención completa) y **Dato requerido** (moneda, costo real y momento de disponibilidad no verificados). Los nombres anonimizados no completan esos datos requeridos.
+
 ## 1. Qué archivos permiten seguir cada variable
 
 El notebook 01 exporta [eda_diccionario_variables.csv](../results/tables/eda_diccionario_variables.csv), con una fila por cada una de las **434 columnas originales**: procedencia, significado verificable, tipo semántico, tipo leído, rol, cardinalidad, ausencia y relación con ingeniería. La ausencia y cardinalidad corresponden al EDA global histórico; no son estadísticas permitidas para ajustar el predictor.
@@ -63,6 +79,8 @@ El código combina una lista explícita con detección de object/string/category
 
 Una categoría desconocida en evaluación no genera una columna nueva: `handle_unknown='ignore'` produce ceros en el bloque de esa variable. No se asimila automáticamente al grupo de categorías raras conocidas. El token de ausencia también participa en el vocabulario y puede agruparse por la misma regla. No usamos target encoding ni códigos ordinales aprendidos de tasas de fraude.
 
+Ausente, rara y desconocida son situaciones distintas. Ausente significa que no recibimos un valor y lo representamos con el token; rara es una categoría observada pocas veces en train; desconocida es una categoría que no estuvo en el vocabulario ajustado. La frecuencia mínima 50 agrupa las raras conocidas. El comportamiento de una desconocida lo establece `handle_unknown`, sin consultar su etiqueta ni añadir columnas futuras.
+
 ### 4.2. Las variables tratadas numéricamente
 
 Las 410 entradas numéricas ampliadas incluyen TransactionAmt, dist1–dist2, C1–C14, D1–D15, V1–V339, id_01–id_11, los doce id enumerados debajo, has_identity y los quince atributos nuevos. Antes de estos quince tenemos 395 numéricas y 37 categóricas en la representación base.
@@ -71,7 +89,23 @@ Convertimos infinitos en NaN y aprendemos la mediana por columna únicamente del
 
 La matriz se convierte a float32 y se conserva dispersa cuando corresponde. No estandarizamos, normalizamos a [0,1] ni truncamos montos extremos automáticamente. El monto para evaluación económica se mantiene en su precisión original, separado de la representación predictiva.
 
-### 4.3. Discrepancia pendiente en doce códigos de identidad
+TransactionAmt tiene una validación adicional antes de construir atributos: el monto debe existir, ser finito y no negativo. Una operación que incumpla esa condición se rechaza en la interfaz fuente; la mediana de monto registrada en el preprocesador no significa que aceptemos rescatar allí una operación sin monto.
+
+Un valor numérico imputado y su indicador responden a preguntas diferentes: el primero permite procesar la magnitud; el segundo conserva que el valor original faltaba. La mediana no reconstruye el dato verdadero. Tampoco un indicador demuestra el mecanismo MCAR, MAR o MNAR. Por ejemplo, V258 aporta su valor preparado y un indicador adicional porque presentó ausencias durante el ajuste.
+
+### 4.3. Ejemplos para distinguir significado y representación
+
+| Variable | Almacenamiento del EDA | Tipo semántico | Tratamiento efectivo en el 06 | Columnas transformadas |
+|---|---|---|---|---:|
+| TransactionAmt | float64 | Numérica | Valor predictivo float32; monto económico conservado aparte | 1 |
+| ProductCD | object | Categórica | Token de ausencia y one-hot | 5 |
+| card1 | int64 | Categórica | Se convierte a texto y se codifica one-hot | 884 |
+| V258 | float64 | Numérica anonimizada | Mediana de train e indicador de ausencia | 2 |
+| id_13 | float64 | Categórica según proveedor | Numérica con mediana e indicador: discrepancia pendiente | 2 |
+
+Estos conteos se leen del inventario del reajuste concreto; no se deducen de la cardinalidad global del EDA. Una variable puede expandirse a muchas columnas y otra aportar solo una. Los 342 indicadores corresponden a columnas numéricas que faltaron al ajustar; no se suman 447 indicadores por defecto.
+
+### 4.4. Discrepancia pendiente en doce códigos de identidad
 
 La [descripción de Kaggle](https://www.kaggle.com/competitions/ieee-fraud-detection/data) incluye id_12–id_38 entre las categóricas. Nuestro pipeline dejó numéricas id_13, id_14, id_17, id_18, id_19, id_20, id_21, id_22, id_24, id_25, id_26 e id_32, porque llegaron como números y no estaban en la lista explícita.
 
@@ -127,6 +161,38 @@ El archivo `validation_scores_selected.parquet` conserva TransactionID, Transact
 
 El 09 añade una isotónica candidata que recibe p_raw directamente y usa predict, no el logit/predict_proba de Platt. No sustituye silenciosamente el contrato del 06. La calidad de una probabilidad debe evaluarse: pertenecer a [0,1] no demuestra calibración adecuada.
 
+### 7.1. Entrada al sistema y entrada al estimador
+
+Cuando decimos «el modelo recibe 2.642 columnas» nos referimos al XGBoost interno. `FittedPredictor.predict_raw(frame)` recibe primero un DataFrame con las columnas fuente para construir los atributos. TransactionID y TransactionDT se requieren en ese recorrido para validar, alinear y calcular pasado, aunque no se entreguen como columnas directas al clasificador. `isFraud` puede estar ausente al inferir.
+
+Para n operaciones, el constructor produce n × 447 atributos y el preprocesador n × 2.642 valores. El `predict_proba` interno produce n × 2, con columnas de clases [0,1]; el objeto devuelve el vector de n probabilidades de fraude. Platt o la isotónica candidata transforman ese vector y conservan la correspondencia de filas. Ningún paso crea una confirmación de fraude.
+
+```mermaid
+flowchart LR
+    A["Operaciones fuente y pasado permitido"] --> B["447 atributos con nombres"]
+    B --> C["Preprocesador de train: 2.642 columnas"]
+    C --> D["XGBoost: probabilidad raw"]
+    D --> E["Platt del 06: logit y sigmoide"]
+    D --> F["Isotónica candidata del 09: función no decreciente"]
+    E --> G["Clasificación fija y BMR históricos"]
+    F --> H["Diagnóstico del 09; elección pendiente"]
+```
+
+La función exige operaciones posteriores al final de train, índices/IDs únicos y el mismo esquema de características. El preprocesador selecciona columnas por nombre y mantiene el orden aprendido. La representación dispersa también forma parte del contrato: XGBoost distingue una posición no almacenada de un cero explícito. Densificar o reconstruir manualmente la matriz puede alterar el tratamiento de ausencias; una tabla de one-hot no autoriza a deducir cualquier recorrido de un árbol sin conservar esa representación.
+
+### 7.2. La línea base no es el reajuste seleccionado
+
+| Elemento | Línea base 03/04 | Predictor seleccionado 05/06 y diagnósticos 07–09 |
+|---|---|---|
+| Atributos previos al preprocesador | 432 base | 447, con quince adicionales |
+| Ajuste | Configuración de referencia con profundidad 6 | history_deeper con profundidad 8 y reg_lambda=5 |
+| Preparación | Preprocesador propio del notebook 03 | `make_preprocessor` de features.py; matriz registrada de 2.642 columnas |
+| Calibración Platt | Ajustada con scores de la línea base | Nuevo ajuste con scores del predictor seleccionado |
+| Scores locales esperados | `data/interim/validation_scores.parquet` | `data/interim/validation_scores_selected.parquet` |
+| Artefacto esperado | `results/models/baseline_xgboost_platt.joblib` | `results/models/selected_xgboost_platt.joblib` |
+
+Las métricas de un archivo pertenecen al predictor que lo generó. No mezclamos un score baseline con medianas, historial, dimensiones o coeficientes de calibración del selected. La isotónica del 09 también está vinculada a este último predictor.
+
 ## 8. Cómo se incorporan los costos sin confundir etiquetas
 
 XGBoost aprende fraude con objetivo logístico, no minimizando directamente nuestra matriz. La política fija y BMR usan sus probabilidades; el árbol ajusta otra tarea de acción con z=1[yA>Ca] y peso |yA−Ca| solo en train. Esos objetivos de acción no reemplazan isFraud en el dataset original.
@@ -161,3 +227,87 @@ Reejecutamos el notebook 01 completo con el kernel del proyecto, incluida la exp
 La comprobación sintética confirmó mediana, indicadores y bloques categóricos en la posición documentada, sin ajustar el preprocesador ni llamar al clasificador. Las doce discrepancias de tipo no se confunden con el conteo de columnas de alta ausencia: son problemas distintos y no autorizan eliminaciones automáticas.
 
 La carpeta tests fue retirada previamente en la organización del repositorio. Estas comprobaciones puntuales de la ampliación no se presentan como una nueva ejecución de las 57 pruebas históricas ni como su reemplazo completo. La función de inventario conserva controles reproducibles de cobertura, rama, anchura y procedencia; antes de una modificación algorítmica será necesario recuperar una suite versionada y registrar un nuevo experimento.
+
+## 11. Recorrido de una operación real hasta la matriz
+
+Para estudiar la preparación seguimos TransactionID **3433215**, una operación de validación posterior identificada directamente en `data/raw/train_transaction.csv`. Buscamos su ID en `train_identity.csv` y no encontramos una fila asociada. Los datos originales permanecen locales, excluidos de Git.
+
+| Campo fuente | Valor observado | Papel |
+|---|---|---|
+| TransactionID | 3433215 | Vincular la explicación con la operación, fuera de X |
+| TransactionDT | 11370286 | Tiempo relativo y construcción de historia, fuera de X crudo |
+| TransactionAmt | 994 | Predictor y monto original para evaluación económica |
+| ProductCD | W | Categoría, sin significado comercial asignado aquí |
+| card1 / card2 / card3 / card5 | 14643 / 529 / 150 / 162 | Componentes del proxy histórico |
+| C1 / D1 | 1 / 19 | Valores anonimizados observados, sin interpretar su causa |
+| V258 | Ausente | Requiere preparación numérica |
+| isFraud | 1 | Etiqueta histórica para evaluación; no participa en las entradas |
+
+Recontamos únicamente operaciones con ese proxy dentro de train, cuyo último tiempo es 9521218. Hay **143** operaciones, con monto medio **189,837902…** y último tiempo del proxy **9462570**. Como el historial está congelado, la recencia para el caso es 11370286 − 9462570 = **1907716 segundos**. No incluimos operaciones de gaps ni validación en ese recuento.
+
+El conteo de ausencias antes de rellenar categorías es **208**. No tener fila de identidad produce `has_identity=0`. `log1p(994)` es aproximadamente **6,902743**; el valor preparado usa float32. Estos cálculos describen las entradas y no utilizan isFraud.
+
+| Parte de la representación | Valor preparado | Posición de matriz, desde cero |
+|---|---:|---:|
+| TransactionAmt | 994 | 0 |
+| V258 imputada con mediana de train | 1 | 289 |
+| has_identity | 0 | 394 |
+| amount_log1p | ≈ 6,902743 | 395 |
+| missing_count | 208 | 396 |
+| card_proxy_past_count | 143 | 401 |
+| Indicador de ausencia de V258 | 1 | 641 |
+| Indicadora ProductCD_W | 1 | 756 |
+
+La mediana de V258 y las posiciones proceden de los CSV del inventario del 06; no calculamos una mediana global nueva. Esta tabla muestra una parte de las 2.642 posiciones y no constituye una entrada completa que podamos entregar al estimador.
+
+**Límite de este ejemplo:** en esta copia no están el artefacto selected ni sus scores por operación. Por ello no atribuimos una probabilidad individual del 06 a este caso ni ejecutamos un nuevo clasificador. El recorrido continúa mediante el contrato descrito en la sección 7 y las métricas agregadas reales del 06/09. El ejemplo Platt con p_raw=0,20 de esos informes es didáctico; ese número no es la predicción de esta transacción. Tampoco sustituimos el score por el de la línea base del 03.
+
+## 12. Cómo consultar el detalle por variable
+
+Podemos estudiar los CSV versionados sin cargar modelos ni ejecutar los notebooks. Desde la raíz del repositorio, esta consulta solo lee tablas:
+
+```python
+import pandas as pd
+
+originales = pd.read_csv("results/tables/eda_diccionario_variables.csv")
+modelo = pd.read_csv("results/tables/modelo_diccionario_variables.csv")
+matriz = pd.read_csv("results/tables/modelo_matriz_variables.csv")
+
+nombres = ["TransactionAmt", "ProductCD", "card1", "V258", "id_13"]
+detalle = modelo.loc[modelo["variable"].isin(nombres), [
+    "variable", "origen", "tipo_semantico", "dtype_union_eda",
+    "entra_modelo", "tipo_pipeline_verificado", "tratamiento",
+    "mediana_ajustada_train", "indicador_numerico_ausencia",
+    "columnas_matriz", "discrepancia_tipo",
+]]
+print(detalle.to_string(index=False))
+print(matriz.loc[matriz["variable"].eq("V258")].to_string(index=False))
+```
+
+`origen`, `significado`, `tipo_semantico` y `dtype_union_eda` describen la fuente. `entra_modelo` y `tipo_pipeline_verificado` describen participación y rama efectiva. `variables_padre` y `formula_o_procedencia` identifican los atributos creados. `tratamiento`, `mediana_ajustada_train` e `indicador_numerico_ausencia` describen lo registrado del ajuste. `columnas_matriz` enlaza con posiciones reales; `discrepancia_tipo` señala una revisión pendiente, sin corregirla.
+
+Para las filas auxiliares, una mediana vacía significa que ese campo no pertenece a la rama numérica ajustada. No se interpreta como una mediana cero. La ausencia y cardinalidad EDA son globales e históricas; las medianas registradas pertenecen a train.
+
+## 13. Preguntas que debemos poder responder
+
+| Pregunta de defensa | Respuesta sustentada |
+|---|---|
+| ¿Qué queremos predecir y cuándo? | Probabilidad de fraude de una operación posterior al entrenamiento, con atributos y pasado permitidos. La disponibilidad operativa exacta de todos los campos anonimizados sigue requiriendo verificación. |
+| ¿Por qué card1 es categórica si contiene números? | Son códigos; la distancia entre códigos no demuestra una magnitud. La preparación actual la fuerza a texto y one-hot. |
+| ¿Eliminamos las columnas con más ausencia? | No. Conservamos las originales permitidas; cualquier eliminación requeriría una comparación aprendida dentro de train. |
+| ¿Las V son ingeniería nuestra? | No. Ya vienen del proveedor. Has_identity y los quince derivados sí los construimos nosotros. |
+| ¿Por qué 451 filas en el catálogo y 447 entradas? | El catálogo también incluye ID, tiempo crudo, etiqueta y split, que no son entradas directas. |
+| ¿Cuándo se usa la etiqueta real? | Para entrenar y calibrar en sus bloques autorizados y para evaluar después de obtener probabilidades/acciones. No entra en X ni en los agregados históricos. |
+| ¿Calibrar equivale a volver a entrenar XGBoost? | No. Se aprende una transformación de sus scores manteniendo fijo predictor, preparación e historial. El 09 solo ajusta isotónica; reutiliza Platt del 06. |
+| ¿Ya corregimos los doce códigos de identidad? | No. La documentación los identifica; recodificarlos exige otro experimento y revisar los artefactos posteriores. |
+| ¿Ya elegimos calibrador y Ca finales? | No. Los registros mantienen esas decisiones pendientes y test sin puntuar. |
+
+## 14. Alcance de esta explicación y requisitos locales
+
+Esta ampliación conserva fuentes predictivas, datos, tablas, configuraciones y salidas históricas. Completa el relato en los notebooks 01/02/03/06/09 e informes; no presenta una reejecución de entrenamiento o calibración. El notebook 05 permanece intacto porque su huella incluye Markdown.
+
+En esta copia están el modelo y scores de la línea base, pero no los artefactos selected, árboles, acciones ni isotónica en sus rutas esperadas. Los inventarios y resultados agregados versionados permiten estudiar el proceso; reproducir inferencia individual requiere recuperar los artefactos propios con procedencia verificable o regenerar las etapas necesarias en un entorno compatible.
+
+La revisión de fuentes también encontró diferencias de bytes CRLF/LF en módulos que coinciden al normalizar saltos de línea. Las verificaciones estrictas de procedencia pueden detenerse por esa conversión de checkout. Debe revisarse la causa y conservarse la identidad de la corrida: no reescribimos sus hashes para hacer pasar fuentes o resultados distintos. `requirements.txt` sigue siendo un rango de dependencias, no un lockfile; las versiones de cada corrida están en sus configuraciones.
+
+**Pendientes:** recuperar las pruebas versionadas antes de cambios algorítmicos; resolver experimentalmente los doce tipos; decidir calibrador y escenarios/unidades de Ca; congelar el protocolo y realizar la evaluación final declarando la consulta histórica de etiquetas agregadas del test. Ninguna ampliación de redacción resuelve por sí sola estos puntos.

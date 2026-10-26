@@ -45,6 +45,36 @@ La siguiente descripción es una reconstrucción documental de las etapas 05/06,
 
 Hay una discrepancia pendiente: id_13, id_14, id_17, id_18, id_19, id_20, id_21, id_22, id_24, id_25, id_26 e id_32 quedaron numéricas en nuestro código pese a la clasificación categórica del proveedor. Los árboles pueden usar un orden no justificado entre códigos. Lo documentamos por columna sin cambiar retrospectivamente la preparación, los modelos ni sus resultados.
 
+### 2.3. Cómo leemos una variable de principio a fin
+
+Para defender su tratamiento distinguimos tres niveles: **tipo semántico**, qué representa la variable; **dtype**, cómo llegó almacenada a pandas; y **rama de preparación**, qué operación ejecutó realmente nuestro pipeline. Un código entero puede ser categórico y una columna one-hot numérica sigue representando una categoría. Estos ejemplos proceden de los dos diccionarios versionados:
+
+| Variable | Tipo semántico | Dtype de la unión | Tratamiento del predictor 06 | Columnas de matriz |
+|---|---|---|---|---:|
+| TransactionAmt | Numérica | float64 | Monto finito no negativo validado; valor predictivo float32 y original conservado para costos | 1 |
+| ProductCD | Categórica | object | Token de ausencia, vocabulario de train y one-hot | 5 |
+| card1 | Categórica | int64 | Se fuerza a categoría; agrupación de raras y one-hot | 884 |
+| id_13 | Categórica según proveedor | float64 | Permanece numérica: mediana e indicador de ausencia | 2 |
+
+Las anchuras describen el preprocesador concreto del reajuste; no son parámetros fijados para cualquier entrenamiento. En id_13, las dos columnas son valor numérico e indicador, no dos categorías. En card1, 884 columnas no significan 884 variables originales ni 884 personas. No cambiamos esa preparación al documentarla.
+
+TransactionAmt tiene además una validación previa: `features._validated` rechaza montos ausentes, no finitos o negativos antes de construir atributos. Aunque el imputador numérico conserve una mediana registrada para esta columna, esa estadística no significa que la interfaz fuente permita rescatar una operación sin monto. La imputación de las otras variables numéricas no debe confundirse con ese contrato de entrada.
+
+En los CSV puede seguirse una columna por su nombre: `origen` y `significado` explican de dónde viene; `tipo_semantico` y `dtype_union_eda` separan concepto y almacenamiento; `entra_modelo` identifica su participación; `tipo_pipeline_verificado`, `tratamiento` y `columnas_matriz` describen su transformación efectiva. `variables_padre` y `formula_o_procedencia` permiten rastrear la ingeniería. Los campos `ausencia_eda` y `cardinalidad_eda` describen el conjunto global, mientras `mediana_ajustada_train` corresponde al pasado que ajustó el modelo.
+
+### 2.4. Qué se aprende después de esta exploración
+
+La ingeniería y la preparación se ejecutan en las etapas posteriores. Para explicar su relación con el dato dejamos este resumen retrospectivo; el EDA no ajusta estas reglas con la población global:
+
+| Componente | Regla implementada en 05/06 | Límite que debemos explicar |
+|---|---|---|
+| Numéricas | Infinitos a NaN, mediana aprendida en train, indicadores cuando hubo ausencia al ajustar y float32; el monto requiere validación finita no negativa previa | Un indicador no se añade automáticamente si una columna empieza a faltar por primera vez en el futuro; un monto fuente ausente se rechaza antes de imputar |
+| Categóricas | Texto, `__MISSING__`, one-hot y categorías infrecuentes con mínimo 50 en train | Desconocidas dejan su bloque en ceros; no crean una categoría nueva ni equivalen automáticamente al grupo de raras |
+| Monto y tiempo | Monto original más log1p; fases relativas de día y semana | Conservamos A original para costos; no asignamos fechas calendario no verificadas |
+| Historia | Conteo, monto medio y recencia por proxies de tarjeta, dispositivo y dominio | Pasado estricto en train; estado congelado de train al transformar validación; sin etiquetas en los agregados |
+
+Las doce discrepancias de tipo y las doce columnas con más de 90% de ausencia son recuentos de problemas diferentes. Ninguno autoriza una eliminación automática. Conservamos 431 originales permitidas, `has_identity` y quince derivados; no aplicamos PCA, selección por importancia, escalamiento ni recorte de montos para entrenar.
+
 ## 3. Resultados principales
 
 ### 3.1 Variable objetivo
@@ -77,11 +107,15 @@ De las 434 columnas unidas, 414 contienen al menos un valor ausente y 12 superan
 
 La tasa de fraude fue 7,85% en transacciones con registro de identidad y 2,09% en aquellas sin identidad. A su vez, 54,77% de los fraudes tiene identidad, frente a 23,32% de las operaciones legítimas. Interpretamos este resultado como una asociación descriptiva, no como evidencia causal. Conservaremos un indicador de disponibilidad y evaluaremos su estabilidad temporal.
 
+**Origen y mecanismo de ausencia son conceptos distintos.** Llamamos estructural a la falta causada por no encontrar una fila de identidad en la unión; una fila de identidad que sí existe también puede contener campos vacíos. No hemos identificado el mecanismo MCAR (ausencia independiente de los valores), MAR (dependencia de información observada) o MNAR (dependencia de valores no observados). El contraste de tasas no valida por sí solo uno de esos mecanismos ni garantiza utilidad predictiva fuera de muestra. Las formulaciones breves conservadas en salidas históricas deben leerse con este alcance.
+
 ### 3.5 Variables categóricas
 
 Algunas categorías presentan diferencias considerables. `ProductCD=C` registra 11,69% de fraude frente a 2,04% en `W`; las tarjetas de crédito presentan 6,68% frente a 2,43% en débito; y las operaciones con dispositivo móvil alcanzan 10,17%.
 
 Estas cifras ayudan a comprender el conjunto, pero fueron calculadas con todos los datos y no se utilizarán directamente como codificaciones. Cualquier transformación basada en la etiqueta deberá aprenderse únicamente con el bloque de entrenamiento.
+
+No establecemos con estas tasas que una categoría cause fraude o que mejore el modelo en un periodo futuro. El soporte de cada grupo y su estabilidad temporal forman parte de la interpretación. La medida de cardinalidad cuenta niveles observados; no es una importancia de variable. Una alta cardinalidad justifica revisar memoria y representación, pero no es por sí sola una razón para eliminar una columna.
 
 ### 3.6. Ampliaciones de la revisión de la profesora
 

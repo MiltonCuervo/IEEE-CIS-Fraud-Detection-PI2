@@ -76,6 +76,14 @@ Los demás parámetros se mantienen: learning_rate 0,05, subsample 0,8 y colsamp
 
 reference frente a history es una comparación del conjunto de atributos con parámetros iguales; no atribuye el efecto a una variable histórica individual. Las otras configuraciones exploran profundidad y regularización de forma acotada. No es una búsqueda exhaustiva ni garantiza que no exista una alternativa mejor.
 
+### 6.1. Cómo explicamos la selección de variables y modelo
+
+Aquí hay dos decisiones diferentes. La lista de originales permitidas conserva 431 columnas, añade has_identity y define una base de 432 atributos. La representación ampliada añade quince características, sin retirar originales por su ausencia o importancia. Después comparamos configuraciones del predictor sobre esas representaciones. «Seleccionamos history_deeper» no significa «seleccionamos solo las variables importantes».
+
+Cada fold aprende su propia preparación con el pasado que le corresponde. Por eso el vocabulario y la anchura one-hot pueden cambiar entre folds. Los 447 atributos y las 2.642 columnas del inventario describen el reajuste posterior del 06; esas dimensiones no deben copiarse a todas las matrices de esta búsqueda. Tampoco se utilizan los promedios o tasas globales del EDA como codificación supervisada.
+
+Para explicar un atributo concreto consultamos su fila en `modelo_diccionario_variables.csv` y las posiciones asociadas en `modelo_matriz_variables.csv`. Esas tablas reconstruyen el artefacto del 06; no son una nueva ejecución del 05. El [recorrido central](diccionario_variables_y_flujo_modelo.md) incluye una operación real preparada y preguntas de defensa. El notebook 05 permanece íntegro para conservar la identidad de su corrida registrada.
+
 Seleccionamos por AP media con el mismo peso para cada periodo. En un empate exacto conservamos el orden predeclarado de candidatos. Brier y log-loss describen las probabilidades sin calibrar, pero no deciden la selección. No escogemos configuraciones con el costo de los escenarios ilustrativos ni ajustamos el umbral clasificatorio.
 
 ## 7. Resultados y evidencia

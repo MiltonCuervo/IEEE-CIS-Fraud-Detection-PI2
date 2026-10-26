@@ -167,6 +167,22 @@ Cada cifra del informe final debe poder rastrearse a: version/hash de datos, par
 
 El test permanece sin puntuar. Antes de evaluarlo es necesario acordar escenarios finales de Ca y unidades, discutir la calibracion y congelar el protocolo.
 
+## Recorrido para estudiar y explicar el proyecto
+
+La lectura comienza por el [diccionario de variables y flujo del modelo](docs/diccionario_variables_y_flujo_modelo.md). Allí conectamos las columnas fuente con sus tipos, preparación, ingeniería y posiciones en la matriz, incluyendo una operación real hasta su representación. Para preparar la asesoría seguimos este orden:
+
+| Tema que debemos explicar | Lectura y evidencia |
+|---|---|
+| Datos y tratamiento por variable | Notebook 01, informe 01 y los tres CSV de inventario descritos abajo |
+| Qué pasado puede usar cada operación | Notebook 02 e informe 02; distinguir duración temporal de cantidad de filas |
+| Qué entra y qué entrega XGBoost | Sección 7 del diccionario y notebook 06; distinguir DataFrame fuente, 447 atributos y matriz de 2.642 columnas |
+| Qué hicimos en Platt | Notebook/informe 06: ventanas, predictor fijo, logit recortado y parámetros aprendidos |
+| Qué añade isotónica y qué encontramos | Notebook/informe 09: mismo predictor, ajuste temprano y comparación posterior, métricas y preguntas de defensa |
+
+El caso real del diccionario explica datos y transformaciones verificables. El ejemplo numérico de Platt con p_raw=0,20 es didáctico y no es una predicción atribuida a ese caso. Las métricas agregadas de 06/09 sí pertenecen a corridas históricas identificadas. Esta ampliación de explicaciones conserva las celdas ejecutables de calibración y sus salidas; no anuncia un nuevo entrenamiento.
+
+Mantenemos explícitos los doce códigos de identidad pendientes, la elección abierta de calibrador y Ca, y la exposición histórica agregada del test. La documentación distingue lo observado, la interpretación, los supuestos y los datos que todavía necesitamos.
+
 ## Detalle de variables y reproducción del inventario
 
 El notebook 01 conserva las explicaciones y visualizaciones de la revisión de la profesora e incorpora nuestro inventario completo. Exporta `results/tables/eda_diccionario_variables.csv`, una fila por cada una de las 434 originales. El [diccionario y recorrido](docs/diccionario_variables_y_flujo_modelo.md) distingue tipo semántico, almacenamiento, tratamiento efectivo, columnas auxiliares, ingeniería y resultados del modelo.
@@ -187,3 +203,9 @@ Verifica las fuentes registradas en 05/06 y exporta `modelo_diccionario_variable
 Los resultados 03/04 siguen siendo la línea base histórica, no los scores seleccionados del 06. El 04 consume `validation_scores.parquet`; el 07 usa `validation_scores_selected.parquet` y `selected_xgboost_platt.joblib`. El 08 necesita los scores/acciones locales del 06/07; el 09 carga el predictor del 06 y ajusta solo la candidata isotónica temprana. Modelos y archivos por operación permanecen locales e ignorados por Git. Un clon sin ellos debe regenerar las etapas previas.
 
 El notebook 02 comprueba la asignación antes de reutilizar un manifiesto existente, sin sobrescribirlo innecesariamente: una regeneración idéntica de filas puede cambiar bytes Parquet y romper la procedencia. Si cambia una fuente o asignación, se revisa y regenera la cadena necesaria; no se reescriben hashes para aparentar una corrida anterior.
+
+### Requisitos de esta copia local
+
+La lectura del repositorio no implica que todos los artefactos ignorados estén disponibles. En la revisión de esta copia están el baseline y sus scores; faltan selected, scores selected, árboles, acciones e isotónica en sus rutas esperadas. Para repetir inferencia o diagnósticos deben recuperarse artefactos propios verificables o regenerarse las etapas necesarias. Las tablas versionadas permiten estudiar los resultados mientras se prepara esa reproducción.
+
+También se detectó conversión CRLF/LF en módulos cuyo contenido coincide al normalizar saltos de línea. Las verificaciones históricas usan bytes y pueden detenerse por esa conversión en Windows. Debe revisarse el checkout y la identidad de las fuentes antes de ejecutar; no se actualizan hashes antiguos para ocultar diferencias. Esta revisión documental no ejecuta modelos ni la suite histórica retirada.
