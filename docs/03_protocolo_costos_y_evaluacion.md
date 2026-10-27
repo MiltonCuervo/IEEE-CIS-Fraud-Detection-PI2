@@ -15,6 +15,20 @@ La implementación principal mantiene esta matriz. Los parámetros `B`, `λ`, co
 
 ## 2. Probabilidad, etiqueta y acción
 
+### 2.1. Antes de decidir debemos especificar la entrada
+
+La línea base del notebook 03 utiliza las 431 columnas originales permitidas y has_identity, sin los quince atributos ampliados del 05. Retira de X TransactionID, TransactionDT, isFraud y split; conserva las tres primeras fuera de X para alinear, ordenar y evaluar. No aplica selección automática por correlación o ausencia. Las categorías explícitas y las columnas de texto pasan a one-hot; las numéricas se imputan con medianas e indicadores aprendidos solo en train. El notebook 03 tiene su propio preprocesador; no le atribuimos automáticamente las 2.642 columnas ni todos los detalles de implementación del reajuste del 06.
+
+El predictor seleccionado del 06 añade los quince atributos y utiliza 447 entradas, 37 categóricas y 410 numéricas, con una matriz de 2.642 columnas. Su [diccionario de variables y contrato de flujo](diccionario_variables_y_flujo_modelo.md) identifica cada columna y la discrepancia pendiente en doce códigos de identidad. No mezclamos el modelo baseline con selected ni usamos un calibrador de otro predictor.
+
+### 2.2. Qué produce el predictor y qué recibe cada política
+
+XGBoost devuelve probabilidades por clase; usamos la columna de fraude como p_raw. Platt transforma el logit recortado de esa probabilidad para obtener p_calibrada. La etiqueta convencional se obtiene después con >=0,5. BMR consume p_calibrada, TransactionAmt original y Ca, no la etiqueta binaria ni isFraud. El árbol recibe los atributos transformados y entrega una acción aprendida, no una probabilidad calibrada de fraude.
+
+TransactionID asocia cada salida con su transacción. isFraud se utiliza después de decidir para medir, aunque aparezca junto a los scores en archivos de evaluación. Su presencia en una tabla de resultados no lo convierte en una entrada de inferencia. Ca no es una columna original ni modifica la pérdida logística de XGBoost: se usa al decidir BMR y al construir objetivos/pesos del árbol en train.
+
+### 2.3. Regla y riesgo esperado
+
 XGBoost estima una probabilidad que calibramos antes de decidir. El corte clasificatorio 0,5 se mantiene: la estrategia convencional interviene cuando `p_i >= 0,5`. BMR calcula riesgos esperados:
 
 ```text
@@ -74,6 +88,6 @@ Reportamos costo, componentes, ahorro con ambas referencias, recall de fraude, t
 
 ## 7. Organización y reproducción
 
-`src/fraud_cost/costs.py` concentra decisiones, costos, comparación y ponderación. `scenarios.py` valida scores y recorre Ca. Los notebooks conservan las preguntas, parámetros y lectura de salidas. Las pruebas en `tests/test_costs.py` verifican las cuatro celdas de la matriz, empates, montos cero, referencias de ahorro y equivalencia del error ponderado.
+`src/fraud_cost/costs.py` concentra decisiones, costos, comparación y ponderación. `scenarios.py` valida scores y recorre Ca. Los notebooks conservan las preguntas, parámetros y lectura de salidas. Las corridas históricas verificaron las cuatro celdas de la matriz, empates, montos cero, referencias y equivalencia del error ponderado. La carpeta tests fue retirada en la organización actual; no se afirma que aquella suite esté disponible para ejecutar hoy. La auditoría de variables no modifica esa matriz ni reemplaza sus verificaciones.
 
 Ejecutamos 03 antes de 04 para regenerar la referencia y su sensibilidad. La etapa 06 guarda `validation_scores_selected.parquet` y `selected_xgboost_platt.joblib`; la etapa 07 los verifica y utiliza conjuntamente sin sobrescribir la referencia. Reconstruye atributos de train con pasado estricto, aplica el preprocesamiento ya aprendido y ajusta árboles solo con train. El diagnóstico raw/calibrado de BMR es separado y no elige retrospectivamente un calibrador. Los CSV y figuras históricos de la matriz con B y λ no son evidencia del protocolo actual. Los valores finales de Ca siguen pendientes, por lo que la evaluación de test permanece cerrada.

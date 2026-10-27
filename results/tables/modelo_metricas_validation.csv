@@ -1,2 +1,2 @@
-block,rows,frauds,fraud_rate,average_precision,recall_at_fixed_0_5,precision_at_fixed_0_5,brier_score,log_loss,legitimate_block_rate_at_fixed_0_5
-validation_policy,42047,1517,0.036078673864960636,0.4680509576521608,0.27554383651944625,0.7683823529411765,0.025003976603887736,0.1016505758448949,0.0031088082901554403
+block,modelo,rows,frauds,fraud_rate,average_precision,recall_at_fixed_0_5,precision_at_fixed_0_5,brier_score,log_loss,legitimate_block_rate_at_fixed_0_5
+validation_policy,xgboost,42047,1517,0.036078673864960636,0.4648811884844175,0.27488464073829927,0.7595628415300546,0.02517161521489015,0.10212239138863818,0.003256846780162842

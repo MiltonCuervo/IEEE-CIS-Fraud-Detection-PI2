@@ -10,7 +10,7 @@ Este proyecto compara tres políticas de decisión sobre la misma matriz de cost
 
 ## Pregunta de investigación
 
-En que medida la optimización de la regla de decisión basada en costos permite mejorar el ahorro financiero frente a un umbral fijo convencional para el bloqueo de transacciones sospechosas en el conjunto de datos IEEE-CIS, y como varia este beneficio ante diferentes costos administrativos de revision Ca.
+¿En qué medida la optimización de la regla de decisión basada en costos permite mejorar el ahorro financiero frente a un umbral fijo convencional para el bloqueo de transacciones sospechosas en el conjunto de datos IEEE-CIS, y cómo varía este beneficio ante diferentes costos administrativos de revisión Ca?
 
 ---
 
@@ -93,11 +93,9 @@ Escribe el manifiesto local `data/interim/data_provenance.json` con hashes SHA-2
 
 Seleccionar el kernel `ieee-cis-pi2` y ejecutar los notebooks en orden (ver secuencia mas abajo).
 
-**Paso 6 — Verificar la lógica reutilizable**
+**Paso 6 — Verificar la lógica reutilizable y la procedencia**
 
-```powershell
-.\.venv\Scripts\python.exe -m pytest -q
-```
+Los notebooks incluyen comprobaciones ejecutables y las etapas 05–09 verifican hashes de sus entradas antes de reutilizarlas. Las corridas históricas documentaron una suite de pruebas, pero `tests/` fue retirada en la organización actual; no presentamos sus resultados como pruebas disponibles hoy. Antes de cambios algorítmicos debe recuperarse una suite versionada. La auditoría del inventario, descrita más abajo, verifica el predictor existente sin reentrenarlo.
 
 Las versiones utilizadas quedan registradas en:
 
@@ -156,6 +154,8 @@ Cada cifra del informe final debe poder rastrearse a: version/hash de datos, par
 
 | Documento | Contenido |
 |---|---|
+| [`docs/01_informe_eda.md`](docs/01_informe_eda.md) | Estructura, ausencia, variables y hallazgos del EDA |
+| [`docs/02_particion_temporal.md`](docs/02_particion_temporal.md) | Particiones, límites y usos permitidos de cada bloque |
 | [`docs/03_protocolo_costos_y_evaluacion.md`](docs/03_protocolo_costos_y_evaluacion.md) | Matriz de costos |
 | [`docs/04_sensibilidad_hipotetica_validation.md`](docs/04_sensibilidad_hipotetica_validation.md) | Referencia economica |
 | [`docs/05_preparacion_y_seleccion_temporal.md`](docs/05_preparacion_y_seleccion_temporal.md) | Seleccion temporal |
@@ -163,7 +163,27 @@ Cada cifra del informe final debe poder rastrearse a: version/hash de datos, par
 | [`docs/07_comparacion_economica_validation.md`](docs/07_comparacion_economica_validation.md) | Comparacion de tres politicas y diagnostico de calibracion |
 | [`docs/08_diagnostico_y_estabilidad.md`](docs/08_diagnostico_y_estabilidad.md) | Calibracion condicional, frontera economica y estabilidad temporal |
 | [`docs/09_comparacion_calibradores_y_costos.md`](docs/09_comparacion_calibradores_y_costos.md) | Comparacion Platt/isotonica y alcance de antecedentes de Ca |
-| [`docs/guia_defensa_tecnica.md`](docs/guia_defensa_tecnica.md) | Explicacion del dataset, tecnicas, costos, metricas, hallazgos y respuestas para sustentacion |
-| [`docs/estado_actual_proyecto.md`](docs/estado_actual_proyecto.md) | Artefactos, decisiones pendientes y orden para retomar (corte al 12 de octubre de 2026) |
+| [`docs/diccionario_variables_y_flujo_modelo.md`](docs/diccionario_variables_y_flujo_modelo.md) | Inventario por variable, ingeniería, transformaciones y contrato de entrada/salida |
 
 El test permanece sin puntuar. Antes de evaluarlo es necesario acordar escenarios finales de Ca y unidades, discutir la calibracion y congelar el protocolo.
+
+## Detalle de variables y reproducción del inventario
+
+El notebook 01 conserva las explicaciones y visualizaciones de la revisión de la profesora e incorpora nuestro inventario completo. Exporta `results/tables/eda_diccionario_variables.csv`, una fila por cada una de las 434 originales. El [diccionario y recorrido](docs/diccionario_variables_y_flujo_modelo.md) distingue tipo semántico, almacenamiento, tratamiento efectivo, columnas auxiliares, ingeniería y resultados del modelo.
+
+El predictor actual tiene 447 entradas: 37 categóricas y 410 numéricas. Su matriz de 2.642 columnas combina 410 valores numéricos, 342 indicadores de ausencia y 1.890 one-hot. Los doce campos id que el proveedor declara categóricos y que el pipeline trata numéricamente permanecen señalados como discrepancia pendiente; esta integración no cambia sus tipos ni sus resultados.
+
+Con el entorno del proyecto y el artefacto del 06 ya disponible, desde la raíz:
+
+```python
+from pathlib import Path
+from fraud_cost.schema import export_model_inventory
+
+catalogo, matriz, registro = export_model_inventory(Path.cwd())
+```
+
+Verifica las fuentes registradas en 05/06 y exporta `modelo_diccionario_variables.csv` (451 filas, 447 entradas directas), `modelo_matriz_variables.csv` (2.642 posiciones) e `inventario_variables_config.json`. No entrena ni produce nuevas predicciones. El perfil EDA global es descriptivo; las medianas, indicadores y vocabularios del predictor se aprendieron solo con train.
+
+Los resultados 03/04 siguen siendo la línea base histórica, no los scores seleccionados del 06. El 04 consume `validation_scores.parquet`; el 07 usa `validation_scores_selected.parquet` y `selected_xgboost_platt.joblib`. El 08 necesita los scores/acciones locales del 06/07; el 09 carga el predictor del 06 y ajusta solo la candidata isotónica temprana. Modelos y archivos por operación permanecen locales e ignorados por Git. Un clon sin ellos debe regenerar las etapas previas.
+
+El notebook 02 comprueba la asignación antes de reutilizar un manifiesto existente, sin sobrescribirlo innecesariamente: una regeneración idéntica de filas puede cambiar bytes Parquet y romper la procedencia. Si cambia una fuente o asignación, se revisa y regenera la cadena necesaria; no se reescriben hashes para aparentar una corrida anterior.

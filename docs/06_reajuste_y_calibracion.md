@@ -6,6 +6,18 @@ En el notebook 05 elegimos history_deeper por AP media dentro de train. Su venta
 
 El experimento está en `notebooks/06_reajuste_y_calibracion.ipynb`. La implementación reutilizable está en `src/fraud_cost/refit.py` y utiliza los atributos de `features.py`. El propósito es dejar un predictor y un calibrador coherentes, junto con un diagnóstico reproducible. No optimizamos el umbral clasificatorio ni evaluamos todavía decisiones económicas.
 
+### 1.1. Contrato completo de entrada y salida
+
+Las columnas originales utilizadas son 431: todas salvo TransactionID, TransactionDT e isFraud como entradas directas. Has_identity completa 432 atributos base y los quince derivados del 05 elevan X a 447. Split no entra. El preprocesador ajustado confirma **37 categóricas y 410 numéricas**; estas se convierten en **410 valores numéricos imputados, 342 indicadores de ausencia y 1.890 columnas one-hot**, para un total de 2.642. Los vocabularios de los folds del 05 tienen otras dimensiones; no se reutilizan como si fueran los del reajuste.
+
+La auditoría por variable está en `results/tables/modelo_diccionario_variables.csv` y por posición de matriz en `modelo_matriz_variables.csv`. Las doce discrepancias de tipo en id_13, id_14, id_17–id_22, id_24–id_26 e id_32 permanecen en el artefacto: no se cambiaron al documentarlas. La [explicación integral](diccionario_variables_y_flujo_modelo.md) distingue significado, almacenamiento, rama actual y transformaciones para cada nombre.
+
+XGBoost recibe esa matriz, no IDs, Ca ni etiquetas de la operación a predecir. `predict_proba` entrega dos columnas de clases [0,1]; tomamos la de fraude. `FittedPredictor.predict_raw` devuelve ese vector, y `predict_calibrated` aplica Platt sobre el logit recortado. El corte >=0,5 genera una etiqueta clasificatoria; no es otra salida probabilística aprendida ni la decisión BMR.
+
+El constructor requiere las columnas fuente y TransactionDT para derivar atributos con el pasado de train congelado. El esquema de nombres debe coincidir con el entrenado y el preprocesador aplica su orden; no basta enviar 447 números sin correspondencia. TransactionID alinea las salidas sin pertenecer a X. `isFraud` solo se necesita para ajustar y evaluar, no para inferir; su presencia en el Parquet de scores permite evaluación posterior, no fuga hacia el predictor.
+
+El notebook 07 recibe p_calibrada, monto original y Ca para BMR, y la matriz para los árboles. En el 09 la isotónica candidata consume p_raw directamente con predict: no se puede sustituir en la interfaz Platt sin adaptar la transformación de entrada y documentar el cambio.
+
 ## 2. Población y responsabilidades temporales
 
 Antes de cargar desarrollo verificamos los hashes de datos, manifiesto y fuentes registrados en la selección del 05. Una configuración no debe reutilizarse como si estuviera respaldada por el mismo experimento cuando cambiaron sus entradas. El registro conserva el commit y el estado de cambios locales, además de hashes que identifican las fuentes efectivamente utilizadas.
@@ -112,6 +124,10 @@ Conservamos únicamente estas salidas:
 Las probabilidades y modelos quedan locales, ignorados por Git, y pueden regenerarse. Joblib no es un formato seguro para archivos de origen desconocido: solo cargamos el artefacto generado y verificado por nosotros. La serialización conserva el conjunto necesario para que inferencia use el mismo historial y preprocesamiento.
 
 Los hashes de módulos y datos corresponden a sus bytes. En el notebook 06 identificamos el diseño ejecutable mediante tipos y fuentes de celdas de código, excluyendo Markdown, salidas y conteos; esto permite completar después la lectura académica sin fingir que se volvió a entrenar. El método de hash queda explícito en la configuración y es distinto del utilizado en el 05. También registramos hashes del modelo y las probabilidades guardadas.
+
+### 6.1. Inventario auditado después de la corrida
+
+La ampliación documental del 24 de octubre añade `modelo_diccionario_variables.csv`, `modelo_matriz_variables.csv` e `inventario_variables_config.json`. Los genera `fraud_cost.schema.export_model_inventory` a partir del diccionario EDA y el artefacto del 06 verificado, sin fit, sin actualizar historial y sin producir nuevas predicciones. No son salidas que atribuyamos retrospectivamente a save_refit de la corrida original. Las medianas e indicadores que muestran se leen del preprocesador ya ajustado con train.
 
 Las pruebas comprueban separación temporal y de IDs, exclusión de gaps/test, tratamiento de empates, validación de probabilidades, grupos con probabilidades repetidas y matriz de confusión al corte fijo. Verificamos además que cambiar etiquetas posteriores no altere predictor o calibrador, que la inferencia no actualice el historial y que guardar/cargar el artefacto conserve las probabilidades.
 

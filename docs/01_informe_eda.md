@@ -11,9 +11,39 @@ El análisis reproducible se encuentra en [`notebooks/01_exploracion_datos.ipynb
 Trabajamos con los archivos etiquetados de la competencia:
 
 - `train_transaction.csv`: 590.540 transacciones y 394 columnas.
-- `train_identity.csv`: 144.233 registros y 41 columnas adicionales.
+- `train_identity.csv`: 144.233 registros y 41 columnas, incluida la clave compartida; aporta 40 columnas no clave.
 
 Realizamos un `left join` mediante `TransactionID`. La tabla resultante conserva las 590.540 transacciones y contiene 434 columnas. La cobertura de identidad es 24,42%, por lo que una unión interna eliminaría la mayoría de las observaciones etiquetadas y cambiaría la población analizada.
+
+### 2.1. Inventario completo y significado de los tipos
+
+Exportamos `results/tables/eda_diccionario_variables.csv` con **434 filas, una por columna original**. Conserva tabla de origen, familia, significado verificable, dtype leído, tipo semántico, rol, cardinalidad, ausencia y relación con ingeniería. No sustituimos ese inventario por ejemplos de cinco columnas. La ausencia/cardinalidad globales describen el EDA; no se usan como medianas, vocabulario ni selección para entrenar.
+
+| Familia original | Cantidad | Tipo semántico o rol |
+|---|---:|---|
+| TransactionID, TransactionDT, isFraud | 3 | Identificador, tiempo relativo y objetivo; no entradas directas |
+| TransactionAmt | 1 | Numérica y monto para evaluación económica |
+| ProductCD | 1 | Categórica |
+| card1–card6 | 6 | Códigos categóricos, aunque algunos se almacenan como números |
+| addr1–addr2 | 2 | Categóricas |
+| dist1–dist2 | 2 | Numéricas |
+| P_emaildomain, R_emaildomain | 2 | Categóricas |
+| C1–C14 | 14 | Descriptores numéricos anonimizados |
+| D1–D15 | 15 | Descriptores numéricos anonimizados |
+| M1–M9 | 9 | Categóricas |
+| V1–V339 | 339 | Descriptores numéricos del proveedor |
+| id_01–id_38 | 38 | id_01–id_11 numéricas; id_12–id_38 declaradas categóricas por el proveedor |
+| DeviceType, DeviceInfo | 2 | Categóricas |
+
+La [descripción oficial](https://www.kaggle.com/competitions/ieee-fraud-detection/data) aporta la clasificación categórica y el carácter relativo de TransactionDT. No conocemos la interpretación individual de todos los códigos anonimizados: el diccionario lo señala expresamente, en vez de atribuir significado a cada C, D, M, V o id. Las variables V ya vienen en el archivo y no son ingeniería creada por nosotros.
+
+### 2.2. Qué conservamos y qué no entra directamente
+
+Conservamos **431 columnas originales como predictores**, sin selección automática por correlación, importancia, cardinalidad o ausencia. TransactionID se conserva para unir/alinear, isFraud como y y TransactionDT para ordenar, partir y construir derivados, pero las tres quedan fuera de X. Split, creado después, es control temporal y tampoco entra. Que no sean entradas directas no implica borrarlas de los datos fuente.
+
+La siguiente descripción es una reconstrucción documental de las etapas 05/06, no una afirmación de que el EDA original ajustó el preprocesador. Con has_identity tenemos 432 atributos base; con quince derivados posteriores llegamos a 447. El artefacto del 06 distribuye esas entradas en 37 categóricas y 410 numéricas antes de la matriz codificada de 2.642 columnas. El [diccionario y flujo hasta el modelo](diccionario_variables_y_flujo_modelo.md) enumera tratamientos, fórmulas y contratos de entrada/salida; no confunde las 434 originales con los 447 atributos ni con las 2.642 columnas codificadas.
+
+Hay una discrepancia pendiente: id_13, id_14, id_17, id_18, id_19, id_20, id_21, id_22, id_24, id_25, id_26 e id_32 quedaron numéricas en nuestro código pese a la clasificación categórica del proveedor. Los árboles pueden usar un orden no justificado entre códigos. Lo documentamos por columna sin cambiar retrospectivamente la preparación, los modelos ni sus resultados.
 
 ## 3. Resultados principales
 
@@ -53,6 +83,16 @@ Algunas categorías presentan diferencias considerables. `ProductCD=C` registra 
 
 Estas cifras ayudan a comprender el conjunto, pero fueron calculadas con todos los datos y no se utilizarán directamente como codificaciones. Cualquier transformación basada en la etiqueta deberá aprenderse únicamente con el bloque de entrenamiento.
 
+### 3.6. Ampliaciones de la revisión de la profesora
+
+La revisión del 22 de octubre amplía la lectura de las celdas, el ratio legítimas/fraude, el resumen de ausencia por familias y las gráficas categóricas. Conservamos esos aportes como base del notebook e incorporamos después el diccionario completo. El ratio es aproximadamente 27,58 legítimas por fraude; se añade al resumen calculado junto con la fracción de monto fraudulento y su concentración superior.
+
+La nueva figura `eda_tasas_fraude_categoricas.png` compara las categorías de mayor volumen de ProductCD, card4, card6, P_emaildomain y DeviceType, con una referencia de prevalencia global. Es una presentación de asociaciones, no codificación supervisada: el predictor actual usa one-hot aprendido con train y no tasas de fraude como atributos.
+
+La figura `eda_señal_numericas.png` contrasta C1, D1, TransactionAmt y V258 entre clases. Son representantes ilustrativos, no una selección final ni un ranking de importancia. Las distribuciones se muestran sobre valores observados y se recortan al percentil 99 exclusivamente para visualizar; no truncamos los datos que alimentan modelos o costos. V258 tiene 77,91% de ausencia y se identifica como alta ausencia. Un histograma similar entre clases tampoco demuestra utilidad conjunta ni inutilidad: hace falta evaluación predictiva controlada.
+
+Para conciliar explicación y código distinguimos exactitud insuficiente de macro-F1, que pondera ambas clases por igual; mantenemos dispositivos separados de la familia D y exportamos todas las figuras versionadas. Estas precisiones no cambian datos, etiquetas, atributos del predictor ni matriz de costos.
+
 ## 4. Decisiones derivadas del EDA
 
 Con base en la evidencia anterior acordamos:
@@ -72,6 +112,7 @@ Con base en la evidencia anterior acordamos:
 - Las asociaciones categóricas no implican causalidad.
 - El EDA utiliza el conjunto etiquetado completo para descripción. Ninguna estadística global se reutilizará para ajustar transformaciones o seleccionar modelos.
 - Esta etapa todavía no define imputadores, codificadores, atributos finales ni hiperparámetros.
+- El diccionario actualizado distingue las descripciones originales de la preparación que se ejecutó después. Su columna tipo_regla_vigente describe esa implementación, no una recomendación semántica ni un ajuste aprendido del conjunto global.
 
 ## 6. Resultado de la etapa y continuación
 
@@ -88,10 +129,13 @@ results/
 ├── figures/
 │   ├── eda_distribucion_objetivo.png
 │   ├── eda_distribucion_montos.png
-│   └── eda_evolucion_temporal.png
+│   ├── eda_evolucion_temporal.png
+│   ├── eda_tasas_fraude_categoricas.png
+│   └── eda_señal_numericas.png
 └── tables/
     ├── eda_cobertura_identidad_por_clase.csv
     ├── eda_distribucion_objetivo.csv
+    ├── eda_diccionario_variables.csv
     ├── eda_fraude_segun_identidad.csv
     ├── eda_montos_por_clase.csv
     ├── eda_resumen_general.csv

@@ -6,6 +6,14 @@ En esta etapa definimos los bloques de entrenamiento, validación y prueba que s
 
 El procedimiento reproducible está en [`notebooks/02_particion_temporal.ipynb`](../notebooks/02_particion_temporal.ipynb). La asignación individual se guarda en `data/interim/split_manifest.parquet`, archivo derivado que no se versiona porque puede regenerarse desde los datos originales.
 
+### 1.1. Separar observaciones no es seleccionar atributos
+
+La lista `usecols` carga once columnas para ordenar, resumir y describir novedades de tarjetas/direcciones/correos. **No significa que el modelo utilice solo once variables** ni que descartemos las demás originales. El manifiesto conserva TransactionID y split para recuperar luego todas las columnas de las operaciones permitidas.
+
+TransactionDT fija el orden; TransactionID conserva la correspondencia; isFraud permite resúmenes en los bloques autorizados, no un corte aprendido por etiqueta. Ninguna mediana ni categoría de este notebook se transfiere al entrenamiento. El EDA completo y el [diccionario por variable](diccionario_variables_y_flujo_modelo.md) son descriptivos; el ajuste se realiza dentro de cada pasado de entrenamiento.
+
+Train ajusta historial, imputación, vocabulario y modelo. Los gaps no contribuyen a ninguna de esas estadísticas. Validación temprana calibra el predictor fijo; validación posterior compara probabilidades y acciones. Ambas usan el historial final de train congelado, sin incorporar transacciones de validación. ID, etiqueta, tiempo crudo y split siguen disponibles como controles, pero no entran directamente a X. TransactionAmt mantiene su función predictiva y económica.
+
 ## 2. Justificación metodológica
 
 Una partición aleatoria mezclaría transacciones de los 182 días disponibles en los tres bloques. Esto haría que entrenamiento y evaluación compartieran simultáneamente periodos iniciales y finales, ocultando los cambios de prevalencia observados en el EDA.
@@ -27,7 +35,7 @@ Los gaps comienzan después de cada límite y consumen parte del intervalo sigui
 | 3 días | 380.815 | 95.763 | 96.139 | 3.718 | 3.312 |
 | 7 días | 380.815 | 84.093 | 84.233 | 3.075 | 2.960 |
 
-El EDA anterior a esta partición recorrió todos los datos etiquetados, incluidos los periodos que después se asignaron a test. Además, **la selección histórica de 7 días consultó conteos agregados de fraude de los candidatos a test**, como muestra la tabla; estos conteos se usaron para verificar suficiencia de positivos junto con el criterio temporal de una semana y la separación más conservadora. La tabla versionada conserva esos conteos como evidencia histórica; el notebook actualizado ya no los agrega al regenerar sus resultados. Por eso el bloque test actual no es un holdout estrictamente intocado para una afirmación confirmatoria independiente. La selección no incluyó scores del modelo ni costos realizados sobre test. Las futuras ejecuciones de notebook 02 omiten las etiquetas test en sus resúmenes y comprobaciones.
+El EDA anterior a esta partición recorrió todos los datos etiquetados, incluidos los periodos que después se asignaron a test. Además, **la selección histórica de 7 días consultó conteos agregados de fraude de los candidatos a test**, como muestra la tabla; estos conteos se usaron para verificar suficiencia de positivos junto con el criterio temporal de una semana y la separación más conservadora. Este informe y la historia Git conservan esos conteos como evidencia histórica; los CSV actualizados y el notebook ya no los agregan al regenerar sus resultados. Por eso el bloque test actual no es un holdout estrictamente intocado para una afirmación confirmatoria independiente. La selección no incluyó scores del modelo ni costos realizados sobre test. Las futuras ejecuciones de notebook 02 omiten las etiquetas test en sus resúmenes y comprobaciones.
 
 ## 4. Partición seleccionada
 
@@ -77,7 +85,7 @@ El notebook verifica automáticamente que:
 4. validation contiene ambas clases; el test se reserva sin comprobar su distribución de etiquetas en la corrida actual;
 5. el manifiesto puede guardarse y leerse sin perder filas ni asignaciones.
 
-Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. En etapas posteriores incorporamos pruebas en `tests/test_features_selection.py` y `tests/test_refit.py` para las ventanas internas, exclusión de bloques externos, límites de calibración y garantías de pasado estricto. Estas pruebas complementan las comprobaciones del notebook; no sustituyen una prueba dedicada de toda la partición original.
+Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. Las corridas posteriores documentaron pruebas de ventanas internas, exclusión de bloques externos, límites de calibración y pasado estricto. La carpeta tests fue retirada en la organización actual del repositorio; esos resultados históricos no equivalen a una suite disponible hoy para ejecutar. Las verificaciones de procedencia y las comprobaciones de los notebooks permanecen; no sustituyen una prueba dedicada de toda la partición original.
 
 ## 7. Uso permitido de cada bloque
 
@@ -87,6 +95,14 @@ Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El noteb
 - **Gaps:** no se utilizan para aprender ni evaluar; solo preservan la separación.
 
 El test no podrá utilizarse repetidamente para corregir el modelo. Si una decisión se toma después de observar sus resultados, esa evaluación deja de ser independiente y deberá declararse.
+
+### 7.1. Integración de la revisión de la profesora
+
+Conservamos la ampliación de las explicaciones y la presentación de resultados de los commits del 23 de octubre. La figura distingue el bloque reservado sin atribuirle una tasa ficticia y usa únicamente la prevalencia de train como línea de referencia. No representar una tasa test tampoco borra la consulta histórica descrita arriba.
+
+El manifiesto conserva TransactionID, TransactionDT y split. Si el archivo ya existe, el notebook compara la asignación completa, ordenada por ID, antes de reutilizarlo sin sobrescribir sus bytes. Si difiere, se detiene para revisar el diseño; un clon sin manifiesto puede generarlo. Así evitamos invalidar hashes posteriores por una serialización nueva cuando las filas son idénticas, sin ocultar cambios reales de partición.
+
+Las claves compuestas nuevas describen combinaciones no observadas, no el porcentaje exacto de bloques one-hot desconocidos: una combinación de tarjeta nueva puede usar niveles individuales ya conocidos. Tampoco interpretamos el gap de siete días como una medición del retraso de etiquetas, que el dataset no proporciona. La selección de hiperparámetros vigente sigue usando folds internos de train y la validación temprana ajusta el calibrador.
 
 ## 8. Limitaciones y decisiones pendientes
 
