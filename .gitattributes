@@ -1,0 +1,2 @@
+# La procedencia de costs.py se registro con LF; conservar esos bytes en Windows.
+/src/fraud_cost/costs.py text eol=lf

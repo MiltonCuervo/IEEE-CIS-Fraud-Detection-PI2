@@ -1,0 +1,113 @@
+{
+  "status": "verified_reconstruction",
+  "created_utc": "2026-11-03T03:08:54.832376+00:00",
+  "run_id": "20261103T025750Z-524586e7",
+  "historical_records_sha256": {
+    "results/tables/comparacion_modelos_config.json": "a90e037cb5e72b964358cc46bba64b044e6a07393217757f61d7b9215da99eac",
+    "results/tables/seleccion_ordinal_protocolo.json": "12a42d96f9956a585eee2e01cae55b122f864c56cf7898f633ffa0cce58f729f",
+    "results/tables/seleccion_ordinal_config.json": "bc39bd4ea3bdf8922aeee7c5dee5b752425a7c6695611d69089466dfd87dd5d6"
+  },
+  "python_original": "3.11.9",
+  "python_reconstruction": "3.12.14",
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "xgboost": "3.2.0",
+    "lightgbm": "4.7.0",
+    "catboost": "1.2.10",
+    "joblib": "1.6.0"
+  },
+  "numerical_comparison": {
+    "passed": true,
+    "atol": 1e-08,
+    "rtol": 1e-08,
+    "tables": [
+      {
+        "table": "comparacion_modelos_validation.csv",
+        "rows": 4,
+        "passed": true,
+        "max_absolute_numeric_difference": 1.7069679003611782e-13
+      },
+      {
+        "table": "modelos_calibracion_validation.csv",
+        "rows": 8,
+        "passed": true,
+        "max_absolute_numeric_difference": 1.7069679003611782e-13
+      },
+      {
+        "table": "costos_validation_sensibilidad.csv",
+        "rows": 18,
+        "passed": true,
+        "max_absolute_numeric_difference": 0.0
+      },
+      {
+        "table": "modelo_variables_ordinal.csv",
+        "rows": 432,
+        "passed": true,
+        "max_absolute_numeric_difference": 0.0
+      },
+      {
+        "table": "modelo_vocabulario_ordinal.csv",
+        "rows": 15101,
+        "passed": true,
+        "max_absolute_numeric_difference": 0.0
+      }
+    ]
+  },
+  "inference_verification": {
+    "passed": true,
+    "policy_rows": 42047,
+    "matrix_columns": 432,
+    "models_checked": [
+      "xgboost",
+      "lightgbm",
+      "catboost",
+      "logistica"
+    ],
+    "scores_match_xgboost": true,
+    "test_predicted": false
+  },
+  "selected_candidate": {
+    "candidate": "lightgbm_referencia",
+    "model": "lightgbm",
+    "variant": "referencia",
+    "params": {
+      "n_estimators": 250,
+      "learning_rate": 0.05,
+      "num_leaves": 63,
+      "min_child_samples": 50,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "n_jobs": 4,
+      "random_state": 42,
+      "verbose": -1
+    }
+  },
+  "test_evaluated": false,
+  "artifact_sha256": {
+    "data/interim/validation_scores.parquet": "96d815b07b4dfa0d7f81c3d2c18a5f9370a9169837f22d469d1985879668ad3e",
+    "results/models/baseline_xgboost_platt.joblib": "5bccd8a724bc33c9fac747798e332bebef104bc51f0158f12d44612e8f7cd818",
+    "results/models/comparacion_modelos_ordinal.joblib": "be27a04e4fd7f7680c2055f4528b00c3df7c91d5004ad61a076fd88fcdc186c4",
+    "results/models/cost_sensitive_trees.joblib": "8beb8b2010e6f46ddb7e5fa9e8a14b21ed38f43a0687dab07ddb1882d6418780"
+  },
+  "original_artifact_sha256": {
+    "data/interim/validation_scores.parquet": "5494fb418b286692db60177f8712dd24e0dd678167bdfb73a2ad7791beebb627",
+    "results/models/baseline_xgboost_platt.joblib": "30d3aaad07c542e2158a98839ac1d909f06d2e587f5f66df12c6a796e120da35",
+    "results/models/comparacion_modelos_ordinal.joblib": "96ad11feee72e478d9245b1e808c47d59e63ed01f88875cad8b73d6e8a32fa48",
+    "results/models/cost_sensitive_trees.joblib": "8beb8b2010e6f46ddb7e5fa9e8a14b21ed38f43a0687dab07ddb1882d6418780"
+  },
+  "reconstruction_evidence_sha256": {
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/plan.json": "9605da5ebf384ab0b7f4de7dc95f281c6c2c597404663768d8f499b106a98785",
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/environment.txt": "c4e9dba7a99066fb02a68bc7a0935f65337d715588128e2c58f4962c2c6905de",
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/notebooks/03_modelado_y_decisiones_costos.ipynb": "36fed08e5729dd86c15b0e137422d3eba66e8396b17e75fa033e8f0bdbe1228f",
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/comparacion_modelos_config.json": "4f9ff69fc3b694757464195872c3d941559927ac90c63d1926e2fe7cab3ed6de",
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/comparacion_modelos_validation.csv": "d69761d05aa69345fc560e584585fb722e50b8d0b40d4f8bd1800631c2deaa74",
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/modelos_calibracion_validation.csv": "5abd4a665a6de4935b88f3875531299d337b08d2743124261f68df19953ef639",
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/costos_validation_sensibilidad.csv": "a232fa705db4556008414633b97d842326ff61c3804e250508e724c3fda913bd",
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/modelo_variables_ordinal.csv": "bf4d2ecf4776ec43f761ffd1ad9de087d38332830286d94df79521da47379005",
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/modelo_vocabulario_ordinal.csv": "efda6caf48c89c946fa8954b5aec01327af6c8d000376943d7dfa37bd0a4bb7b"
+  },
+  "recovery_script_sha256": "0f9463937480586a2bbe4f00ff377f4f175044a563a284a82970ea57e025a8cd",
+  "note": "Nueva corrida con equivalencia numérica verificada; no identidad binaria ni nueva selección. Los registros originales 03/04 permanecen intactos."
+}

@@ -34,3 +34,6 @@ Thumbs.db
 # Archivos del espacio de trabajo de Codex, no del proyecto académico
 AGENTS.md
 sources/
+
+# Registros automáticos de CatBoost
+catboost_info/

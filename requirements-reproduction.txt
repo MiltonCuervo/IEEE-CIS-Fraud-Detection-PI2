@@ -1,0 +1,10 @@
+# Versiones del nucleo predictivo registradas en las etapas ordinales 03 y 04.
+# Usar como restricciones junto con requirements.txt, no como lockfile completo.
+# Python original: 3.11.9. La reconstruccion local con 3.12 es una nueva corrida.
+numpy==2.4.6
+pandas==2.3.3
+scikit-learn==1.9.1
+xgboost==3.2.0
+lightgbm==4.7.0
+catboost==1.2.10
+joblib==1.6.0

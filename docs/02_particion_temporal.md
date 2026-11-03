@@ -14,21 +14,6 @@ TransactionDT fija el orden; TransactionID conserva la correspondencia; isFraud 
 
 Train ajusta historial, imputación, vocabulario y modelo. Los gaps no contribuyen a ninguna de esas estadísticas. Validación temprana calibra el predictor fijo; validación posterior compara probabilidades y acciones. Ambas usan el historial final de train congelado, sin incorporar transacciones de validación. ID, etiqueta, tiempo crudo y split siguen disponibles como controles, pero no entran directamente a X. TransactionAmt mantiene su función predictiva y económica.
 
-### 1.2. El contrato temporal que recibe el modelo
-
-Distinguimos la fila fuente, los atributos (`X`), la etiqueta (`y`) y los controles de seguimiento. Una transacción puede conservar TransactionID, TransactionDT e isFraud en una tabla de trabajo sin que esas tres columnas entren directamente al predictor. Más adelante recuperamos las columnas completas por ID; el filtrado de filas define qué pasado está permitido, y el constructor de atributos define qué representación aprende el modelo.
-
-| Momento | Qué información utilizamos | Qué obtenemos |
-|---|---|---|
-| Train e interiores de train | Atributos de su pasado y etiquetas de ese entrenamiento | Historial, medianas, vocabulario y XGBoost; selección de configuración en ventanas internas |
-| Validación temprana: 42.046 operaciones | Probabilidades del predictor fijo y sus etiquetas tempranas | Parámetros de Platt o isotónica; no un nuevo ajuste de XGBoost |
-| Validación posterior: 42.047 operaciones | Atributos posteriores, mismo historial/preprocesador y mapeo ajustado | Probabilidades; después se consultan sus etiquetas para diagnosticar y evaluar acciones |
-| Test temporal | Periodo reservado para el protocolo final | No se han producido scores ni costos finales en las etapas de desarrollo |
-
-El corte principal de 60/80% usa **duración**, mientras las dos mitades de validation se definen aproximadamente por **filas** y mantienen juntas las operaciones simultáneas. No hay otro gap experimental entre esas mitades. La frontera de tres segundos entre sus registros límite no es un retraso de confirmación del fraude medido.
-
-La inferencia se ubica después de recibir una operación y antes de conocer su etiqueta. Como varias variables originales están anonimizadas, el dataset no permite verificar por completo su disponibilidad en una autorización bancaria real. Tratamos este punto como dato requerido para una implementación operativa, sin atribuir esa garantía al orden temporal de nuestra evaluación.
-
 ## 2. Justificación metodológica
 
 Una partición aleatoria mezclaría transacciones de los 182 días disponibles en los tres bloques. Esto haría que entrenamiento y evaluación compartieran simultáneamente periodos iniciales y finales, ocultando los cambios de prevalencia observados en el EDA.
@@ -90,8 +75,6 @@ La tarjeta compuesta combina `card1`, `card2`, `card3` y `card5`; la dirección 
 
 La presencia de tarjetas nuevas demuestra que los codificadores posteriores deben aceptar categorías desconocidas. No podemos construir un vocabulario con todo el dataset antes de separar, porque eso informaría al pipeline de valores que todavía no habían aparecido durante entrenamiento.
 
-La novedad aquí se mide sobre **claves compuestas**, mientras one-hot opera sobre columnas individuales. Una combinación card1+card2+card3+card5 nueva puede estar formada por códigos individuales ya vistos y no activar ningún bloque desconocido. Además, una clave es un proxy; no demostramos que cada una corresponda a una tarjeta física o persona. Este análisis no crea un vocabulario ni elimina las operaciones nuevas.
-
 ## 6. Comprobaciones realizadas
 
 El notebook verifica automáticamente que:
@@ -102,12 +85,12 @@ El notebook verifica automáticamente que:
 4. validation contiene ambas clases; el test se reserva sin comprobar su distribución de etiquetas en la corrida actual;
 5. el manifiesto puede guardarse y leerse sin perder filas ni asignaciones.
 
-Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. Las corridas posteriores documentaron pruebas de ventanas internas, exclusión de bloques externos, límites de calibración y pasado estricto. La carpeta tests fue retirada en la organización actual del repositorio; esos resultados históricos no equivalen a una suite disponible hoy para ejecutar. Las verificaciones de procedencia y las comprobaciones de los notebooks permanecen; no sustituyen una prueba dedicada de toda la partición original.
+Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. La suite vigente en `tests/` verifica preparación, matriz económica, ventanas internas, exclusión de bloques externos, ranking completo y recuperación de artefactos. No confundimos esta suite con las pruebas de los experimentos retirados ni con una cobertura exhaustiva de la partición original.
 
 ## 7. Uso permitido de cada bloque
 
-- **Train:** ajuste de imputadores, codificadores, ingeniería de atributos y modelo base.
-- **Validación:** usamos la mitad temprana para ajustar el calibrador y la mitad posterior para diagnosticar el modelo y explorar políticas. El notebook 05 selecciona hiperparámetros dentro de train mediante validación temporal y el 06 reajusta ese predictor con un calibrador nuevo. Las operaciones simultáneas del límite entre mitades quedan juntas en calibración; el predictor no se reajusta con validation.
+- **Train:** ajuste de imputadores, codificadores, escalador de logística y predictores base.
+- **Validación:** usamos la mitad temprana para ajustar el calibrador y la mitad posterior para diagnosticar el modelo y explorar políticas. El notebook 04 ya seleccionó la configuración LightGBM de referencia mediante ventanas internas de train; quedan pendientes la adopción del predictor y la evaluación económica con sus probabilidades. Las operaciones simultáneas del límite entre mitades quedan juntas en calibración; el predictor no se reajusta con validation.
 - **Test:** bloque temporal reservado y aún no puntuado por el modelo. Debido a la consulta histórica de etiquetas agregadas durante el diseño de gaps, una evaluación en este bloque debe declararse como holdout condicionado; para una afirmación estrictamente independiente se requiere reservar datos/periodo nuevo sin consultar sus etiquetas durante el diseño.
 - **Gaps:** no se utilizan para aprender ni evaluar; solo preservan la separación.
 
@@ -119,13 +102,17 @@ Conservamos la ampliación de las explicaciones y la presentación de resultados
 
 El manifiesto conserva TransactionID, TransactionDT y split. Si el archivo ya existe, el notebook compara la asignación completa, ordenada por ID, antes de reutilizarlo sin sobrescribir sus bytes. Si difiere, se detiene para revisar el diseño; un clon sin manifiesto puede generarlo. Así evitamos invalidar hashes posteriores por una serialización nueva cuando las filas son idénticas, sin ocultar cambios reales de partición.
 
-Las claves compuestas nuevas describen combinaciones no observadas, no el porcentaje exacto de bloques one-hot desconocidos: una combinación de tarjeta nueva puede usar niveles individuales ya conocidos. Tampoco interpretamos el gap de siete días como una medición del retraso de etiquetas, que el dataset no proporciona. La selección de hiperparámetros vigente sigue usando folds internos de train y la validación temprana ajusta el calibrador.
+Las claves compuestas nuevas describen combinaciones no observadas, no el porcentaje exacto de categorías individuales desconocidas para el codificador ordinal: una combinación de tarjeta nueva puede usar niveles individuales ya conocidos. Tampoco interpretamos el gap de siete días como una medición del retraso de etiquetas, que el dataset no proporciona. La selección del 04 utilizó folds internos de train y la validación temprana ajusta el calibrador.
 
 ## 8. Limitaciones y decisiones pendientes
 
 - Los límites se expresan en tiempo relativo porque `TransactionDT` no tiene un origen calendario público.
 - Un gap reduce proximidad, pero no garantiza que una tarjeta o dispositivo nunca reaparezca después. Esa reaparición puede ser legítima en un escenario real.
 - La semana de separación es una decisión conservadora del proyecto, no un valor universal.
-- La etapa 05 define atributos históricos con pasado estrictamente anterior en train y estado de train congelado para periodos posteriores. La etapa 06 conserva esa convención al reajustar y calibrar. No utilizamos operaciones de gaps ni validation para actualizar el historial.
 - La partición test se construyó usando conteos agregados de sus etiquetas para comparar gaps; no se han calculado predicciones ni costos del modelo en ese bloque. No describirlo como completamente ciego.
 - El calibrador deberá ajustarse sin acceder al test; el notebook de modelado usa una mitad temprana de validation y reporta métricas en la mitad posterior.
+
+
+## Continuidad metodológica actualizada
+
+La secuencia vigente continúa en el notebook 03 de la profesora con cuatro predictores y preparación ordinal de 432 entradas, y en el nuevo 04 con selección temporal interna completada. La configuración LightGBM elegida requiere una adopción verificable en la etapa posterior. Los experimentos del pipeline anterior fueron retirados; las cifras de EDA y la asignación temporal se conservan. Véanse el [protocolo vigente](03_protocolo_costos_y_evaluacion.md) y los [resultados del 04](04_seleccion_temporal_modelos.md).

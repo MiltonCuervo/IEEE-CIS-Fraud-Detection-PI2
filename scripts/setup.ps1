@@ -1,12 +1,18 @@
 param(
     [string]$PythonExecutable,
-    [string]$BrokenEnvironmentBackupDirectory
+    [string]$BrokenEnvironmentBackupDirectory,
+    [string]$ConstraintsFile
 )
 
 $ErrorActionPreference = "Stop"
 $ProjectRoot = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $VenvPath = Join-Path $ProjectRoot ".venv"
 $PythonPath = Join-Path $VenvPath "Scripts\python.exe"
+$ResolvedConstraints = $null
+if ($ConstraintsFile) {
+    # Validar antes de respaldar o instalar: una ruta errónea no debe alterar .venv.
+    $ResolvedConstraints = (Resolve-Path -LiteralPath $ConstraintsFile).Path
+}
 
 function Invoke-Checked {
     param([string]$Executable, [string[]]$Arguments)
@@ -16,8 +22,12 @@ function Invoke-Checked {
 
 $HealthyEnvironment = $false
 if (Test-Path -LiteralPath $PythonPath) {
-    & $PythonPath -c "import sys; print(sys.version)" *> $null
-    $HealthyEnvironment = $LASTEXITCODE -eq 0
+    try {
+        & $PythonPath -c "import sys; assert (3,11) <= sys.version_info[:2] <= (3,12); print(sys.version)" *> $null
+        $HealthyEnvironment = $LASTEXITCODE -eq 0
+    } catch {
+        $HealthyEnvironment = $false
+    }
 }
 
 if (-not $HealthyEnvironment) {
@@ -54,7 +64,11 @@ if (-not $HealthyEnvironment) {
 }
 
 Invoke-Checked $PythonPath @("-m", "pip", "install", "--upgrade", "pip")
-Invoke-Checked $PythonPath @("-m", "pip", "install", "-r", (Join-Path $ProjectRoot 'requirements.txt'))
+$InstallArguments = @("-m", "pip", "install", "-r", (Join-Path $ProjectRoot 'requirements.txt'))
+if ($ResolvedConstraints) {
+    $InstallArguments += @("--constraint", $ResolvedConstraints)
+}
+Invoke-Checked $PythonPath $InstallArguments
 Invoke-Checked $PythonPath @("-m", "pip", "install", "--editable", $ProjectRoot)
 Invoke-Checked $PythonPath @("-m", "ipykernel", "install", "--user", "--name", "ieee-cis-pi2", "--display-name", "Python (IEEE-CIS PI2)")
 Write-Host "Entorno preparado: .\.venv\Scripts\python.exe -m jupyter lab"
