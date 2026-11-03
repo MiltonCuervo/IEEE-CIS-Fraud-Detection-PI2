@@ -1,93 +1,112 @@
-# Protocolo de costos y evaluación
+# Etapa 03 — Comparación de modelos y decisiones basadas en costos
 
-## 1. Formulación de la propuesta
+## 1. Pregunta y alcance
 
-La metodología entregada define dos acciones: aprobar e intervenir. Intervenir significa bloquear y enviar a revisión y cuesta `Ca` independientemente de la etiqueta. Bajo este modelo simplificado, la intervención evita la pérdida fraudulenta; su eficacia imperfecta, recuperación y capacidad diaria quedan fuera del experimento principal.
+Con la partición del notebook 02 buscamos establecer una referencia probabilística y económica reproducible. Seguimos la preparación ordinal y los cuatro predictores incorporados por la profesora: XGBoost, LightGBM, CatBoost y regresión logística. Sus parámetros son fijos; esta etapa no selecciona el predictor final.
 
-| Estado real | Aprobar | Intervenir |
+La consolidación del 2 de noviembre corrige explicaciones, guarda la imputación en el preprocesador, preserva el monto económico original y recupera las exportaciones. Estos cambios requieren una nueva corrida: no atribuimos las métricas del commit de la profesora a estas fuentes modificadas. Las salidas ejecutadas y su registro son la evidencia numérica vigente.
+
+## 2. Poblaciones y preparación
+
+Train contiene 380.815 operaciones y 13.011 fraudes. Validación temprana tiene 42.046 operaciones y 1.558 fraudes; validación posterior tiene 42.047 y 1.517. Se conserva el manifiesto y los gaps de siete días. Las operaciones de un mismo instante no se reparten entre calibración y diagnóstico.
+
+El preprocesador aprende exclusivamente en train. Conserva 432 entradas: 431 originales permitidas y has_identity; 37 se codifican ordinalmente y 395 se imputan numéricamente. Categorías desconocidas reciben −1; la ausencia categórica usa un token explícito. No agregamos indicadores ni los quince atributos del experimento anterior. Las medianas se calculan vector por vector para reducir memoria y se guardan para su reutilización. El [diccionario](diccionario_variables_y_flujo_modelo.md) detalla familias, exclusiones, orden, vocabularios y las doce discrepancias de tipos pendientes.
+
+CatBoost recibe códigos como números, sin categorías nativas. La regresión logística añade escalado aprendido en train. Esta representación condiciona la comparación: sus resultados no prueban el desempeño máximo de cada algoritmo. Conservamos la configuración de LightGBM de la profesora; `subsample=0.8` con `subsample_freq=0` no activa muestreo de filas. No afirmamos que los presupuestos o las capacidades sean idénticos entre bibliotecas.
+
+## 3. Aprendizaje y calibración
+
+Cada predictor aprende isFraud con train. Su Platt se ajusta sobre el logit de sus propias probabilidades de validación temprana, recortadas a [10⁻⁶,1−10⁻⁶]. Después no reajustamos el predictor. Evaluamos raw y Platt en las mismas filas posteriores mediante AP, Brier, log-loss y curvas de calibración. La tabla comparativa incorpora precision, recall y bloqueo de legítimas a 0,5.
+
+AP no equivale necesariamente al área trapezoidal de precision–recall. Brier y log-loss no son pruebas aisladas de calibración suficiente, especialmente con desbalance. Una advertencia de convergencia de logística debe leerse como limitación del ajuste, no ocultarse ni interpretarse como rendimiento óptimo.
+
+### Cómo leer las métricas
+
+Precision es la fracción de fraudes entre las operaciones marcadas: TP/(TP+FP). Recall es la fracción de fraudes reales intervenidos: TP/(TP+FN). La tasa de bloqueo de legítimas es FP/(FP+TN). TP y FN corresponden a fraude real intervenido y aprobado; FP y TN, a legítimas intervenidas y aprobadas. Al comparar políticas, estos conteos describen sus acciones y no necesariamente la etiqueta del clasificador a 0,5.
+
+Brier promedia (p−y)²; log-loss penaliza especialmente probabilidades confiadas que contradicen la etiqueta. En ambos, menor es mejor, pero los valores absolutos deben leerse con la prevalencia. AP resume precision a medida que aumenta recall y no depende de fijar el corte 0,5. La calibración pregunta si riesgos anunciados y frecuencias observadas son compatibles; discriminación y calibración son propiedades diferentes.
+
+## 4. Matriz y regla económica
+
+| Estado observado | Aprobar | Intervenir |
 |---|---:|---:|
-| Fraude | `A_i = TransactionAmt_i` | `Ca` |
-| Legítima | `0` | `Ca` |
+| Fraude | A = monto original | Ca |
+| Legítima | 0 | Ca |
 
-Así, `C(TP)=C(FP)=Ca`, `C(FN)=A_i` y `C(TN)=0`. Estos términos describen la acción frente a la etiqueta real. La propuesta se consulta en su sección 9, páginas 3 y 4.
+Intervenir significa bloquear y revisar; asumimos que evita toda la pérdida fraudulenta y cuesta Ca en ambas clases. No modelamos capacidad, recuperación o revisión imperfecta. La moneda no está verificada; expresamos montos y costos en unidades del dataset.
 
-La implementación principal mantiene esta matriz. Los parámetros `B`, `λ`, costo residual de bloquear fraude, sensibilidad/especificidad de revisión y capacidad diaria se retiraron porque correspondían a otro modelo operativo. Los resultados anteriores de esa matriz no son evidencia del experimento actual.
+Ca es el costo administrativo por intervención; A_i es el monto original de la operación i y p_i su probabilidad estimada de fraude. Si A_i>0, p*=Ca/A_i es el límite económico por operación, distinto del corte clasificatorio fijo. El corte clasificatorio 0,5 se conserva. Para BMR, R(aprobar)=pA y R(intervenir)=Ca. Intervenimos cuando pA>Ca y aprobamos en empate. La comparación multiplicativa evita dividir por cero; A≤Ca no justifica intervenir con probabilidades válidas.
 
-## 2. Probabilidad, etiqueta y acción
+El árbol aprende la acción 1[yA>Ca] y pondera cada error por abs(yA−Ca). Esa transformación reproduce el costo empírico como error ponderado más una constante. Su ajuste mediante impureza es una aproximación; no garantiza el mínimo global. Ajustamos un árbol para cada Ca únicamente con train y sus montos.
 
-### 2.1. Antes de decidir debemos especificar la entrada
+## 5. Comparación y referencias
 
-La línea base del notebook 03 utiliza las 431 columnas originales permitidas y has_identity, sin los quince atributos ampliados del 05. Retira de X TransactionID, TransactionDT, isFraud y split; conserva las tres primeras fuera de X para alinear, ordenar y evaluar. No aplica selección automática por correlación o ausencia. Las categorías explícitas y las columnas de texto pasan a one-hot; las numéricas se imputan con medianas e indicadores aprendidos solo en train. El notebook 03 tiene su propio preprocesador; no le atribuimos automáticamente las 2.642 columnas ni todos los detalles de implementación del reajuste del 06.
-
-El predictor seleccionado del 06 añade los quince atributos y utiliza 447 entradas, 37 categóricas y 410 numéricas, con una matriz de 2.642 columnas. Su [diccionario de variables y contrato de flujo](diccionario_variables_y_flujo_modelo.md) identifica cada columna y la discrepancia pendiente en doce códigos de identidad. No mezclamos el modelo baseline con selected ni usamos un calibrador de otro predictor.
-
-### 2.2. Qué produce el predictor y qué recibe cada política
-
-XGBoost devuelve probabilidades por clase; usamos la columna de fraude como p_raw. Platt transforma el logit recortado de esa probabilidad para obtener p_calibrada. La etiqueta convencional se obtiene después con >=0,5. BMR consume p_calibrada, TransactionAmt original y Ca, no la etiqueta binaria ni isFraud. El árbol recibe los atributos transformados y entrega una acción aprendida, no una probabilidad calibrada de fraude.
-
-TransactionID asocia cada salida con su transacción. isFraud se utiliza después de decidir para medir, aunque aparezca junto a los scores en archivos de evaluación. Su presencia en una tabla de resultados no lo convierte en una entrada de inferencia. Ca no es una columna original ni modifica la pérdida logística de XGBoost: se usa al decidir BMR y al construir objetivos/pesos del árbol en train.
-
-### 2.3. Regla y riesgo esperado
-
-XGBoost estima una probabilidad que calibramos antes de decidir. El corte clasificatorio 0,5 se mantiene: la estrategia convencional interviene cuando `p_i >= 0,5`. BMR calcula riesgos esperados:
+Comparamos regla fija, BMR y árbol con XGBoost + Platt sobre las mismas filas. No confundimos la comparación de cuatro predictores con una evaluación económica de los cuatro: esa extensión todavía está pendiente.
 
 ```text
-R(aprobar) = p_i A_i
-R(intervenir) = p_i Ca + (1-p_i) Ca = Ca
-```
-
-Elegimos intervenir si `p_i A_i > Ca`; en igualdad aprobamos. Para `A_i>0`, esto equivale a `p_i > Ca/A_i`. Implementamos la comparación multiplicativa para evitar división por cero. Si `A_i=0`, aprobamos; si `A_i<=Ca`, intervenir no reduce el riesgo. Esta regla utiliza solo probabilidad, monto y Ca, nunca la etiqueta real al decidir.
-
-## 3. Costo realizado y ahorro
-
-Después de tomar las acciones, utilizamos las etiquetas para evaluar:
-
-```text
-C_total = Ca × número de intervenciones
-          + suma de montos de fraudes aprobados
-C_aprobar_todo = suma de montos de todos los fraudes
+C_total = Ca × intervenciones + monto de fraudes aprobados
+C_aprobar_todo = monto total de fraude
 C_intervenir_todo = N × Ca
 C_referencia = min(C_aprobar_todo, C_intervenir_todo)
-S_referencia = 1 - C_total/C_referencia
+ahorro_referencia = 1 − C_total/C_referencia
+mejora_fijo = 1 − C_total/C_fijo
 ```
 
-La referencia es la mejor de las dos políticas triviales, como establece el anteproyecto. Se calcula sobre las mismas filas y con el mismo Ca para todas las estrategias. Usa etiquetas exclusivamente al evaluar, no para construir acciones. El ahorro puede ser negativo y es indefinido si la referencia vale cero; en ese caso registramos `NaN`.
+Las referencias son diferentes y pueden producir ahorros negativos. Para Ca=5, intervenir todo cuesta 210.235, menor que el monto fraudulento aproximado de 254.537; para Ca=10, aprobar todo es la mejor referencia trivial. No afirmamos que un rango de Ca sea operativo sin evidencia de costos aplicable al dataset.
 
-También reportamos `C_convencional-C_estrategia` y su proporción respecto al costo convencional si este es positivo. Esta mejora frente al corte 0,5 es diferente del ahorro respecto a la referencia trivial. Descomponemos siempre costo administrativo y monto fraudulento aprobado.
+Los escenarios 1,5,10,20,50,100 son hipotéticos. Su elección final y justificación quedan pendientes. BMR minimiza riesgo esperado con las probabilidades suministradas; no garantiza el menor costo realizado en toda muestra o periodo.
 
-## 4. Estrategias y árbol ponderado
+## 6. Archivos y reproducción
 
-Comparamos la política fija, BMR y el árbol sensible al costo sobre las mismas observaciones. La contingencia con ponderación está contemplada en la página 4 de la propuesta; declaramos que el árbol ajustado por impureza ponderada es una aproximación al método de costos por ejemplo. La etapa 07 implementa una comparación exploratoria de las tres políticas con Ca ilustrativo y el predictor del 06; no equivale a aprobar escenarios finales.
+Ejecutamos 01, 02 y 03 en ese orden con las dependencias declaradas. El 03 exporta:
 
-Para respetar esta matriz no basta ponderar fraudes por su monto. Con etiqueta conocida, la acción de menor costo es intervenir si `y_i A_i > Ca`. La diferencia entre costos es `|y_i A_i-Ca|`:
+- `comparacion_modelos_validation.csv`: métricas Platt de los cuatro predictores.
+- `modelos_calibracion_validation.csv`: diagnóstico raw/Platt.
+- `costos_validation_sensibilidad.csv`: tres estrategias, seis escenarios y componentes.
+- `modelo_variables_ordinal.csv` y `modelo_vocabulario_ordinal.csv`: tratamiento real por variable.
+- `comparacion_modelos_config.json`: parámetros, versiones, advertencias, hashes y test_evaluated=false.
+- `comparacion_modelos.png` y `costos_validation_sensibilidad.png`: figuras utilizadas.
+- Artefactos locales: scores por operación, referencia XGBoost, paquete de cuatro modelos y árboles por Ca.
 
-- fraude con `A_i>Ca`: objetivo de acción intervenir y peso `A_i-Ca`;
-- fraude con `A_i<Ca`: objetivo de acción aprobar y peso `Ca-A_i`;
-- legítima: objetivo de acción aprobar y peso `Ca`;
-- igualdad: peso cero; ambas acciones cuestan igual.
+Los nombres y el orden de columnas de la tabla económica proceden de `src/fraud_cost/costs.py`. Evitamos mantener una segunda matriz económica dentro del notebook. Las pruebas versionadas verifican imputación reutilizable, categorías nuevas/ausentes, serialización, empates y equivalencia de los pesos del árbol con el costo realizado.
 
-El costo de cualquier acción equivale al mínimo por fila más el peso cuando la acción difiere de la óptima. Ese mínimo es una constante para el entrenamiento. Ajustamos un árbol por Ca con estos objetivos de acción y pesos normalizados por una constante común. Sus predicciones representan acciones, no una nueva etiqueta de fraude. La probabilidad del XGBoost sigue disponible para evaluar discriminación y calibración.
+## 7. Transición y continuación
 
-## 5. Protocolo temporal
+Retiramos de la estructura activa los notebooks 04–09 del pipeline anterior, sus informes y sus resultados. No borramos CSV originales ni modificamos el manifiesto. Git conserva los archivos retirados en `089df7f`; los modelos locales antiguos siguen ignorados, pero no forman parte del flujo actual. También retiramos los registros automáticos de CatBoost y desactivamos su escritura en nuevas corridas.
 
-Conservamos train, gaps, validación y test del manifiesto. Ajustamos preprocesamiento y predictor solo con train. El primer modelo tiene hiperparámetros fijos. El notebook 05 compara atributos y cuatro configuraciones en dos ventanas expansivas internas de train, con preprocesamiento propio por fold y siete días de separación. Selecciona por AP media, sin consultar validación externa ni test; su diseño y resultados se explican en `docs/05_preparacion_y_seleccion_temporal.md`.
+La siguiente etapa comparará configuraciones de los cuatro modelos con ventanas temporales internas de train. La exploración posterior ya fue consultada y forma parte del desarrollo; no afirmaremos que las decisiones siguientes son independientes de ella. La calibración, comparación económica y estabilidad se reconstruirán después sobre el predictor seleccionado.
 
-La etapa 06 reajusta el predictor elegido con todo train y ajusta un calibrador nuevo sobre sus propias puntuaciones tempranas. Conserva el estado histórico de train congelado para ambas mitades de validation y guarda artefactos con nombres distintos. El diagnóstico está en `docs/06_reajuste_y_calibracion.md`. No reutilizamos un calibrador entrenado para otro predictor ni mezclamos las métricas internas con las de validación posterior.
+El test permanece sin puntuar y no incluimos una celda para habilitarlo en esta exploración. El EDA y la comparación histórica de gaps consultaron etiquetas agregadas del periodo final: mantenemos esa limitación explícita. La evaluación final requiere congelar primero el protocolo.
 
-Usamos validación temprana para calibrar y la posterior para diagnóstico y exploración de políticas. El predictor que genera ambas puntuaciones permanece fijo. Los gaps no participan en entrenamiento ni evaluación. El test no se puntúa mientras `RUN_FINAL_TEST=False`; antes de habilitarlo fijamos predictor, calibrador, escenarios de Ca y árboles correspondientes.
+## 8. Hallazgos de la corrida consolidada
 
-El EDA y la comparación histórica de gaps consultaron etiquetas agregadas del periodo final. Declaramos esa limitación; la evaluación temporal no se presenta como un bloque estrictamente ciego desde el inicio. Sus resultados no se usan para ajustar modelos ni elegir costos.
+Ejecutamos el notebook completo con la preparación ordinal consolidada. El registro `comparacion_modelos_config.json` identifica las fuentes y salidas de esta corrida. Se mantuvieron 380.815 operaciones de train, 42.046 de calibración y 42.047 de diagnóstico. El manifiesto no se modificó y el test no se puntuó.
 
-## 6. Escenarios, unidades y métricas
+| Modelo | AP | Recall a 0,5 | Precision a 0,5 | Brier | Log-loss |
+|---|---:|---:|---:|---:|---:|
+| LightGBM | 0.5044 | 0.3085 | 0.7852 | 0.02406 | 0.09645 |
+| XGBoost | 0.4673 | 0.2769 | 0.7527 | 0.02507 | 0.10181 |
+| CatBoost | 0.4251 | 0.2353 | 0.7376 | 0.02639 | 0.10814 |
+| Regresión logística | 0.2910 | 0.1213 | 0.6996 | 0.02983 | 0.12615 |
 
-La matriz está definida por la propuesta, pero IEEE-CIS no aporta un costo administrativo observado. Notebook 04 explora `Ca ∈ {1,5,10,20,50,100}` como valores ilustrativos absolutos en unidades del dataset. No se deducen de la mediana de validación ni se presentan como estimación operativa. Antes de la evaluación final acordamos rango y justificación y registramos su referencia.
+Observamos que **LightGBM obtiene la mayor AP en esta comparación**. Es evidencia para estudiar este candidato dentro de train, no una elección final ni una prueba de mayor ahorro: los costos siguientes se calcularon únicamente con XGBoost. La regresión logística es una referencia sobre códigos ordinales y parámetros fijos; no deducimos de su posición que hayamos demostrado una estructura causal o una propiedad universal del problema.
 
-La propuesta plantea reportar USD, pero la moneda debe verificarse antes de poner ese rótulo en resultados. Ca y TransactionAmt deben compartir escala; mientras tanto usamos unidades del dataset. El costo evaluado es un proxy bajo los supuestos del estudio, no una pérdida bancaria observada.
+Al comparar raw y Platt sobre las mismas filas, Brier disminuye en 4 de los cuatro modelos y log-loss en 4. La tabla `modelos_calibracion_validation.csv` conserva los ocho registros. La calibración se interpreta por predictor; no trasladamos automáticamente un calibrador ni una conclusión a los demás modelos.
 
-Reportamos costo, componentes, ahorro con ambas referencias, recall de fraude, tasa de legítimas intervenidas y recall ponderado por monto. Evaluamos las probabilidades con AP, Brier score, log-loss y curva de calibración. `average_precision_score` calcula average precision; no necesariamente coincide con el área trapezoidal AUC-PR. La comparación de acciones no modifica el orden de las probabilidades del modelo base.
+La prevalencia observada en validación posterior es 3.61%. Las probabilidades medias calibradas van de 3.03% a 3.13%: todavía observamos una subestimación global en esta muestra. Mejorar Brier y log-loss no demuestra una calibración perfecta ni uniformidad por rango de monto. AP permanece igual entre raw y Platt en los cuatro modelos de esta corrida, consistente con conservar el orden de riesgo al transformar las probabilidades.
 
-## 7. Organización y reproducción
+| Estrategia, Ca=10 | Costo total | Recall | Bloqueo de legítimas |
+|---|---:|---:|---:|
+| Regla fija | 204,786.21 | 0.2769 | 0.34% |
+| BMR | 88,182.74 | 0.5438 | 6.38% |
+| Árbol ponderado | 125,992.24 | 0.4054 | 6.60% |
 
-`src/fraud_cost/costs.py` concentra decisiones, costos, comparación y ponderación. `scenarios.py` valida scores y recorre Ca. Los notebooks conservan las preguntas, parámetros y lectura de salidas. Las corridas históricas verificaron las cuatro celdas de la matriz, empates, montos cero, referencias y equivalencia del error ponderado. La carpeta tests fue retirada en la organización actual; no se afirma que aquella suite esté disponible para ejecutar hoy. La auditoría de variables no modifica esa matriz ni reemplaza sus verificaciones.
+Con Ca=10, BMR interviene 3,410 operaciones. Su costo se descompone en 34,100.00 de intervención y 54,082.74 de fraude aprobado. La mejora frente al corte fijo es 56.94%; el ahorro frente a la mejor referencia trivial es 65.36%. Son porcentajes con denominadores distintos, no dos estimaciones del mismo indicador. Las cantidades monetarias de estas tablas están expresadas en unidades del dataset; los separadores numéricos siguen el formato de las exportaciones.
 
-Ejecutamos 03 antes de 04 para regenerar la referencia y su sensibilidad. La etapa 06 guarda `validation_scores_selected.parquet` y `selected_xgboost_platt.joblib`; la etapa 07 los verifica y utiliza conjuntamente sin sobrescribir la referencia. Reconstruye atributos de train con pasado estricto, aplica el preprocesamiento ya aprendido y ajusta árboles solo con train. El diagnóstico raw/calibrado de BMR es separado y no elige retrospectivamente un calibrador. Los CSV y figuras históricos de la matriz con B y λ no son evidencia del protocolo actual. Los valores finales de Ca siguen pendientes, por lo que la evaluación de test permanece cerrada.
+El beneficio económico se acompaña de un cambio en intervenciones sobre legítimas. Por eso no lo interpretamos solo como una mejora de recall. La tabla completa permite revisar los seis escenarios sin elegir Ca retrospectivamente por el ahorro observado.
+
+### Advertencias del ajuste
+
+No se registraron advertencias durante el ajuste de los cuatro predictores.
+
+La ausencia de advertencias no certifica optimalidad de hiperparámetros ni calibración suficiente.

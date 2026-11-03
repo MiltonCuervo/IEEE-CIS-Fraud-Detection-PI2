@@ -89,8 +89,8 @@ Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El noteb
 
 ## 7. Uso permitido de cada bloque
 
-- **Train:** ajuste de imputadores, codificadores, ingeniería de atributos y modelo base.
-- **Validación:** usamos la mitad temprana para ajustar el calibrador y la mitad posterior para diagnosticar el modelo y explorar políticas. El notebook 05 selecciona hiperparámetros dentro de train mediante validación temporal y el 06 reajusta ese predictor con un calibrador nuevo. Las operaciones simultáneas del límite entre mitades quedan juntas en calibración; el predictor no se reajusta con validation.
+- **Train:** ajuste de imputadores, codificadores, escalador de logística y predictores base.
+- **Validación:** usamos la mitad temprana para ajustar el calibrador y la mitad posterior para diagnosticar el modelo y explorar políticas. La próxima etapa comparará configuraciones dentro de train mediante validación temporal; todavía no hay un predictor final seleccionado. Las operaciones simultáneas del límite entre mitades quedan juntas en calibración; el predictor no se reajusta con validation.
 - **Test:** bloque temporal reservado y aún no puntuado por el modelo. Debido a la consulta histórica de etiquetas agregadas durante el diseño de gaps, una evaluación en este bloque debe declararse como holdout condicionado; para una afirmación estrictamente independiente se requiere reservar datos/periodo nuevo sin consultar sus etiquetas durante el diseño.
 - **Gaps:** no se utilizan para aprender ni evaluar; solo preservan la separación.
 
@@ -102,13 +102,17 @@ Conservamos la ampliación de las explicaciones y la presentación de resultados
 
 El manifiesto conserva TransactionID, TransactionDT y split. Si el archivo ya existe, el notebook compara la asignación completa, ordenada por ID, antes de reutilizarlo sin sobrescribir sus bytes. Si difiere, se detiene para revisar el diseño; un clon sin manifiesto puede generarlo. Así evitamos invalidar hashes posteriores por una serialización nueva cuando las filas son idénticas, sin ocultar cambios reales de partición.
 
-Las claves compuestas nuevas describen combinaciones no observadas, no el porcentaje exacto de bloques one-hot desconocidos: una combinación de tarjeta nueva puede usar niveles individuales ya conocidos. Tampoco interpretamos el gap de siete días como una medición del retraso de etiquetas, que el dataset no proporciona. La selección de hiperparámetros vigente sigue usando folds internos de train y la validación temprana ajusta el calibrador.
+Las claves compuestas nuevas describen combinaciones no observadas, no el porcentaje exacto de categorías individuales desconocidas para el codificador ordinal: una combinación de tarjeta nueva puede usar niveles individuales ya conocidos. Tampoco interpretamos el gap de siete días como una medición del retraso de etiquetas, que el dataset no proporciona. La selección de hiperparámetros pendiente utilizará folds internos de train y la validación temprana ajusta el calibrador.
 
 ## 8. Limitaciones y decisiones pendientes
 
 - Los límites se expresan en tiempo relativo porque `TransactionDT` no tiene un origen calendario público.
 - Un gap reduce proximidad, pero no garantiza que una tarjeta o dispositivo nunca reaparezca después. Esa reaparición puede ser legítima en un escenario real.
 - La semana de separación es una decisión conservadora del proyecto, no un valor universal.
-- La etapa 05 define atributos históricos con pasado estrictamente anterior en train y estado de train congelado para periodos posteriores. La etapa 06 conserva esa convención al reajustar y calibrar. No utilizamos operaciones de gaps ni validation para actualizar el historial.
 - La partición test se construyó usando conteos agregados de sus etiquetas para comparar gaps; no se han calculado predicciones ni costos del modelo en ese bloque. No describirlo como completamente ciego.
 - El calibrador deberá ajustarse sin acceder al test; el notebook de modelado usa una mitad temprana de validation y reporta métricas en la mitad posterior.
+
+
+## Continuidad metodológica actualizada
+
+La secuencia vigente continúa en el notebook 03 de la profesora con cuatro predictores y preparación ordinal de 432 entradas. Los experimentos posteriores del pipeline anterior fueron retirados para reconstruirlos con esta base. Las cifras de EDA y la asignación temporal se conservan; no implican una selección del predictor final. Véase el [protocolo vigente](03_protocolo_costos_y_evaluacion.md).

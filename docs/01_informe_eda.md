@@ -41,8 +41,6 @@ La [descripción oficial](https://www.kaggle.com/competitions/ieee-fraud-detecti
 
 Conservamos **431 columnas originales como predictores**, sin selección automática por correlación, importancia, cardinalidad o ausencia. TransactionID se conserva para unir/alinear, isFraud como y y TransactionDT para ordenar, partir y construir derivados, pero las tres quedan fuera de X. Split, creado después, es control temporal y tampoco entra. Que no sean entradas directas no implica borrarlas de los datos fuente.
 
-La siguiente descripción es una reconstrucción documental de las etapas 05/06, no una afirmación de que el EDA original ajustó el preprocesador. Con has_identity tenemos 432 atributos base; con quince derivados posteriores llegamos a 447. El artefacto del 06 distribuye esas entradas en 37 categóricas y 410 numéricas antes de la matriz codificada de 2.642 columnas. El [diccionario y flujo hasta el modelo](diccionario_variables_y_flujo_modelo.md) enumera tratamientos, fórmulas y contratos de entrada/salida; no confunde las 434 originales con los 447 atributos ni con las 2.642 columnas codificadas.
-
 Hay una discrepancia pendiente: id_13, id_14, id_17, id_18, id_19, id_20, id_21, id_22, id_24, id_25, id_26 e id_32 quedaron numéricas en nuestro código pese a la clasificación categórica del proveedor. Los árboles pueden usar un orden no justificado entre códigos. Lo documentamos por columna sin cambiar retrospectivamente la preparación, los modelos ni sus resultados.
 
 ## 3. Resultados principales
@@ -87,7 +85,7 @@ Estas cifras ayudan a comprender el conjunto, pero fueron calculadas con todos l
 
 La revisión del 22 de octubre amplía la lectura de las celdas, el ratio legítimas/fraude, el resumen de ausencia por familias y las gráficas categóricas. Conservamos esos aportes como base del notebook e incorporamos después el diccionario completo. El ratio es aproximadamente 27,58 legítimas por fraude; se añade al resumen calculado junto con la fracción de monto fraudulento y su concentración superior.
 
-La nueva figura `eda_tasas_fraude_categoricas.png` compara las categorías de mayor volumen de ProductCD, card4, card6, P_emaildomain y DeviceType, con una referencia de prevalencia global. Es una presentación de asociaciones, no codificación supervisada: el predictor actual usa one-hot aprendido con train y no tasas de fraude como atributos.
+La nueva figura `eda_tasas_fraude_categoricas.png` compara las categorías de mayor volumen de ProductCD, card4, card6, P_emaildomain y DeviceType, con una referencia de prevalencia global. Es una presentación de asociaciones, no codificación supervisada: el predictor actual usa codificación ordinal aprendida con train y no tasas de fraude como atributos.
 
 La figura `eda_señal_numericas.png` contrasta C1, D1, TransactionAmt y V258 entre clases. Son representantes ilustrativos, no una selección final ni un ranking de importancia. Las distribuciones se muestran sobre valores observados y se recortan al percentil 99 exclusivamente para visualizar; no truncamos los datos que alimentan modelos o costos. V258 tiene 77,91% de ausencia y se identifica como alta ausencia. Un histograma similar entre clases tampoco demuestra utilidad conjunta ni inutilidad: hace falta evaluación predictiva controlada.
 
@@ -141,3 +139,8 @@ results/
     ├── eda_resumen_general.csv
     └── eda_resumen_temporal.csv
 ```
+
+
+## Continuidad metodológica actualizada
+
+La secuencia vigente continúa en el notebook 03 de la profesora con cuatro predictores y preparación ordinal de 432 entradas. Los experimentos posteriores del pipeline anterior fueron retirados para reconstruirlos con esta base. Las cifras de EDA y la asignación temporal se conservan; no implican una selección del predictor final. Véase el [protocolo vigente](03_protocolo_costos_y_evaluacion.md).

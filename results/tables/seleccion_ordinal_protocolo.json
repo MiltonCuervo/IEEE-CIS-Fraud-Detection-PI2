@@ -1,0 +1,158 @@
+{
+  "created_utc": "2026-11-03T01:16:46.305885+00:00",
+  "status": "planned_before_fit",
+  "fractions": [
+    0.5,
+    0.75
+  ],
+  "gap_days": 7,
+  "candidates": [
+    {
+      "candidate": "xgboost_referencia",
+      "model": "xgboost",
+      "variant": "referencia",
+      "params": {
+        "n_estimators": 250,
+        "max_depth": 6,
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_weight": 10,
+        "tree_method": "hist",
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 4,
+        "random_state": 42,
+        "verbosity": 0
+      }
+    },
+    {
+      "candidate": "xgboost_regularizada",
+      "model": "xgboost",
+      "variant": "regularizada",
+      "params": {
+        "n_estimators": 250,
+        "max_depth": 4,
+        "learning_rate": 0.05,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "min_child_weight": 20,
+        "tree_method": "hist",
+        "objective": "binary:logistic",
+        "eval_metric": "aucpr",
+        "n_jobs": 4,
+        "random_state": 42,
+        "verbosity": 0,
+        "reg_lambda": 10
+      }
+    },
+    {
+      "candidate": "lightgbm_referencia",
+      "model": "lightgbm",
+      "variant": "referencia",
+      "params": {
+        "n_estimators": 250,
+        "learning_rate": 0.05,
+        "num_leaves": 63,
+        "min_child_samples": 50,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "n_jobs": 4,
+        "random_state": 42,
+        "verbose": -1
+      }
+    },
+    {
+      "candidate": "lightgbm_regularizada",
+      "model": "lightgbm",
+      "variant": "regularizada",
+      "params": {
+        "n_estimators": 250,
+        "learning_rate": 0.05,
+        "num_leaves": 31,
+        "min_child_samples": 100,
+        "subsample": 0.8,
+        "colsample_bytree": 0.8,
+        "n_jobs": 4,
+        "random_state": 42,
+        "verbose": -1,
+        "reg_lambda": 5
+      }
+    },
+    {
+      "candidate": "catboost_referencia",
+      "model": "catboost",
+      "variant": "referencia",
+      "params": {
+        "iterations": 250,
+        "thread_count": 4,
+        "allow_writing_files": false,
+        "learning_rate": 0.05,
+        "depth": 6,
+        "random_seed": 42,
+        "verbose": 0,
+        "eval_metric": "AUC"
+      }
+    },
+    {
+      "candidate": "catboost_regularizada",
+      "model": "catboost",
+      "variant": "regularizada",
+      "params": {
+        "iterations": 250,
+        "thread_count": 4,
+        "allow_writing_files": false,
+        "learning_rate": 0.05,
+        "depth": 4,
+        "random_seed": 42,
+        "verbose": 0,
+        "eval_metric": "AUC",
+        "l2_leaf_reg": 10
+      }
+    },
+    {
+      "candidate": "logistica_referencia",
+      "model": "logistica",
+      "variant": "referencia",
+      "params": {
+        "C": 0.1,
+        "solver": "saga",
+        "max_iter": 500,
+        "random_state": 42
+      }
+    },
+    {
+      "candidate": "logistica_regularizada",
+      "model": "logistica",
+      "variant": "regularizada",
+      "params": {
+        "C": 0.01,
+        "solver": "saga",
+        "max_iter": 500,
+        "random_state": 42
+      }
+    }
+  ],
+  "selection_metric": "mean_average_precision_raw_equal_fold_weight",
+  "tie_rule": "candidate_id_lexicographic_on_exact_equal_mean",
+  "fold_count": 2,
+  "expected_fits": 16,
+  "notebook_code_sha256": "e37e40137feaea9ba12df0d5afe1e8ccd3f8bff50477ddcbf154f0c79006a9c2",
+  "source_sha256": {
+    "src/fraud_cost/temporal_selection.py": "b266b4db083822ee7d18cc997c3d50209823129c092b0b4b18ce3f148c504041",
+    "src/fraud_cost/reference.py": "b5e5f9f18f45a46a788652d9db8ace719c69cb5583d561c4a7b5dd4307206a08",
+    "requirements.txt": "80393591c029c5501c79a32fdbbb639408d2c5d6f5bc6c349ba38635236701ef"
+  },
+  "reference_record_sha256": "a90e037cb5e72b964358cc46bba64b044e6a07393217757f61d7b9215da99eac",
+  "input_sha256": {
+    "data/raw/train_transaction.csv": "3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642",
+    "data/raw/train_identity.csv": "b63c725d8377be90a995268d97f347c17d456b95db45807adcf9f59cd603c37c",
+    "data/interim/split_manifest.parquet": "12fe07ee14adb6bb9dfb97dbafe5d756f64aa2613b0265d74efb9332a917f7a4"
+  },
+  "windows_sha256": "8470fb37f86fe2308cb46612f0eac2a5445105e6807d1123b2231149498d43ab",
+  "external_validation_used_for_current_fits_or_ranking": false,
+  "prior_external_exploration_consulted": true,
+  "test_evaluated": false,
+  "calibrator_fitted": false,
+  "costs_selected": false
+}
