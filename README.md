@@ -8,7 +8,7 @@ Estudiamos cómo cambia el costo de intervenir transacciones cuando pasamos del 
 
 Seguimos los notebooks 01–03 revisados por la profesora. El 03 compara XGBoost, LightGBM, CatBoost y regresión logística sobre una representación ordinal de 432 entradas. Los cuatro reciben su propio calibrador Platt. CatBoost utiliza códigos numéricos, sin tratamiento nativo de categorías.
 
-El notebook 04 completó la selección temporal interna: ocho configuraciones, dos ventanas expansivas y 16 ajustes. Seleccionamos `lightgbm_referencia` con AP media raw de **0,5881**. Es la configuración elegida entre los candidatos evaluados; falta formalizar su reutilización/reajuste, diagnosticar su calibración y reconstruir la comparación económica en la etapa 05. Los costos administrativos siguen siendo hipotéticos y el test permanece sin puntuar.
+El notebook 04 completó la selección temporal interna: ocho configuraciones, dos ventanas expansivas y 16 ajustes. Seleccionamos `lightgbm_referencia` con AP media raw de **0,5881**. La etapa 05 ya verificó y adoptó su ajuste y su propio Platt del 03, sin reentrenar. Reconstruyó probabilidades y las tres políticas en validación posterior: con Ca=10, BMR cuesta 84,169.73 unidades y mejora 57.51% frente al corte fijo de LightGBM. Son resultados exploratorios del bloque de desarrollo. Los costos administrativos siguen siendo hipotéticos y el test permanece sin puntuar.
 
 El 2 de noviembre de 2026 retiramos de la secuencia activa los notebooks 04–09, sus informes, módulos y resultados del procesamiento anterior. Git conserva ese trabajo en el commit `089df7f` y sus antecedentes. Sus 447 entradas, atributos históricos y matriz one-hot de 2.642 columnas no describen la metodología actual. Los artefactos locales antiguos no autorizan reutilizar sus conclusiones.
 
@@ -53,6 +53,7 @@ Seleccionamos el kernel `ieee-cis-pi2` y ejecutamos en orden:
 | 02_particion_temporal | Separar pasado, gaps, validación y test | Manifiesto temporal y resúmenes |
 | 03_modelado_y_decisiones_costos | Comparar cuatro predictores con preparación ordinal y Platt; explorar tres políticas con XGBoost | Métricas, inventario, costos hipotéticos, figuras y registro de corrida |
 | 04_seleccion_temporal_modelos | Comparar ocho configuraciones solo dentro de train, sin calibrar | 16 ajustes, ranking por AP media, protocolo y configuración LightGBM seleccionada |
+| 05_lightgbm_calibracion_y_costos | Adoptar LightGBM y su Platt verificados; diagnosticar probabilidades y comparar tres políticas | Métricas, grupos y montos; 18 costos/escenarios; modelo y scores LightGBM locales |
 
 La ejecución completa del 03 requiere memoria para una matriz densa de 380.815 × 432 y los predictores. La matriz de train ocupa aproximadamente 627,6 MiB en float32; las copias y estructuras internas aumentan el consumo. Los cuatro modelos se ajustan de manera secuencial y utilizan hasta cuatro hilos cada uno; la regresión logística tiene sus propias reglas de paralelización.
 
@@ -90,8 +91,9 @@ Intervenir cuesta Ca en ambas clases. Aprobar fraude cuesta el monto original y 
 - [Partición temporal](docs/02_particion_temporal.md).
 - [Protocolo y reporte de la etapa 03](docs/03_protocolo_costos_y_evaluacion.md).
 - [Selección temporal interna y resultados del 04](docs/04_seleccion_temporal_modelos.md).
+- [Adopción LightGBM, calibración y costos](docs/05_lightgbm_calibracion_y_costos.md).
 - [Diccionario y recorrido de variables](docs/diccionario_variables_y_flujo_modelo.md).
 
 Los resultados del 03 son exploratorios sobre validación posterior. La selección interna del 04 utilizó solo train para ajustar y calcular su ranking, pero sus decisiones de desarrollo estuvieron precedidas por aquella exploración. El EDA y la comparación histórica de gaps consultaron etiquetas agregadas del periodo final; declaramos esta limitación y no presentamos el test como estrictamente ciego desde el inicio.
 
-Antes de evaluarlo fijaremos predictor, calibrador, costos hipotéticos justificados y reglas. La comparación económica de esta etapa usa XGBoost; que otro modelo lidere en AP no implica que ya hayamos demostrado mayor ahorro con ese predictor.
+Antes de evaluarlo fijaremos predictor, calibrador, costos hipotéticos justificados y reglas. El 03 conserva su comparación económica con XGBoost. El 05 usa probabilidades LightGBM y los mismos árboles verificados, montos y escenarios; sus diferencias de costo son descriptivas sobre validación de desarrollo. La siguiente etapa estudiará estabilidad y errores antes de congelar el protocolo final.

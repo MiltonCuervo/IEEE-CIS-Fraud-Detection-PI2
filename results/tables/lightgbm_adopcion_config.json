@@ -1,0 +1,103 @@
+{
+  "status": "complete",
+  "created_utc": "2026-11-03T15:04:32.943502+00:00",
+  "model": "lightgbm",
+  "selected_candidate": {
+    "candidate": "lightgbm_referencia",
+    "model": "lightgbm",
+    "variant": "referencia",
+    "params": {
+      "n_estimators": 250,
+      "learning_rate": 0.05,
+      "num_leaves": 63,
+      "min_child_samples": 50,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "n_jobs": 4,
+      "random_state": 42,
+      "verbose": -1
+    }
+  },
+  "adoption_method": "verified_reuse_stage03_no_refit",
+  "source_artifact_status": "verified_original_artifacts",
+  "new_model_fitted": false,
+  "new_calibrator_fitted": false,
+  "cost_trees_refitted": false,
+  "model_fit_origin": "stage03_train",
+  "calibrator_fit_origin": "stage03_validation_early",
+  "reference_metrics_verified": true,
+  "cost_tree_reference_verified": true,
+  "comparison_atol": 1e-08,
+  "comparison_rtol": 1e-08,
+  "validation_windows": {
+    "calibration_rows": 42046,
+    "policy_rows": 42047,
+    "calibration_time_start": 10126067,
+    "calibration_time_end": 11293017,
+    "policy_time_start": 11293020,
+    "policy_time_end": 12666174
+  },
+  "test_evaluated": false,
+  "costs_hypothetical": true,
+  "final_protocol_frozen": false,
+  "validation_policy_previously_consulted": true,
+  "ca_grid": [
+    1,
+    5,
+    10,
+    20,
+    50,
+    100
+  ],
+  "amount_edges": [
+    "0",
+    "50",
+    "100",
+    "250",
+    "500",
+    "1000",
+    "inf"
+  ],
+  "input_sha256": {
+    "data/raw/train_transaction.csv": "3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642",
+    "data/raw/train_identity.csv": "b63c725d8377be90a995268d97f347c17d456b95db45807adcf9f59cd603c37c",
+    "data/interim/split_manifest.parquet": "12fe07ee14adb6bb9dfb97dbafe5d756f64aa2613b0265d74efb9332a917f7a4",
+    "data/interim/validation_scores.parquet": "5494fb418b286692db60177f8712dd24e0dd678167bdfb73a2ad7791beebb627",
+    "results/models/baseline_xgboost_platt.joblib": "30d3aaad07c542e2158a98839ac1d909f06d2e587f5f66df12c6a796e120da35",
+    "results/models/comparacion_modelos_ordinal.joblib": "96ad11feee72e478d9245b1e808c47d59e63ed01f88875cad8b73d6e8a32fa48",
+    "results/models/cost_sensitive_trees.joblib": "8beb8b2010e6f46ddb7e5fa9e8a14b21ed38f43a0687dab07ddb1882d6418780"
+  },
+  "source_sha256": {
+    "src/fraud_cost/adoption.py": "450a9d6513b5d3b97d9ef03e5b7f2881cd8e3e8be89bc0af04375cf7059b1301",
+    "src/fraud_cost/artifacts.py": "220c144001ce7438faadb4730f916ab851628e99eafacdefb71a9f419dafba95",
+    "src/fraud_cost/reference.py": "b5e5f9f18f45a46a788652d9db8ace719c69cb5583d561c4a7b5dd4307206a08",
+    "src/fraud_cost/costs.py": "e8e087cfdb79b0813164dd03fe33a3dca00ef3f4e76a61d1c9a85d8155d807eb"
+  },
+  "historical_record_sha256": {
+    "results/tables/comparacion_modelos_config.json": "a90e037cb5e72b964358cc46bba64b044e6a07393217757f61d7b9215da99eac",
+    "results/tables/seleccion_ordinal_config.json": "bc39bd4ea3bdf8922aeee7c5dee5b752425a7c6695611d69089466dfd87dd5d6"
+  },
+  "notebook_code_sha256": "63a0e17679768d68da9060f2aae4b2313c20e3c5de7b6b9c146d9b73e3758d5d",
+  "output_sha256": {
+    "results/models/lightgbm_seleccionado_platt.joblib": "59161e585dafa59a12c3e5e536b4af6a1ed344b0a71fb29d51a9a09125f37510",
+    "data/interim/lightgbm_validation_scores.parquet": "60d3044eefe1bdffbd59accd18f2f13948f3cfbc3e0310a6663d937d0d934b7a",
+    "data/interim/lightgbm_validation_actions.parquet": "e887862cb1d495d7d963bdcb7ababdf154599a48aff6551ac8e298cc8da2bf1f",
+    "results/tables/lightgbm_metricas_validation.csv": "c5759676b26ceebe2b432635053f2805975c443f195a42db2e11c4db903fea11",
+    "results/tables/lightgbm_calibracion_grupos.csv": "9a701dccde0d998e1a747fcf40f940c1a3c376222224a2167414c88c99f34378",
+    "results/tables/lightgbm_calibracion_montos.csv": "06ded3a2da8569965fae3519633c91e4e1cdb1f323111ba286fceb91f305ecdb",
+    "results/tables/lightgbm_costos_validation.csv": "702ef44d1217175147904bd0d01590ab4f56a01fc7a9b657d899e987d137fa21",
+    "results/tables/lightgbm_bmr_raw_platt.csv": "6bb86721bff88dd2844448efc0ecc2b253c6c2050ff13a667049fd5eb98da4e6",
+    "results/figures/lightgbm_calibracion_validation.png": "d18209bf911264cd9830000720181c68391d4052545141757ef85cdfded8e09c",
+    "results/figures/lightgbm_costos_validation.png": "fc5d0fcea23dd9ba51d651e53bdd8e884883226ca01061f12a34271ca5727e03"
+  },
+  "python": "3.11.9",
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "lightgbm": "4.7.0",
+    "joblib": "1.6.0"
+  },
+  "git_base_commit": "3537b0b5451f2aa7e6dae8600f93cef55e14e2df",
+  "working_tree_dirty": true
+}

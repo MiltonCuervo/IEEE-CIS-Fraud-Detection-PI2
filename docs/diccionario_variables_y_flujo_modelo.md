@@ -75,3 +75,12 @@ El archivo local `validation_scores.parquet` identifica operaciones y conserva m
 El notebook 04 conserva exactamente esta representación y seleccionó `lightgbm_referencia` entre ocho configuraciones mediante AP media de dos ventanas internas de train (0,588117). La selección no cambia las 432 entradas ni corrige las doce discrepancias. Sus parámetros coinciden con el LightGBM del 03; el siguiente notebook deberá verificar la procedencia antes de reutilizar su ajuste y su propio Platt.
 
 Un paquete reconstruido tiene hashes nuevos y un recibo separado en `recuperacion_03_config.json`. Usamos `verify_reference_artifacts` antes de cargarlo. El recibo prueba integridad y equivalencia numérica dentro de tolerancias declaradas, sin reemplazar las huellas históricas del 03/04. `validation_scores.parquet` sigue identificando scores XGBoost: no se convierte en LightGBM por haber seleccionado ese algoritmo. Véase [recuperación y trazabilidad](recuperacion_local_y_trazabilidad.md).
+
+
+## 7. Adopción del predictor seleccionado
+
+La etapa 05 reutiliza el LightGBM seleccionado, el preprocesador completo y su propio Platt del 03 tras verificar originales o reconstrucción auditada. Conserva 432 entradas y las mismas posiciones, medianas y vocabularios de modelo_variables_ordinal.csv y modelo_vocabulario_ordinal.csv. No aplica otra ingeniería ni corrige silenciosamente tipos.
+
+El paquete local lightgbm_seleccionado_platt.joblib contiene preprocessor, model y calibrator; el Platt recibe el logit recortado de p_raw, no X directamente. lightgbm_validation_scores.parquet contiene ID, tiempo, monto original, etiqueta observada, probabilidad raw, probabilidad calibrada y acción fija a 0,5. La etiqueta allí sirve para medir; no entra al predictor. lightgbm_validation_actions.parquet identifica cada operación/Ca y las acciones fija, BMR y árbol.
+
+validation_scores.parquet continúa siendo XGBoost. Los árboles reutilizados predicen acciones con la misma matriz transformada; no consumen p de LightGBM. Los costos se evalúan con TransactionAmt original, no con su representación predictiva float32. Los archivos por operación y el modelo permanecen locales e ignorados por Git.
