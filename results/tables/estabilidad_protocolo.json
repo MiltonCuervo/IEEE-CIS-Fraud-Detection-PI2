@@ -1,5 +1,5 @@
 {
-  "planned_utc": "2026-11-05T04:27:19.435632+00:00",
+  "planned_utc": "2026-11-05T22:31:18.535326+00:00",
   "period_count": 3,
   "period_rule": "equal_observed_duration_left_closed_last_right_closed",
   "ca_grid": [
@@ -33,8 +33,8 @@
   ],
   "notebook_code_sha256": "8b82f3177efdf78fc3d74552fdc907c20eadb6cd435356e66d9847fcd28de179",
   "input_sha256": {
-    "results/tables/lightgbm_adopcion_config.json": "b3928fa4492d27011610885c39e1ae9f770fa67906fb4102dcdfcfe64fb8f2dc",
-    "data/interim/lightgbm_validation_scores.parquet": "60d3044eefe1bdffbd59accd18f2f13948f3cfbc3e0310a6663d937d0d934b7a",
+    "results/tables/lightgbm_adopcion_config.json": "86cd7f97e67f619ddc503bc2483ac66a65ba51d2eb0b668d081072b8de7399ca",
+    "data/interim/lightgbm_validation_scores.parquet": "e4b8ea0487a366428345a55da5701c291d6137697edcdd25b97d41729695891a",
     "data/interim/lightgbm_validation_actions.parquet": "e887862cb1d495d7d963bdcb7ababdf154599a48aff6551ac8e298cc8da2bf1f",
     "data/interim/split_manifest.parquet": "12fe07ee14adb6bb9dfb97dbafe5d756f64aa2613b0265d74efb9332a917f7a4",
     "results/tables/lightgbm_costos_validation.csv": "702ef44d1217175147904bd0d01590ab4f56a01fc7a9b657d899e987d137fa21"

@@ -79,3 +79,9 @@ La corrida `20261103T025750Z-524586e7` terminó con estado `verified_reconstruct
 | Suite vigente | 13 pruebas aprobadas |
 
 Los modelos y scores activos ya pertenecen a la reconstrucción ordinal verificada. Los dos archivos locales preexistentes quedaron respaldados en `data/interim/reference_recovery/<run_id>/previous_artifacts/`. El test no fue puntuado. Quedan disponibles los prerrequisitos locales para la etapa 05; esta recuperación no la implementa ni aprueba decisiones finales.
+
+## Continuidad después de la ampliación del 04
+
+La nueva ejecución del 04 amplió diagnósticos sin modificar el ajuste 03 ni su configuración LightGBM adoptable. `scripts/revalidate_reference_recovery.py` revalidó el vínculo y preservó el recibo anterior. No reasigna hashes a otros binarios: comprueba el mismo 03, toda su evidencia, las tablas y la inferencia antes de actualizar la referencia al 04 vigente.
+
+Después, `scripts/reproduce_validation.py` ejecutó 05/06 y regeneró sus archivos locales; las doce tablas coincidieron dentro de atol=rtol=10⁻⁸. La preparación de la etapa 07 se documenta en [protocolo final](07_protocolo_final.md). Una vez congelado, no se reemplazan sus dependencias para continuar la evaluación; una reproducción distinta requiere una versión de experimento propia.

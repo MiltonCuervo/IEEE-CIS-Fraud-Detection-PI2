@@ -3,3 +3,6 @@
 # Conservar la huella de la seleccion temporal al clonar en Windows.
 /src/fraud_cost/temporal_selection.py text eol=lf
 /src/fraud_cost/stability.py text eol=lf
+# Archivos de la congelacion tecnica: los hashes se calculan sobre LF.
+/src/fraud_cost/final_protocol.py text eol=lf
+/results/tables/protocolo_final* text eol=lf

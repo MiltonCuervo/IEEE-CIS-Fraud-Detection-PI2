@@ -10,6 +10,8 @@ Seguimos los notebooks 01–03 revisados por la profesora. El 03 compara XGBoost
 
 El notebook 04 completó la selección temporal interna: ocho configuraciones, dos ventanas expansivas y 16 ajustes. Seleccionamos `lightgbm_referencia` con AP media raw de **0,5881**. La etapa 05 ya verificó y adoptó su ajuste y su propio Platt del 03, sin reentrenar. Reconstruyó probabilidades y las tres políticas en validación posterior: con Ca=10, BMR cuesta 84,169.73 unidades y mejora 57.51% frente al corte fijo de LightGBM. Son resultados exploratorios del bloque de desarrollo. Los costos administrativos siguen siendo hipotéticos y el test permanece sin puntuar.
 
+El 06 completó el diagnóstico de estabilidad y errores. El **07 ya congeló técnicamente el protocolo académico**: LightGBM, Platt propio, preparación, tres políticas, seis Ca y métricas. La siguiente etapa será la evaluación temporal final. La congelación conserva las limitaciones históricas y no acredita aval docente ni costos operativos.
+
 El 2 de noviembre de 2026 retiramos de la secuencia activa los notebooks 04–09, sus informes, módulos y resultados del procesamiento anterior. Git conserva ese trabajo en el commit `089df7f` y sus antecedentes. Sus 447 entradas, atributos históricos y matriz one-hot de 2.642 columnas no describen la metodología actual. Los artefactos locales antiguos no autorizan reutilizar sus conclusiones.
 
 ## Organización
@@ -55,6 +57,7 @@ Seleccionamos el kernel `ieee-cis-pi2` y ejecutamos en orden:
 | 04_seleccion_temporal_modelos | Comparar ocho configuraciones solo dentro de train, sin calibrar | 16 ajustes; seis métricas raw, conteos y entradas por ajuste; ranking por AP media y configuración LightGBM seleccionada |
 | 05_lightgbm_calibracion_y_costos | Adoptar LightGBM y su Platt verificados; diagnosticar probabilidades y comparar tres políticas | Métricas, grupos y montos; 18 costos/escenarios; modelo y scores LightGBM locales |
 | 06_estabilidad_y_errores_economicos | Diagnosticar subperiodos, concentración de pérdida y frontera BMR sin nuevos ajustes | Seis métricas por periodo, 54 costos, sensibilidad, siete tablas agregadas y dos figuras |
+| 07_protocolo_final | Verificar prerrequisitos y fijar el experimento antes de test | Protocolo técnico congelado, comprobaciones y decisiones; test sin puntuar |
 
 La ejecución completa del 03 requiere memoria para una matriz densa de 380.815 × 432 y los predictores. La matriz de train ocupa aproximadamente 627,6 MiB en float32; las copias y estructuras internas aumentan el consumo. Los cuatro modelos se ajustan de manera secuencial y utilizan hasta cuatro hilos cada uno; la regresión logística tiene sus propias reglas de paralelización.
 
@@ -78,6 +81,8 @@ El script ejecuta el 03 en una copia aislada, contrasta cinco tablas con toleran
 
 Para continuar desde código usamos `fraud_cost.artifacts.verify_reference_artifacts(PROJECT_ROOT)` antes de deserializar. Un consumidor que compare únicamente los hashes binarios originales debe detenerse si los archivos fueron reconstruidos. Véase [recuperación local y trazabilidad](docs/recuperacion_local_y_trazabilidad.md).
 
+Si solo cambió el 04 y el ajuste del 03 reconstruido sigue idéntico, `scripts/revalidate_reference_recovery.py` puede revalidar el vínculo y conservar el recibo previo. Antes de congelar, `scripts/reproduce_validation.py` regenera 05/06 con respaldo y comparación de sus doce tablas. Ya se ejecutaron en esta copia. Después de la congelación no se regeneran sus dependencias sobre las mismas rutas; una reproducción nueva requiere una versión de experimento propia.
+
 ## Variables, probabilidades y costos
 
 Conservamos 431 columnas originales como predictores y añadimos `has_identity`: 432 entradas, 37 categóricas y 395 numéricas. Excluimos `TransactionID`, `TransactionDT`, `isFraud` y `split` de X. El tiempo organiza las particiones; el identificador alinea operaciones y la etiqueta sirve para ajustar o evaluar exclusivamente en los bloques permitidos.
@@ -94,8 +99,9 @@ Intervenir cuesta Ca en ambas clases. Aprobar fraude cuesta el monto original y 
 - [Selección temporal interna y resultados del 04](docs/04_seleccion_temporal_modelos.md).
 - [Adopción LightGBM, calibración y costos](docs/05_lightgbm_calibracion_y_costos.md).
 - [Estabilidad temporal y errores económicos](docs/06_estabilidad_y_errores_economicos.md).
+- [Protocolo final congelado y plan de evaluación](docs/07_protocolo_final.md).
 - [Diccionario y recorrido de variables](docs/diccionario_variables_y_flujo_modelo.md).
 
 Los resultados del 03 son exploratorios sobre validación posterior. La selección interna del 04 utilizó solo train para ajustar y calcular su ranking, pero sus decisiones de desarrollo estuvieron precedidas por aquella exploración. El EDA y la comparación histórica de gaps consultaron etiquetas agregadas del periodo final; declaramos esta limitación y no presentamos el test como estrictamente ciego desde el inicio.
 
-Antes de evaluarlo fijaremos predictor, calibrador, costos hipotéticos justificados y reglas. El 03 conserva su comparación económica con XGBoost. El 05 usa probabilidades LightGBM y los mismos árboles verificados, montos y escenarios; sus diferencias de costo son descriptivas sobre validación de desarrollo. El 06 completó el diagnóstico de estabilidad y errores: BMR presenta menor costo en 17 de 18 combinaciones periodo/Ca; el árbol lo supera en el periodo 3 con Ca=100. La siguiente etapa fijará el protocolo final antes de puntuar test, manteniendo las limitaciones declaradas.
+El 03 conserva su comparación económica con XGBoost. El 05 usa probabilidades LightGBM y los mismos árboles verificados, montos y escenarios; sus diferencias de costo son descriptivas sobre validación de desarrollo. El 06 mostró menor costo BMR en 17 de 18 combinaciones periodo/Ca; el árbol lo supera en el periodo 3 con Ca=100. El 07 fijó el protocolo antes de puntuar test y conserva esas limitaciones. El siguiente evaluador deberá verificarlo y crear un registro exclusivo de ejecución antes de producir predicciones.

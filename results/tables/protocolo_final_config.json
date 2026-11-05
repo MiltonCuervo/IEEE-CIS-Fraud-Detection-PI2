@@ -1,0 +1,15 @@
+{
+  "status": "complete",
+  "technical_protocol_frozen": true,
+  "created_utc": "2026-11-05T22:38:07.613462+00:00",
+  "test_evaluated": false,
+  "new_model_fitted": false,
+  "new_calibrator_fitted": false,
+  "test_labels_read": false,
+  "test_rows": 84233,
+  "output_sha256": {
+    "results/tables/protocolo_final.json": "0c4466ad14592ec3997c97bde8e577ac9aedb6b548555bf71dcca787ad293bbd",
+    "results/tables/protocolo_final_comprobaciones.csv": "808ca95b021e1e0a172c9a6e33a22663027d7f148367f2c85cc34bf383dd9075",
+    "results/tables/protocolo_final_decisiones.csv": "fb0288358adc68b793dfcc50e76d2e63c87d27f0999b27068fb5d6e38b7bc177"
+  }
+}

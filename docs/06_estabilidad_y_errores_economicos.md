@@ -97,3 +97,7 @@ El siguiente paso es revisar estos hallazgos y fijar un protocolo final con pred
 El notebook `06_estabilidad_y_errores_economicos.ipynb` tiene celdas cortas de diseño, ejecución, comprobaciones e interpretación. `src/fraud_cost/stability.py` concentra las operaciones reutilizables. La etapa exporta siete tablas agregadas: periodos, probabilidades, costos, calibración por periodo/monto, concentración de pérdidas, frontera y sensibilidad de probabilidad. Dos figuras sintetizan los hallazgos. No duplicamos scores ni acciones por operación.
 
 `estabilidad_protocolo.json` y `estabilidad_config.json` enlazan fuentes, entradas, notebook, tablas y figuras con sus hashes. Verificamos la cadena 03→04→05, la pertenencia de las operaciones a validación, las reglas guardadas fija/BMR y la alineación por ID. La ejecución preservó datos, modelos, manifiesto y evidencias 01–05. La suite completa pasó 23 pruebas; las cinco nuevas cubren límites temporales, alineación, conservación de costos, concentración y sensibilidad. Las pruebas reducen errores de implementación; no certifican validez poblacional ni calibración suficiente.
+
+## Continuación: protocolo técnico congelado
+
+La reproducción local posterior de 05/06 verificó sus doce tablas dentro de tolerancias prefijadas, sin nuevos ajustes. El [notebook/informe 07](07_protocolo_final.md) ya fija LightGBM, su propio Platt, las políticas y escenarios hipotéticos antes de evaluar test. Los registros 05/06 conservan sus flags históricos; la congelación se acredita en el registro posterior. Test sigue sin puntuar.

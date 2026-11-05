@@ -1,0 +1,7 @@
+decision,value,basis
+predictor,lightgbm_referencia,AP media interna; 04
+preparacion,432 ordinal/imputada,Mismo ajuste train; 03/05
+calibrador,Platt propio,Mejora probabilística; límites 05/06 declarados
+politicas,Fija 0.5; BMR; árbol por Ca,Matriz original común
+Ca,"1,5,10,20,50,100",Escenarios hipotéticos; bibliografía y sensibilidad ampliada
+evaluacion,Test temporal completo; sin reajuste,Identidad/tiempo congelados; etiquetas agregadas históricamente consultadas

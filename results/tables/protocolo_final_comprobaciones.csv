@@ -1,0 +1,9 @@
+check,status,detail
+cadena_03_04_05_06,passed,"Fuentes, registros, salidas y artefactos verificados"
+seleccion_y_adopcion,passed,LightGBM referencia coincide en parámetros y 432 entradas
+platt_propio,passed,Calibrador del modelo adoptado; origen en validación temprana
+poblacion_validation,passed,42047 operaciones posteriores y 1517 fraudes
+acciones_alineadas,passed,252282 filas operación/Ca verificadas
+costos_reconciliados,passed,Subperiodos y perturbación base reproducen los costos del 05
+test_sin_etiquetas,passed,Solo ID/tiempo/split: 84233 operaciones futuras
+escenarios,passed,Seis Ca hipotéticos; ninguna estimación de gasto operativo

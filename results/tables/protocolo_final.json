@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "created_utc": "2026-11-05T22:38:07.613462+00:00",
+  "status": "frozen_for_academic_evaluation",
+  "scope": "academic_hypothetical_cost_sensitivity",
+  "model": {
+    "name": "lightgbm",
+    "candidate": "lightgbm_referencia",
+    "params": {
+      "n_estimators": 250,
+      "learning_rate": 0.05,
+      "num_leaves": 63,
+      "min_child_samples": 50,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "n_jobs": 4,
+      "random_state": 42,
+      "verbose": -1
+    },
+    "artifact": "results/models/lightgbm_seleccionado_platt.joblib",
+    "fit_origin": "stage03_train"
+  },
+  "representation": {
+    "columns": 432,
+    "categorical": 37,
+    "numeric": 395,
+    "encoding": "ordinal",
+    "unknown_category": -1,
+    "dtype": "float32"
+  },
+  "preparation": {
+    "numeric_missing": "train_median; all_empty_kept_zero",
+    "categorical_missing": "__MISSING__",
+    "additional_scaling": false,
+    "new_engineered_features": false,
+    "resampling": false,
+    "amount_for_costs": "original_float64",
+    "excluded": [
+      "TransactionID",
+      "TransactionDT",
+      "isFraud",
+      "split"
+    ]
+  },
+  "calibration": {
+    "method": "platt_on_clipped_logit",
+    "clip_epsilon": 1e-06,
+    "coefficient_a": 1.0442286258875524,
+    "intercept_b": 0.2746296646386229,
+    "fit_origin": "stage03_validation_early",
+    "fit_rows": 42046,
+    "final_probability": "probability_calibrated",
+    "raw_probability_role": "probabilistic_diagnostic_only"
+  },
+  "policies": {
+    "fixed_0_5": "p_platt >= 0.5",
+    "bmr": "p_platt * TransactionAmt > Ca; ties approve",
+    "cost_sensitive_tree": "reuse_stage03_tree_per_Ca; action_1_intervenes"
+  },
+  "trees": {
+    "artifact": "results/models/cost_sensitive_trees.joblib",
+    "target": "1[y * TransactionAmt > Ca]",
+    "weight": "abs(y * TransactionAmt - Ca); normalized_by_training_mean",
+    "max_depth": 12,
+    "min_samples_leaf": 250,
+    "random_state": 42,
+    "global_cost_optimum_guaranteed": false
+  },
+  "costs": {
+    "ca_grid": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100
+    ],
+    "illustrative_ca": 10,
+    "unit": "unidades de TransactionAmt; moneda no verificada",
+    "operational_costs_estimated": false,
+    "matrix": {
+      "approve_fraud": "TransactionAmt",
+      "approve_legitimate": 0,
+      "intervene_fraud": "Ca",
+      "intervene_legitimate": "Ca"
+    },
+    "grid_rationale": {
+      "1_and_5": "numeric_scenarios_inspired_by_bahnsen2013",
+      "10": "numeric_scenario_inspired_by_bahnsen2014",
+      "20_50_100": "expanded_sensitivity_retained_from_development"
+    },
+    "selection_by_observed_savings": false,
+    "aggregate_across_ca": false,
+    "perfect_loss_prevention_assumed": true,
+    "capacity_limit_modelled": false
+  },
+  "metrics": {
+    "primary": [
+      "cost_total_proxy",
+      "administrative_cost_total",
+      "missed_fraud_amount",
+      "cost_per_transaction_proxy",
+      "savings_fraction_vs_reference",
+      "savings_fraction_vs_fixed_proxy"
+    ],
+    "probabilistic_raw_and_platt": [
+      "average_precision",
+      "brier_score",
+      "log_loss",
+      "recall_at_0_5",
+      "precision_at_0_5",
+      "legitimate_block_rate"
+    ],
+    "policy_diagnostics": [
+      "TP",
+      "FP",
+      "FN",
+      "TN",
+      "fraud_recall",
+      "legitimate_block_rate",
+      "policy_block_count",
+      "amount_weighted_recall"
+    ],
+    "average_precision_definition": "sklearn.average_precision_score; not_trapezoidal_PR_AUC",
+    "reference": "min(sum(y * original_amount), N * Ca)",
+    "savings_reference": "1 - cost/reference; NaN_if_reference_zero",
+    "improvement_fixed": "1 - cost/fixed_cost; NaN_if_fixed_cost_zero",
+    "zero_precision": "0_if_no_interventions",
+    "zero_class_denominator": "NaN_if_class_absent"
+  },
+  "test": {
+    "rows": 84233,
+    "time_start": 13270993,
+    "time_end": 15811131,
+    "id_time_sha256": "c77b2c456a3040f52b7302f57221099849cbfd1765e85e6cf740f83ee9928f00",
+    "identity_order": "TransactionDT_then_TransactionID; little_endian_int64_row_major",
+    "labels_read": false
+  },
+  "validation_windows": {
+    "calibration_rows": 42046,
+    "policy_rows": 42047,
+    "calibration_time_start": 10126067,
+    "calibration_time_end": 11293017,
+    "policy_time_start": 11293020,
+    "policy_time_end": 12666174
+  },
+  "reporting": {
+    "per_ca_all_three_policies": true,
+    "time_subperiods": 3,
+    "amount_edges": [
+      "0",
+      "50",
+      "100",
+      "250",
+      "500",
+      "1000",
+      "inf"
+    ],
+    "interpretation": "descriptive_observed_costs; no_claim_of_statistical_superiority",
+    "change_model_or_threshold_after_test": false,
+    "test_run_record": "results/tables/evaluacion_test_config.json",
+    "refit_with_validation": false
+  },
+  "limitations": {
+    "historical_test_label_aggregates_consulted": true,
+    "development_validation_consulted": true,
+    "numeric_identity_codes": [
+      "id_13",
+      "id_14",
+      "id_17",
+      "id_18",
+      "id_19",
+      "id_20",
+      "id_21",
+      "id_22",
+      "id_24",
+      "id_25",
+      "id_26",
+      "id_32"
+    ],
+    "ordinal_artificial_order": true,
+    "catboost_native_categories_evaluated": false,
+    "amount_is_net_banking_loss": false,
+    "calibration_remaining_underestimation_500_1000": true,
+    "review_imperfection_recovery_customer_harm_modelled": false
+  },
+  "review": {
+    "professor_approval_of_final_protocol_recorded": false,
+    "note": "Congelación técnica del experimento académico; no acredita aval docente ni costos de negocio."
+  },
+  "references": [
+    {
+      "id": "bahnsen2013",
+      "title": "Cost Sensitive Credit Card Fraud Detection using Bayes Minimum Risk",
+      "year": 2013,
+      "doi": "10.1109/ICMLA.2013.68",
+      "url": "https://albahnsen.github.io/files/Cost%20Sensitive%20Credit%20Card%20Fraud%20Detection%20using%20Bayes%20Minimum%20Risk%20-%20Publish.pdf",
+      "location": "Sección V.E y tabla VI, páginas 5–6 del PDF",
+      "scope": "Escenarios 1, 2.5 y 5 euros en datos de otra procesadora; no estima costos IEEE-CIS."
+    },
+    {
+      "id": "bahnsen2014",
+      "title": "Improving Credit Card Fraud Detection with Calibrated Probabilities",
+      "year": 2014,
+      "url": "https://albahnsen.github.io/files/%20Improving%20Credit%20Card%20Fraud%20Detection%20by%20using%20Calibrated%20Probabilities%20-%20Publish.pdf",
+      "location": "Sección 4, página 4 del PDF",
+      "scope": "Ca=10 euros estimado con el equipo de riesgo de otra empresa; no trasladamos moneda ni costo operativo."
+    }
+  ],
+  "dependency_sha256": {
+    "data/raw/train_transaction.csv": "3a5c83ab6b3cc13dcabe5ffa9f522307fd5f7f7b6e6f6a60c32284ca6283d642",
+    "data/raw/train_identity.csv": "b63c725d8377be90a995268d97f347c17d456b95db45807adcf9f59cd603c37c",
+    "data/interim/split_manifest.parquet": "12fe07ee14adb6bb9dfb97dbafe5d756f64aa2613b0265d74efb9332a917f7a4",
+    "data/interim/validation_scores.parquet": "96d815b07b4dfa0d7f81c3d2c18a5f9370a9169837f22d469d1985879668ad3e",
+    "results/models/baseline_xgboost_platt.joblib": "5bccd8a724bc33c9fac747798e332bebef104bc51f0158f12d44612e8f7cd818",
+    "results/models/comparacion_modelos_ordinal.joblib": "be27a04e4fd7f7680c2055f4528b00c3df7c91d5004ad61a076fd88fcdc186c4",
+    "results/models/cost_sensitive_trees.joblib": "8beb8b2010e6f46ddb7e5fa9e8a14b21ed38f43a0687dab07ddb1882d6418780",
+    "src/fraud_cost/adoption.py": "450a9d6513b5d3b97d9ef03e5b7f2881cd8e3e8be89bc0af04375cf7059b1301",
+    "src/fraud_cost/artifacts.py": "220c144001ce7438faadb4730f916ab851628e99eafacdefb71a9f419dafba95",
+    "src/fraud_cost/reference.py": "b5e5f9f18f45a46a788652d9db8ace719c69cb5583d561c4a7b5dd4307206a08",
+    "src/fraud_cost/costs.py": "e8e087cfdb79b0813164dd03fe33a3dca00ef3f4e76a61d1c9a85d8155d807eb",
+    "results/models/lightgbm_seleccionado_platt.joblib": "39e7f84dc5c457e3fb2cb2d8cd7934e1373e8c1ce966ad4f9bd99e27f6a32d9f",
+    "data/interim/lightgbm_validation_scores.parquet": "e4b8ea0487a366428345a55da5701c291d6137697edcdd25b97d41729695891a",
+    "data/interim/lightgbm_validation_actions.parquet": "e887862cb1d495d7d963bdcb7ababdf154599a48aff6551ac8e298cc8da2bf1f",
+    "results/tables/lightgbm_metricas_validation.csv": "c5759676b26ceebe2b432635053f2805975c443f195a42db2e11c4db903fea11",
+    "results/tables/lightgbm_calibracion_grupos.csv": "2dea4b3bbf2b0534b37de9fb4052edc87e040e82325be1fc52765429f75b4797",
+    "results/tables/lightgbm_calibracion_montos.csv": "06ded3a2da8569965fae3519633c91e4e1cdb1f323111ba286fceb91f305ecdb",
+    "results/tables/lightgbm_costos_validation.csv": "702ef44d1217175147904bd0d01590ab4f56a01fc7a9b657d899e987d137fa21",
+    "results/tables/lightgbm_bmr_raw_platt.csv": "6bb86721bff88dd2844448efc0ecc2b253c6c2050ff13a667049fd5eb98da4e6",
+    "results/figures/lightgbm_calibracion_validation.png": "d18209bf911264cd9830000720181c68391d4052545141757ef85cdfded8e09c",
+    "results/figures/lightgbm_costos_validation.png": "fc5d0fcea23dd9ba51d651e53bdd8e884883226ca01061f12a34271ca5727e03",
+    "results/tables/lightgbm_adopcion_config.json": "86cd7f97e67f619ddc503bc2483ac66a65ba51d2eb0b668d081072b8de7399ca",
+    "src/fraud_cost/stability.py": "3d0d2f4f83ed98364b5d22693636f36e3a6637a41ccddbc10f87cbfe99e37e85",
+    "results/tables/estabilidad_periodos.csv": "ed9b268ea8367f7f3d211577dcb16e6e5c857d725b8c8fbe97d838b5b1efd441",
+    "results/tables/estabilidad_probabilidades.csv": "e059cfc6c2c4501b9b433e6d1efa779838444888f880e118d5100e12fd343749",
+    "results/tables/estabilidad_costos.csv": "3f31213d43ddb44bdd288b9e6ba609760e85bf2510f161f2fb5b62212cbae589",
+    "results/tables/estabilidad_calibracion_periodo_monto.csv": "83566a04be7a2d60f59784ada7ef27b20a0351b4493e037616af22007fc26721",
+    "results/tables/estabilidad_concentracion_perdidas.csv": "310d9214f5e474d9046d61d06b4cb092177cbeec7ab3c552e0cbba34a5bac12a",
+    "results/tables/estabilidad_frontera.csv": "fe2f0937dde19eb515b0bb138cfbf2825e8af52226864ff2abaa6b01326f37e6",
+    "results/tables/estabilidad_sensibilidad_probabilidad.csv": "7d28efa2edab0f1e1c7bb78d41f95bc4f27fd1163d5a9bd58367557dea4544f4",
+    "results/figures/estabilidad_temporal.png": "e57069a4e1596db1b8c8fbdc2f6b250d5be28876435b84d022b5e447cfb8b576",
+    "results/figures/estabilidad_perdidas_y_frontera.png": "dee110c06b0b686006b951b305ec43364219947b8aa951e749ace5f75dc0a68c",
+    "results/tables/comparacion_modelos_config.json": "a90e037cb5e72b964358cc46bba64b044e6a07393217757f61d7b9215da99eac",
+    "results/tables/seleccion_ordinal_protocolo.json": "561d4279d4fa82126433c3bb1f81f23f86f11fa6aec2c4d497b705419d7c846f",
+    "results/tables/seleccion_ordinal_config.json": "6d40a2643dd351938f464076b2e58b55d20568f8084b5cc03e10dc20953110ce",
+    "results/tables/estabilidad_protocolo.json": "f9fc4bc11259bfe9009f5fd45daf9b9c7e784cdc8a4cc117c0fd9dae0647d7b2",
+    "results/tables/estabilidad_config.json": "01e379eb67da55198b0aec53599d0497cf55efd9f451a9855da7988354935b5f",
+    "results/tables/recuperacion_03_config.json": "ba663381644b300fff19fafc5d360a736929824627aefecdee4a1957871f6bf0",
+    "src/fraud_cost/data.py": "39f09a2e08a0ddee28d1c00882971d7594d8ca8b66d7f2bc9a16bc866eec62c9",
+    "src/fraud_cost/final_protocol.py": "9ca7c733132210c9f91676182aab58e3c70c881c2eb35ff2c726bf5c22aa22bc",
+    "src/fraud_cost/paths.py": "0ff879316bdf7a173e2160eb95a097c3356c667d95809d3cf0b0e38431355e3f",
+    "src/fraud_cost/schema.py": "607da0e9816fca7a17a90e812c5e1b95031df75f9567593c091edb1eeb31e53d",
+    "src/fraud_cost/split.py": "23b729dc06c63090952d67e3c008560ca08b565a27649ec8a3bfc66c471348cf",
+    "src/fraud_cost/temporal_selection.py": "db7453c93f5d0f162cd843838e340fa8eb92510a9da2bd77dcdf628fc945bae9",
+    "src/fraud_cost/__init__.py": "6e3f17363fbd4715cf5a5a7a1b7aefd568f152884766c0b838230dee39b0fe6e",
+    "requirements.txt": "80393591c029c5501c79a32fdbbb639408d2c5d6f5bc6c349ba38635236701ef",
+    "requirements-reproduction.txt": "579eca02e215cf6d3a1f4df9f6192771b8be8982b7e1f6bfd0cce8f6c6189bdf"
+  },
+  "notebook_code_sha256": "7848d24ca763d95cd198c9afab71f072f33af28055f4b464952720011b1db71b",
+  "test_evaluated": false,
+  "new_model_fitted": false,
+  "new_calibrator_fitted": false
+}

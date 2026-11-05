@@ -4,8 +4,8 @@
   "run_id": "20261103T025750Z-524586e7",
   "historical_records_sha256": {
     "results/tables/comparacion_modelos_config.json": "a90e037cb5e72b964358cc46bba64b044e6a07393217757f61d7b9215da99eac",
-    "results/tables/seleccion_ordinal_protocolo.json": "12a42d96f9956a585eee2e01cae55b122f864c56cf7898f633ffa0cce58f729f",
-    "results/tables/seleccion_ordinal_config.json": "bc39bd4ea3bdf8922aeee7c5dee5b752425a7c6695611d69089466dfd87dd5d6"
+    "results/tables/seleccion_ordinal_protocolo.json": "561d4279d4fa82126433c3bb1f81f23f86f11fa6aec2c4d497b705419d7c846f",
+    "results/tables/seleccion_ordinal_config.json": "6d40a2643dd351938f464076b2e58b55d20568f8084b5cc03e10dc20953110ce"
   },
   "python_original": "3.11.9",
   "python_reconstruction": "3.12.14",
@@ -106,8 +106,18 @@
     "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/modelos_calibracion_validation.csv": "5abd4a665a6de4935b88f3875531299d337b08d2743124261f68df19953ef639",
     "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/costos_validation_sensibilidad.csv": "a232fa705db4556008414633b97d842326ff61c3804e250508e724c3fda913bd",
     "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/modelo_variables_ordinal.csv": "bf4d2ecf4776ec43f761ffd1ad9de087d38332830286d94df79521da47379005",
-    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/modelo_vocabulario_ordinal.csv": "efda6caf48c89c946fa8954b5aec01327af6c8d000376943d7dfa37bd0a4bb7b"
+    "data/interim/reference_recovery/20261103T025750Z-524586e7/workspace/results/tables/modelo_vocabulario_ordinal.csv": "efda6caf48c89c946fa8954b5aec01327af6c8d000376943d7dfa37bd0a4bb7b",
+    "data/interim/reference_recovery/revalidation_20261105T222903050610Z/previous_receipt.json": "f41a83820fc25500f199f0110894f1740cea1102cbb20f263ff98de8141f5b22",
+    "data/interim/reference_recovery/revalidation_20261105T222903050610Z/revalidation.json": "c41619f158eaf2052b9e8aa25238b70d2f40c2dc4b9d241119919d40816f6d03"
   },
   "recovery_script_sha256": "0f9463937480586a2bbe4f00ff377f4f175044a563a284a82970ea57e025a8cd",
-  "note": "Nueva corrida con equivalencia numérica verificada; no identidad binaria ni nueva selección. Los registros originales 03/04 permanecen intactos."
+  "note": "Nueva corrida con equivalencia numérica verificada; no identidad binaria ni nueva selección. Los registros originales 03/04 permanecen intactos.",
+  "revalidation": {
+    "created_utc": "2026-11-05T22:29:03.050610+00:00",
+    "script_sha256": "ea84bc8ce7183e7b8023ce17815327cf435a78df10514746e55255855cc583a7",
+    "previous_receipt_path": "data/interim/reference_recovery/revalidation_20261105T222903050610Z/previous_receipt.json",
+    "new_model_fitted": false,
+    "new_calibrator_fitted": false,
+    "test_evaluated": false
+  }
 }
