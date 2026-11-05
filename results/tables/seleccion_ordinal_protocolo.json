@@ -1,5 +1,5 @@
 {
-  "created_utc": "2026-11-03T01:16:46.305885+00:00",
+  "created_utc": "2026-11-05T03:59:52.926655+00:00",
   "status": "planned_before_fit",
   "fractions": [
     0.5,
@@ -134,12 +134,19 @@
     }
   ],
   "selection_metric": "mean_average_precision_raw_equal_fold_weight",
+  "diagnostic_threshold": 0.5,
+  "diagnostic_probability_stage": "raw",
+  "diagnostic_metrics": [
+    "recall_raw_at_0_5",
+    "precision_raw_at_0_5",
+    "legitimate_block_rate_raw_at_0_5"
+  ],
   "tie_rule": "candidate_id_lexicographic_on_exact_equal_mean",
   "fold_count": 2,
   "expected_fits": 16,
-  "notebook_code_sha256": "e37e40137feaea9ba12df0d5afe1e8ccd3f8bff50477ddcbf154f0c79006a9c2",
+  "notebook_code_sha256": "28ade5e8c86e34c2a989bb00d056bb07c6d0996b86f819b48f7aa6306f16d374",
   "source_sha256": {
-    "src/fraud_cost/temporal_selection.py": "b266b4db083822ee7d18cc997c3d50209823129c092b0b4b18ce3f148c504041",
+    "src/fraud_cost/temporal_selection.py": "db7453c93f5d0f162cd843838e340fa8eb92510a9da2bd77dcdf628fc945bae9",
     "src/fraud_cost/reference.py": "b5e5f9f18f45a46a788652d9db8ace719c69cb5583d561c4a7b5dd4307206a08",
     "requirements.txt": "80393591c029c5501c79a32fdbbb639408d2c5d6f5bc6c349ba38635236701ef"
   },

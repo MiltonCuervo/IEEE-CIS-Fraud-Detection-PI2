@@ -1,8 +1,8 @@
 {
-  "completed_utc": "2026-11-03T01:39:11.222473+00:00",
+  "completed_utc": "2026-11-05T04:17:54.903367+00:00",
   "status": "complete",
-  "protocol_sha256": "12a42d96f9956a585eee2e01cae55b122f864c56cf7898f633ffa0cce58f729f",
-  "notebook_code_sha256": "e37e40137feaea9ba12df0d5afe1e8ccd3f8bff50477ddcbf154f0c79006a9c2",
+  "protocol_sha256": "561d4279d4fa82126433c3bb1f81f23f86f11fa6aec2c4d497b705419d7c846f",
+  "notebook_code_sha256": "28ade5e8c86e34c2a989bb00d056bb07c6d0996b86f819b48f7aa6306f16d374",
   "selected_candidate": {
     "candidate": "lightgbm_referencia",
     "model": "lightgbm",
@@ -55,12 +55,12 @@
     "lightgbm": "4.7.0",
     "catboost": "1.2.10"
   },
-  "git_base_commit": "089df7f7f0801cb7902364208cc96eacffa27e6c",
+  "git_base_commit": "6eb446c5c1373ff4f8fc4a8469f67ffb127c6087",
   "working_tree_dirty": true,
   "output_sha256": {
     "results/tables/seleccion_ordinal_ventanas.csv": "8470fb37f86fe2308cb46612f0eac2a5445105e6807d1123b2231149498d43ab",
-    "results/tables/seleccion_ordinal_folds.csv": "4a8268e257cf50b780b6e9bb8bddb59bfdacbd943dfabe08980885639ebe7ca8",
-    "results/tables/seleccion_ordinal_resumen.csv": "4c0dd75fd897a796e72b63369023992243b3554f7a7ef334fe0100a007e7419d",
+    "results/tables/seleccion_ordinal_folds.csv": "7b5154896a9ed0cb3d296553a341a1e8d05752ab0c8113cd4a3de867926b1d91",
+    "results/tables/seleccion_ordinal_resumen.csv": "c461bdfe85a91873a8db0d63bab5b120cc1795a210d785c2d63bead3ec348388",
     "results/tables/seleccion_ordinal_categorias.csv": "59d4e0ca1545fc3a06710f0e9513bc007f8c4d15885d72f30e83105de4a0c25c",
     "results/figures/seleccion_ordinal_ap.png": "6c67f954176a06917e45b73d245e5562de3b314ec3a226da5875728218d20abc"
   }

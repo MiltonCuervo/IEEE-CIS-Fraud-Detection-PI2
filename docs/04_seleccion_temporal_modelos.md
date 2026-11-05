@@ -88,3 +88,29 @@ La salida es una configuración seleccionada, no un predictor entrenado con todo
 Ca no interviene aquí. El test permanece sin puntuarse y mantenemos declarada la consulta histórica de sus etiquetas agregadas. Si el ganador cambia, cambia también la cadena experimental posterior, no las métricas históricas del 03.
 
 La configuración ganadora coincide exactamente con los parámetros LightGBM del 03. La etapa 05 podrá utilizar ese modelo y su propio Platt solo después de verificar su procedencia. Si se reconstruyeron, verificaremos también el recibo de recuperación y sus pruebas de equivalencia; no compararemos sus bytes únicamente con los hashes de los binarios originales. Véase [recuperación local](recuperacion_local_y_trazabilidad.md).
+
+
+## 9. Diagnósticos completos y entradas de cada algoritmo
+
+La revisión del 4 de noviembre incorpora las seis métricas propuestas en el 03 a los ajustes internos: AP, Brier y log-loss raw, junto con recall, precision y bloqueo de legítimas con corte fijo 0,5. Conservamos TP, FP, FN, TN y cantidad de intervenciones por candidato y ventana. El ranking sigue usando exclusivamente AP media; los diagnósticos no cambian retrospectivamente la regla de selección.
+
+Volvimos a ejecutar los 16 ajustes con las fuentes actualizadas. AP, Brier, log-loss y probabilidad media reproducen la corrida anterior dentro de atol=rtol=10⁻⁸; la configuración seleccionada y su AP media permanecen iguales. Es una nueva corrida que amplía los diagnósticos, no evidencia independiente ni métricas añadidas a una ejecución histórica sin recalcular.
+
+| Configuración | AP media raw | Recall medio a 0,5 | Precision media a 0,5 | Bloqueo medio de legítimas |
+|---|---:|---:|---:|---:|
+| lightgbm_referencia | 0.58812 | 34.32% | 87.25% | 0.20% |
+| lightgbm_regularizada | 0.56857 | 33.63% | 87.48% | 0.19% |
+| xgboost_referencia | 0.55486 | 32.28% | 87.42% | 0.19% |
+| xgboost_regularizada | 0.52203 | 28.48% | 87.06% | 0.17% |
+| catboost_referencia | 0.51511 | 29.07% | 88.59% | 0.15% |
+| catboost_regularizada | 0.49123 | 26.85% | 87.40% | 0.16% |
+| logistica_referencia | 0.37069 | 16.44% | 82.62% | 0.14% |
+| logistica_regularizada | 0.37068 | 16.44% | 82.62% | 0.14% |
+
+Cada tasa media da igual peso a las dos ventanas. No es la tasa de una matriz de confusión combinada. Las métricas son raw y se obtienen en futuros internos de train; no se comparan por diferencia directa con las métricas Platt de validación posterior, porque cambian tanto población como preparación aprendida y ajuste.
+
+Las métricas no dan un ganador universal. En la primera ventana, CatBoost referencia alcanza precision 89,11% frente a 87,90% de LightGBM referencia al corte 0,5, mientras LightGBM tiene mayor AP y recall. Una precision mayor entre las alertas no significa detectar una proporción mayor de todos los fraudes. Esta diferencia refuerza la lectura conjunta y no modifica el criterio AP previamente fijado.
+
+La tabla por ajuste también registra input_rows, evaluation_rows, input_features, input_dtype, input_representation y additional_scaling. Los tres modelos de boosting reciben las mismas 432 columnas ordinales/imputadas por ventana. Logística recibe esa matriz a través de un pipeline con StandardScaler ajustado solo en su pasado. No seleccionamos atributos diferentes para cada algoritmo. CatBoost sigue sin categorías nativas y permanecen las doce discrepancias de tipos.
+
+El 04 exporta una configuración. El 05 comprueba si el modelo del 03 coincide y tiene su propio calibrador antes de adoptarlo. Reutilizar ese ajuste coincidente es válido; los modelos de folds internos no se presentan como predictores aprendidos sobre todo train.

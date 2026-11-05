@@ -113,3 +113,12 @@ El BMR de XGBoost cuesta 88,182.74; la diferencia de -4,013.01 favorece a LightG
 Platt reduce el costo BMR en 4 de seis escenarios, pero lo aumenta en los otros 2. Esto ocurre a pesar de mejorar Brier y log-loss globales. Las probabilidades determinan acciones al cruzar pA=Ca; una modificación puede agregar revisiones legítimas y evitar fraudes de montos distintos. El riesgo esperado con probabilidades estimadas y el costo realizado con etiquetas observadas son magnitudes diferentes. BMR minimiza el primero bajo la matriz asumida, sin garantizar el mínimo realizado en cada muestra.
 
 Conservamos Platt como calibrador adoptado del protocolo. Esta tabla no selecciona retrospectivamente raw ni otro Ca. El siguiente análisis debe revisar estabilidad temporal y errores de mayor exposición antes de congelar el protocolo final.
+
+
+## 9. Continuidad de métricas y forma de las entradas
+
+En la revisión del 4 de noviembre explicitamos las seis métricas del 03 para raw y Platt: AP, Brier, log-loss, recall, precision y bloqueo de legítimas. Las tres últimas utilizan 0,5. La nueva ejecución del 05 verifica la cadena del 04 ampliada y conserva exactamente sus métricas y costos previos. No incorpora ajustes nuevos de predictor, Platt ni árboles y mantiene test sin puntuar.
+
+El dataframe de evaluación conserva las columnas originales y controles; make_features excluye ID, tiempo, etiqueta y split y conserva 432 entradas. El preprocesador produce una matriz float32 de 42.047 × 432 para LightGBM, sin el escalador de logística. El dataframe scores tiene 42.047 filas y siete columnas: ID, tiempo, monto original, etiqueta, probabilidades raw/Platt y acción fija. El Platt recibe una columna de logits. Las acciones se organizan por operación/Ca y los costos agregados por política/Ca.
+
+La selección del 04 usa métricas raw en otros periodos internos. Aquí el contraste raw/Platt usa exactamente las mismas operaciones externas posteriores. Por ello una diferencia entre AP del 04 y del 05 no mide el efecto de la calibración. Las curvas de calibración y la evaluación económica complementan las métricas globales; ninguna diferencia de Brier demuestra por sí sola menor costo en cada escenario.

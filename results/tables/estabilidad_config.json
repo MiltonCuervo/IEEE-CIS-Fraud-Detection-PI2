@@ -1,0 +1,51 @@
+{
+  "status": "complete",
+  "completed_utc": "2026-11-05T04:27:21.648655+00:00",
+  "protocol_sha256": "d7ab40f9e64dded29ff15b37f995ee13dfe1f89e5ad2a8707a49cd8874c8c706",
+  "notebook_code_sha256": "8b82f3177efdf78fc3d74552fdc907c20eadb6cd435356e66d9847fcd28de179",
+  "input_sha256": {
+    "results/tables/lightgbm_adopcion_config.json": "b3928fa4492d27011610885c39e1ae9f770fa67906fb4102dcdfcfe64fb8f2dc",
+    "data/interim/lightgbm_validation_scores.parquet": "60d3044eefe1bdffbd59accd18f2f13948f3cfbc3e0310a6663d937d0d934b7a",
+    "data/interim/lightgbm_validation_actions.parquet": "e887862cb1d495d7d963bdcb7ababdf154599a48aff6551ac8e298cc8da2bf1f",
+    "data/interim/split_manifest.parquet": "12fe07ee14adb6bb9dfb97dbafe5d756f64aa2613b0265d74efb9332a917f7a4",
+    "results/tables/lightgbm_costos_validation.csv": "702ef44d1217175147904bd0d01590ab4f56a01fc7a9b657d899e987d137fa21"
+  },
+  "source_sha256": {
+    "src/fraud_cost/stability.py": "3d0d2f4f83ed98364b5d22693636f36e3a6637a41ccddbc10f87cbfe99e37e85",
+    "src/fraud_cost/artifacts.py": "220c144001ce7438faadb4730f916ab851628e99eafacdefb71a9f419dafba95",
+    "src/fraud_cost/costs.py": "e8e087cfdb79b0813164dd03fe33a3dca00ef3f4e76a61d1c9a85d8155d807eb"
+  },
+  "output_sha256": {
+    "results/tables/estabilidad_periodos.csv": "ed9b268ea8367f7f3d211577dcb16e6e5c857d725b8c8fbe97d838b5b1efd441",
+    "results/tables/estabilidad_probabilidades.csv": "188b3326293874cfc3c90e0e2fdda31fdcb9dffab44f399b18afb1adbbcf3a0e",
+    "results/tables/estabilidad_costos.csv": "3f31213d43ddb44bdd288b9e6ba609760e85bf2510f161f2fb5b62212cbae589",
+    "results/tables/estabilidad_calibracion_periodo_monto.csv": "34c9ea0b2ae0adcbc93e3ef4a0f3fd74be5bd2346bbccc355b76ce7a5b14596b",
+    "results/tables/estabilidad_concentracion_perdidas.csv": "310d9214f5e474d9046d61d06b4cb092177cbeec7ab3c552e0cbba34a5bac12a",
+    "results/tables/estabilidad_frontera.csv": "fe2f0937dde19eb515b0bb138cfbf2825e8af52226864ff2abaa6b01326f37e6",
+    "results/tables/estabilidad_sensibilidad_probabilidad.csv": "7d28efa2edab0f1e1c7bb78d41f95bc4f27fd1163d5a9bd58367557dea4544f4",
+    "results/figures/estabilidad_temporal.png": "e57069a4e1596db1b8c8fbdc2f6b250d5be28876435b84d022b5e447cfb8b576",
+    "results/figures/estabilidad_perdidas_y_frontera.png": "dee110c06b0b686006b951b305ec43364219947b8aa951e749ace5f75dc0a68c"
+  },
+  "rows": 42047,
+  "frauds": 1517,
+  "periods": 3,
+  "new_model_fitted": false,
+  "new_calibrator_fitted": false,
+  "model_loaded": false,
+  "test_evaluated": false,
+  "selection_changed": false,
+  "final_protocol_frozen": false,
+  "costs_hypothetical": true,
+  "development_validation_previously_consulted": true,
+  "period_cost_components_reconciled_with_05": true,
+  "baseline_perturbation_reconciled_with_05": true,
+  "python": "3.11.9",
+  "versions": {
+    "numpy": "2.4.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.11.2"
+  },
+  "git_base_commit": "6eb446c5c1373ff4f8fc4a8469f67ffb127c6087",
+  "working_tree_dirty": true
+}

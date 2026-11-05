@@ -143,6 +143,29 @@ def build_candidate(candidate):
     return model
 
 
+def threshold_diagnostics(y, probability):
+    """Diagnóstico raw al corte fijo 0,5; no participa en el ranking por AP.
+
+    Mantiene los conteos para distinguir recall, precision y bloqueo de legítimas.
+    Una tasa sin denominador se informa como NaN; precision sin positivos, cero.
+    """
+    y=np.asarray(y)
+    p=np.asarray(probability,dtype=float)
+    if y.ndim!=1 or p.shape!=y.shape or not len(y) or not np.isin(y,[0,1]).all():
+        raise ValueError('Etiquetas y probabilidades deben ser vectores binarios/alineados')
+    if not np.isfinite(p).all() or ((p<0)|(p>1)).any():
+        raise ValueError('Probabilidades inválidas')
+    positive=p>=0.5
+    fraud=y==1
+    tp=int((fraud & positive).sum()); fn=int((fraud & ~positive).sum())
+    fp=int((~fraud & positive).sum()); tn=int((~fraud & ~positive).sum())
+    return {'recall_raw_at_0_5':tp/(tp+fn) if tp+fn else np.nan,
+            'precision_raw_at_0_5':tp/(tp+fp) if tp+fp else 0.0,
+            'legitimate_block_rate_raw_at_0_5':fp/(fp+tn) if fp+tn else np.nan,
+            'tp_raw_at_0_5':tp,'fp_raw_at_0_5':fp,'fn_raw_at_0_5':fn,'tn_raw_at_0_5':tn,
+            'block_count_raw_at_0_5':tp+fp}
+
+
 def evaluate_candidate(candidate,A,B,y_fit,y_evaluate):
     """Entrena desde cero, sin eval_set, calibrador ni early stopping externo."""
     model=build_candidate(candidate)
@@ -155,6 +178,11 @@ def evaluate_candidate(candidate,A,B,y_fit,y_evaluate):
     if len(p)!=len(y_evaluate) or not np.isfinite(p).all() or ((p<0)|(p>1)).any():
         raise ValueError('Probabilidades inválidas en la evaluación interna')
     return {'candidate':candidate['candidate'],'model':candidate['model'],'variant':candidate['variant'],
+            **threshold_diagnostics(y_evaluate,p),
+            'probability_stage':'raw', 'threshold':0.5,
+            'input_rows':int(A.shape[0]), 'input_features':int(A.shape[1]),
+            'input_dtype':str(A.dtype), 'input_representation':'ordinal_imputed_432',
+            'additional_scaling':candidate['model']=='logistica',
             'average_precision':float(average_precision_score(y_evaluate,p)),
             'brier_raw':float(brier_score_loss(y_evaluate,p)),
             'log_loss_raw':float(log_loss(y_evaluate,p,labels=[0,1])),
@@ -175,6 +203,9 @@ def rank_candidates(results,candidates,fold_count):
         mean_ap=('average_precision','mean'),std_ap=('average_precision','std'),
         min_ap=('average_precision','min'),max_ap=('average_precision','max'),
         mean_brier_raw=('brier_raw','mean'),mean_log_loss_raw=('log_loss_raw','mean'),
+        mean_recall_raw_at_0_5=('recall_raw_at_0_5','mean'),
+        mean_precision_raw_at_0_5=('precision_raw_at_0_5','mean'),
+        mean_legitimate_block_rate_raw_at_0_5=('legitimate_block_rate_raw_at_0_5','mean'),
         fit_seconds_total=('fit_seconds','sum'),convergence_warnings=('convergence_warning','sum'),
     ).reset_index()
     # Igual peso por ventana. Ante igualdad exacta, identificador lexicográfico.

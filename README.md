@@ -52,8 +52,9 @@ Seleccionamos el kernel `ieee-cis-pi2` y ejecutamos en orden:
 | 01_exploracion_datos | Estructura, objetivo, ausencia, montos y tiempo | Tablas y figuras EDA; catálogo de 434 originales |
 | 02_particion_temporal | Separar pasado, gaps, validación y test | Manifiesto temporal y resúmenes |
 | 03_modelado_y_decisiones_costos | Comparar cuatro predictores con preparación ordinal y Platt; explorar tres políticas con XGBoost | Métricas, inventario, costos hipotéticos, figuras y registro de corrida |
-| 04_seleccion_temporal_modelos | Comparar ocho configuraciones solo dentro de train, sin calibrar | 16 ajustes, ranking por AP media, protocolo y configuración LightGBM seleccionada |
+| 04_seleccion_temporal_modelos | Comparar ocho configuraciones solo dentro de train, sin calibrar | 16 ajustes; seis métricas raw, conteos y entradas por ajuste; ranking por AP media y configuración LightGBM seleccionada |
 | 05_lightgbm_calibracion_y_costos | Adoptar LightGBM y su Platt verificados; diagnosticar probabilidades y comparar tres políticas | Métricas, grupos y montos; 18 costos/escenarios; modelo y scores LightGBM locales |
+| 06_estabilidad_y_errores_economicos | Diagnosticar subperiodos, concentración de pérdida y frontera BMR sin nuevos ajustes | Seis métricas por periodo, 54 costos, sensibilidad, siete tablas agregadas y dos figuras |
 
 La ejecución completa del 03 requiere memoria para una matriz densa de 380.815 × 432 y los predictores. La matriz de train ocupa aproximadamente 627,6 MiB en float32; las copias y estructuras internas aumentan el consumo. Los cuatro modelos se ajustan de manera secuencial y utilizan hasta cuatro hilos cada uno; la regresión logística tiene sus propias reglas de paralelización.
 
@@ -92,8 +93,9 @@ Intervenir cuesta Ca en ambas clases. Aprobar fraude cuesta el monto original y 
 - [Protocolo y reporte de la etapa 03](docs/03_protocolo_costos_y_evaluacion.md).
 - [Selección temporal interna y resultados del 04](docs/04_seleccion_temporal_modelos.md).
 - [Adopción LightGBM, calibración y costos](docs/05_lightgbm_calibracion_y_costos.md).
+- [Estabilidad temporal y errores económicos](docs/06_estabilidad_y_errores_economicos.md).
 - [Diccionario y recorrido de variables](docs/diccionario_variables_y_flujo_modelo.md).
 
 Los resultados del 03 son exploratorios sobre validación posterior. La selección interna del 04 utilizó solo train para ajustar y calcular su ranking, pero sus decisiones de desarrollo estuvieron precedidas por aquella exploración. El EDA y la comparación histórica de gaps consultaron etiquetas agregadas del periodo final; declaramos esta limitación y no presentamos el test como estrictamente ciego desde el inicio.
 
-Antes de evaluarlo fijaremos predictor, calibrador, costos hipotéticos justificados y reglas. El 03 conserva su comparación económica con XGBoost. El 05 usa probabilidades LightGBM y los mismos árboles verificados, montos y escenarios; sus diferencias de costo son descriptivas sobre validación de desarrollo. La siguiente etapa estudiará estabilidad y errores antes de congelar el protocolo final.
+Antes de evaluarlo fijaremos predictor, calibrador, costos hipotéticos justificados y reglas. El 03 conserva su comparación económica con XGBoost. El 05 usa probabilidades LightGBM y los mismos árboles verificados, montos y escenarios; sus diferencias de costo son descriptivas sobre validación de desarrollo. El 06 completó el diagnóstico de estabilidad y errores: BMR presenta menor costo en 17 de 18 combinaciones periodo/Ca; el árbol lo supera en el periodo 3 con Ca=100. La siguiente etapa fijará el protocolo final antes de puntuar test, manteniendo las limitaciones declaradas.

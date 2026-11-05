@@ -1,6 +1,6 @@
 {
   "status": "complete",
-  "created_utc": "2026-11-03T15:04:32.943502+00:00",
+  "created_utc": "2026-11-05T04:19:00.501570+00:00",
   "model": "lightgbm",
   "selected_candidate": {
     "candidate": "lightgbm_referencia",
@@ -75,9 +75,9 @@
   },
   "historical_record_sha256": {
     "results/tables/comparacion_modelos_config.json": "a90e037cb5e72b964358cc46bba64b044e6a07393217757f61d7b9215da99eac",
-    "results/tables/seleccion_ordinal_config.json": "bc39bd4ea3bdf8922aeee7c5dee5b752425a7c6695611d69089466dfd87dd5d6"
+    "results/tables/seleccion_ordinal_config.json": "6d40a2643dd351938f464076b2e58b55d20568f8084b5cc03e10dc20953110ce"
   },
-  "notebook_code_sha256": "63a0e17679768d68da9060f2aae4b2313c20e3c5de7b6b9c146d9b73e3758d5d",
+  "notebook_code_sha256": "f90900b2dacfd0bc14a9b33da48f0a6c828263c63db2e0d56906c437b33b0a7d",
   "output_sha256": {
     "results/models/lightgbm_seleccionado_platt.joblib": "59161e585dafa59a12c3e5e536b4af6a1ed344b0a71fb29d51a9a09125f37510",
     "data/interim/lightgbm_validation_scores.parquet": "60d3044eefe1bdffbd59accd18f2f13948f3cfbc3e0310a6663d937d0d934b7a",
@@ -98,6 +98,6 @@
     "lightgbm": "4.7.0",
     "joblib": "1.6.0"
   },
-  "git_base_commit": "3537b0b5451f2aa7e6dae8600f93cef55e14e2df",
+  "git_base_commit": "6eb446c5c1373ff4f8fc4a8469f67ffb127c6087",
   "working_tree_dirty": true
 }
