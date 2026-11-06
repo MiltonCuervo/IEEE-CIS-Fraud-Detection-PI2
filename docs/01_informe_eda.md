@@ -41,7 +41,7 @@ La [descripción oficial](https://www.kaggle.com/competitions/ieee-fraud-detecti
 
 ### 2.2. Qué conservamos y qué no entra directamente
 
-Conservamos **431 columnas originales como predictores**, sin selección automática por correlación, importancia, cardinalidad o ausencia. TransactionID se conserva para unir/alinear, isFraud como y y TransactionDT para ordenar, partir y construir derivados, pero las tres quedan fuera de X. Split, creado después, es control temporal y tampoco entra. Que no sean entradas directas no implica borrarlas de los datos fuente.
+Conservamos **431 columnas originales como predictores**, sin selección automática por correlación, importancia, cardinalidad o ausencia. TransactionID se conserva para unir/alinear, isFraud como y y TransactionDT para ordenar y partir, pero las tres quedan fuera de X. Split, creado después, es control temporal y tampoco entra. Que no sean entradas directas no implica borrarlas de los datos fuente.
 
 Hay una discrepancia pendiente: id_13, id_14, id_17, id_18, id_19, id_20, id_21, id_22, id_24, id_25, id_26 e id_32 quedaron numéricas en nuestro código pese a la clasificación categórica del proveedor. Los árboles pueden usar un orden no justificado entre códigos. Lo documentamos por columna sin cambiar retrospectivamente la preparación, los modelos ni sus resultados.
 
@@ -53,7 +53,10 @@ Encontramos 20.663 transacciones fraudulentas, equivalentes al 3,499% del conjun
 
 ![Distribución de la variable objetivo](../results/figures/eda_distribucion_objetivo.png)
 
-La evaluación predictiva deberá incluir AUC-PR y recall. Sin embargo, la comparación principal utilizará costo total y ahorro, porque el objetivo del proyecto es económico.
+La evaluación predictiva utiliza AP y recall. AP se calcula con
+`average_precision_score`: resume la curva precision–recall mediante sumas
+ponderadas por aumentos de recall; no es el área trapezoidal que también se
+denomina AUC-PR. Usamos AP de forma consistente en tablas y selección. Sin embargo, la comparación principal utilizará costo total y ahorro, porque el objetivo del proyecto es económico.
 
 ### 3.2 Monto de las transacciones
 
@@ -101,7 +104,8 @@ Con base en la evidencia anterior acordamos:
 2. no usar accuracy como criterio principal debido al desbalance;
 3. conservar `TransactionAmt` en su escala original para la matriz de costos y declarar que representa una aproximación de la pérdida potencial;
 4. construir train, validación y test en orden temporal;
-5. ajustar imputación, eliminación de columnas y codificación después de separar los bloques;
+5. aprender imputación y codificación después de separar los bloques; la
+   preparación vigente no elimina atributos por ausencia, correlación o importancia;
 6. diferenciar ausencia estructural de identidad y ausencia interna de las variables;
 7. evaluar los montos extremos mediante sensibilidad, no eliminarlos únicamente por su magnitud.
 
@@ -110,7 +114,11 @@ Con base en la evidencia anterior acordamos:
 - `TransactionAmt` no es una pérdida bancaria neta confirmada: el dataset no informa recuperaciones ni contracargos. La unidad/moneda también debe confirmarse antes de asignarle interpretación financiera.
 - `TransactionDT` no tiene un origen calendario público; las horas y días derivados son relativos.
 - Las asociaciones categóricas no implican causalidad.
-- El EDA utiliza el conjunto etiquetado completo para descripción. Ninguna estadística global se reutilizará para ajustar transformaciones o seleccionar modelos.
+- El EDA utiliza el conjunto etiquetado completo para descripción. No reutilizamos estadísticas globales como medianas, vocabularios o atributos
+  supervisados del predictor. Sin embargo, el EDA sí informó decisiones de diseño
+  y la comparación histórica de gaps consultó etiquetas agregadas futuras. Esto
+  limita la independencia de la evaluación; no afirmamos ausencia de influencia
+  del EDA sobre el desarrollo.
 - Esta etapa todavía no define imputadores, codificadores, atributos finales ni hiperparámetros.
 - El diccionario actualizado distingue las descripciones originales de la preparación que se ejecutó después. Su columna tipo_regla_vigente describe esa implementación, no una recomendación semántica ni un ajuste aprendido del conjunto global.
 

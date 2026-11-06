@@ -48,7 +48,10 @@ Reducir C incrementa la regularización L2 de logística. min_child_weight de XG
 
 Elegimos la mayor AP media de las dos ventanas, con igual peso por ventana. No seleccionamos la mejor ventana de cada modelo ni cambiamos el criterio a Brier, log-loss o ahorro después de observar los resultados. Una igualdad exacta se resuelve por identificador lexicográfico.
 
-AP es el criterio intermedio de selección del predictor, mientras que costo y ahorro siguen siendo el objetivo principal del proyecto. Elegir por AP no demuestra haber elegido el predictor de menor costo económico. AP evalúa el orden de riesgo sin fijar el corte 0,5. No calibramos dentro de esta etapa: el predictor elegido recibirá su propio Platt después de reajustarse con todo train. Brier y log-loss raw son diagnósticos; no implican que las probabilidades ya estén calibradas ni autorizan decisiones económicas finales. Tampoco ajustamos early stopping con el futuro evaluado.
+AP es el criterio intermedio de selección del predictor, mientras que costo y ahorro siguen siendo el objetivo principal del proyecto. Elegir por AP no demuestra haber elegido el predictor de menor costo económico. AP evalúa el orden de riesgo sin fijar el corte 0,5. No calibramos dentro de esta etapa: el paso siguiente exige un predictor aprendido con todo train y su propio
+Platt de validación temprana. En la ejecución realizada, el ganador coincidió
+con el LightGBM del 03: el 05 verificó y reutilizó ambos ajustes existentes,
+sin repetir el entrenamiento ni la calibración. Brier y log-loss raw son diagnósticos; no implican que las probabilidades ya estén calibradas ni autorizan decisiones económicas finales. Tampoco ajustamos early stopping con el futuro evaluado.
 
 Reportamos AP individual, media, mínimo, máximo y desviación estándar muestral. Dos ventanas no proporcionan un intervalo de confianza ni una prueba de superioridad estadística. La prevalencia por ventana se conserva para contextualizar AP. Las advertencias de convergencia y los tiempos forman parte de los resultados; no se ocultan ni se usan como un criterio improvisado para descartar candidatos.
 

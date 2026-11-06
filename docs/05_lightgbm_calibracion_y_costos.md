@@ -20,7 +20,9 @@ Conservamos el tratamiento de las doce variables id semánticamente categóricas
 
 Evaluamos exactamente las 42.047 operaciones posteriores y sus 1.517 fraudes. Verificamos igualdad de TransactionID, TransactionDT, TransactionAmt e isFraud con los scores XGBoost del 03. El monto original se conserva en float64 para costos; la matriz predictiva es float32. Los instantes simultáneos no se reparten entre la mitad temprana y la posterior.
 
-No puntuamos test ni usamos sus etiquetas para resumir, ajustar o elegir parámetros. Conservamos la limitación histórica de consulta de etiquetas agregadas durante EDA/partición. Validación posterior ya se ha utilizado como desarrollo; sus métricas no son una evaluación independiente del diseño completo.
+En esta etapa no puntuamos test ni agregamos sus etiquetas para resumir,
+ajustar o elegir parámetros; el lector común sí recorre los CSV antes de
+retener las filas de validación. Conservamos la limitación histórica de consulta de etiquetas agregadas durante EDA/partición. Validación posterior ya se ha utilizado como desarrollo; sus métricas no son una evaluación independiente del diseño completo.
 
 ## 4. Diagnóstico de probabilidades
 

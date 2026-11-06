@@ -103,3 +103,11 @@ El notebook `06_estabilidad_y_errores_economicos.ipynb` tiene celdas cortas de d
 ## Continuación: protocolo técnico congelado
 
 La reproducción local posterior de 05/06 verificó sus doce tablas dentro de tolerancias prefijadas, sin nuevos ajustes. El [notebook/informe 07](07_protocolo_final.md) ya fija LightGBM, su propio Platt, las políticas y escenarios hipotéticos antes de evaluar test. Los registros 05/06 conservan sus flags históricos; la congelación se acredita en el registro posterior. Test sigue sin puntuar.
+
+
+### Estado posterior de la secuencia
+
+Los 23 tests citados arriba corresponden al cierre histórico del 06, no al total
+actual. La revisión consolidada pasó 49 pruebas. El 07 congeló el protocolo y
+el 08 ya evaluó test con la versión local explícita, conservando las decisiones.
+Las menciones anteriores a “test sin puntuar” describen el momento de esta etapa.

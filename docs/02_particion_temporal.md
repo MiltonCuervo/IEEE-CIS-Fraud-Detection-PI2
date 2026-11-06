@@ -14,7 +14,9 @@ La lista `usecols` carga once columnas para ordenar, resumir y describir novedad
 
 TransactionDT fija el orden; TransactionID conserva la correspondencia; isFraud permite resúmenes en los bloques autorizados, no un corte aprendido por etiqueta. Ninguna mediana ni categoría de este notebook se transfiere al entrenamiento. El EDA completo y el [diccionario por variable](diccionario_variables_y_flujo_modelo.md) son descriptivos; el ajuste se realiza dentro de cada pasado de entrenamiento.
 
-Train ajusta historial, imputación, vocabulario y modelo. Los gaps no contribuyen a ninguna de esas estadísticas. Validación temprana calibra el predictor fijo; validación posterior compara probabilidades y acciones. Ambas usan el historial final de train congelado, sin incorporar transacciones de validación. ID, etiqueta, tiempo crudo y split siguen disponibles como controles, pero no entran directamente a X. TransactionAmt mantiene su función predictiva y económica.
+Train ajusta imputación, vocabulario y modelo; no construimos atributos de
+historial en la línea vigente. Los gaps no contribuyen a ninguna de esas estadísticas. Validación temprana calibra el predictor fijo; validación posterior compara probabilidades y acciones. Ambas usan el preprocesador aprendido en train, sin actualizar sus medianas ni
+vocabularios con transacciones de validación. ID, etiqueta, tiempo crudo y split siguen disponibles como controles, pero no entran directamente a X. TransactionAmt mantiene su función predictiva y económica.
 
 ## 2. Justificación metodológica
 
@@ -84,7 +86,9 @@ El notebook verifica automáticamente que:
 1. las 590.540 transacciones reciben exactamente una etiqueta de bloque;
 2. no existen `TransactionID` duplicados;
 3. train, gaps, validación y test aparecen en orden temporal estricto;
-4. validation contiene ambas clases; el test se reserva sin comprobar su distribución de etiquetas en la corrida actual;
+4. se exige por aserción al menos un fraude en validation; la presencia de ambas
+   clases se constata en sus conteos (la aserción sola no lo garantiza); el test
+   se excluye de ese resumen de etiquetas;
 5. el manifiesto puede guardarse y leerse sin perder filas ni asignaciones.
 
 Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El notebook incluye comprobaciones ejecutables de cobertura, unicidad y orden temporal. La suite vigente en `tests/` verifica preparación, matriz económica, ventanas internas, exclusión de bloques externos, ranking completo y recuperación de artefactos. No confundimos esta suite con las pruebas de los experimentos retirados ni con una cobertura exhaustiva de la partición original.
@@ -117,4 +121,6 @@ Las claves compuestas nuevas describen combinaciones no observadas, no el porcen
 
 ## Continuidad metodológica actualizada
 
-La secuencia vigente continúa en el notebook 03 de la profesora con cuatro predictores y preparación ordinal de 432 entradas, y en el nuevo 04 con selección temporal interna completada. La configuración LightGBM elegida requiere una adopción verificable en la etapa posterior. Los experimentos del pipeline anterior fueron retirados; las cifras de EDA y la asignación temporal se conservan. Véanse el [protocolo vigente](03_protocolo_costos_y_evaluacion.md) y los [resultados del 04](04_seleccion_temporal_modelos.md).
+La secuencia vigente continúa en el notebook 03 de la profesora con cuatro predictores y preparación ordinal de 432 entradas, y en el nuevo 04 con selección temporal interna completada. La configuración LightGBM elegida fue verificada y adoptada en el 05. La
+evaluación ya completada corresponde al 08, bajo la versión local congelada
+allí documentada. Los experimentos del pipeline anterior fueron retirados; las cifras de EDA y la asignación temporal se conservan. Véanse el [protocolo vigente](03_protocolo_costos_y_evaluacion.md) y los [resultados del 04](04_seleccion_temporal_modelos.md).

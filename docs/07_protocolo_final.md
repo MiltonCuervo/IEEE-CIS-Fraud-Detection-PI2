@@ -83,3 +83,18 @@ Después de congelar no debemos regenerar etapas previas sobre esas mismas rutas
 Conservamos la subestimación en [500,1000), la variación temporal y los supuestos simplificados de costos. Validación posterior ya influyó en el desarrollo y el EDA/selección histórica de gaps consultó etiquetas agregadas de test. Por eso no describiremos la evaluación final como estrictamente ciega ni como ahorro bancario real o superioridad universal.
 
 La siguiente etapa es construir y ejecutar la evaluación temporal final bajo este protocolo, registrando el inicio de forma exclusiva y manteniendo trazabilidad de los resultados.
+
+
+## 8. Consulta de esta evidencia después de la evaluación
+
+La evaluación se completó en el 08. El ejemplo `verify_before_test` anterior
+documenta el control previo a puntuar; no es el comando de consulta de una copia
+ya evaluada y debe detenerse si encuentra el registro final existente. Para
+consultarla se ejecuta `scripts/audit_project.py`, como explica el README.
+
+El protocolo recibido conserva sus dependencias reconstruidas en otro equipo.
+El 08 no sustituyó sus hashes: verificó equivalencia de las doce tablas y de las
+decisiones y congeló una versión local explícita antes de evaluar. La ruta y la
+huella de esa versión activa están en `protocolo_ejecucion_local_v2.json`.
+Verificar el protocolo recibido contra binarios originales diferentes puede
+fallar por esa procedencia; no demuestra que debamos reemplazarlo o repetir test.

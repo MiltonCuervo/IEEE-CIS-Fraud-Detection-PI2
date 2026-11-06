@@ -4,9 +4,12 @@
 
 Evaluamos las 84.233 transacciones del bloque temporal final con LightGBM, su Platt y las tres políticas congeladas. Encontramos 2.960 fraudes, una prevalencia de 3,51%. BMR obtiene el menor costo de las tres políticas en los seis escenarios completos y las 18 combinaciones de subperiodo/Ca. Con Ca=10 reduce el costo 50,16% frente a la regla fija y 59,91% frente a la mejor referencia trivial.
 
-La mejora económica convive con una limitación: Platt empeora ligeramente Brier y log-loss globales en test, aunque los mejoró en validación. Conservamos el calibrador fijado antes de evaluar; no elegimos retrospectivamente raw por sus métricas. El resultado compara las tres políticas con p calibrada y no identifica causalmente el ahorro atribuible a Platt.
+La mejora económica convive con una limitación: Platt empeora ligeramente Brier y log-loss globales en test, aunque los mejoró en validación. Conservamos el calibrador fijado antes de evaluar; no elegimos retrospectivamente raw por sus métricas. El resultado utiliza p calibrada para fija/BMR y las acciones del árbol como
+tercera política y no identifica causalmente el ahorro atribuible a Platt.
 
-La evaluación es posterior al entrenamiento de los modelos, sin reajuste con validación o test. No es estrictamente ciega desde el inicio: el EDA y la selección histórica de gaps consultaron estadísticas agregadas de este periodo. Los costos suponen intervención eficaz y montos originales como pérdida potencial, sin moneda verificada, capacidad operativa, recuperación o perjuicio comercial adicional. Los ahorros no son pérdidas bancarias netas observadas.
+La evaluación es posterior al entrenamiento. Los predictores y árboles no se
+reajustaron con validación o test; los calibradores sí se aprendieron, como
+estaba previsto, en validación temprana. Ningún estimador se ajustó con test. No es estrictamente ciega desde el inicio: el EDA y la selección histórica de gaps consultaron estadísticas agregadas de este periodo. Los costos suponen intervención eficaz y montos originales como pérdida potencial, sin moneda verificada, capacidad operativa, recuperación o perjuicio comercial adicional. Los ahorros no son pérdidas bancarias netas observadas.
 
 ## 2. Qué aportó el compañero y cómo continuamos
 
@@ -35,7 +38,7 @@ El monto económico permanece float64. ID, tiempo, etiqueta y split no entran al
 | raw | 0.51780 | 0.02279 | 0.09471 | 3.39% | 34.97% | 79.92% |
 | platt | 0.51780 | 0.02300 | 0.09515 | 3.73% | 37.26% | 77.24% |
 
-Platt conserva AP=0,51781 y aumenta recall al corte 0,5, pero baja precisión e incrementa intervenciones de 1.295 a 1.428. Brier pasa de 0,02279 a 0,02300 y log-loss, de 0,09471 a 0,09515. La probabilidad media pasa de 3,39% a 3,73%, frente a prevalencia 3,51%. El diagnóstico global de validación no garantizó la misma mejora probabilística en el periodo final.
+Platt conserva AP=0,51780 y aumenta recall al corte 0,5, pero baja precisión e incrementa intervenciones de 1.295 a 1.428. Brier pasa de 0,02279 a 0,02300 y log-loss, de 0,09471 a 0,09515. La probabilidad media pasa de 3,39% a 3,73%, frente a prevalencia 3,51%. El diagnóstico global de validación no garantizó la misma mejora probabilística en el periodo final.
 
 La AP externa de validación era 0,50440. El valor test superior no prueba una mejora del modelo: no cambiamos el modelo y las poblaciones son diferentes. Brier/log-loss y el promedio de probabilidades tampoco certifican calibración condicional. No elegimos el calibrador con el resultado test.
 
@@ -129,3 +132,31 @@ Corregimos el lenguaje del EDA sobre ausencia y asociación: la cobertura parcia
 Se eliminaron seis artefactos locales sin referencias activas ni congeladas: candidate_isotonic_calibrator.joblib, cost_trees_hypothetical.joblib, selected_xgboost_platt.joblib, decisiones_economicas_validation.parquet, validation_run_metadata.json y validation_scores_selected.parquet. Pertenecían al pipeline retirado. Conservamos datos originales, modelos actuales y la copia aislada necesaria para verificar la evaluación. También fijamos los finales de línea de las fuentes y evidencias congeladas para preservar sus bytes al clonar.
 
 La suite actual pasó **49 pruebas sin advertencias** y la comprobación de dependencias no encontró incompatibilidades. La auditoría es de integridad y coherencia de implementación: no convierte el test históricamente consultado en una prueba ciega, no resuelve las doce discrepancias de tipos ni garantiza calibración perfecta o ahorro en producción. Esas limitaciones permanecen declaradas y no se corrigen retrospectivamente usando test.
+
+
+## 13. Revisión de explicación y correspondencia con el código
+
+La revisión editorial posterior contrastó las celdas narrativas, comentarios y
+mensajes ejecutados con los informes y el código de preparación, partición,
+selección y costos. Corregimos referencias activas a one-hot, atributos históricos
+retirados, reajuste obligatorio del ganador, AP/AUC-PR y la confusión entre
+calibrar probabilidades y definir una política económica. También delimitamos
+qué comprueba cada aserción y qué constituye solamente evidencia descriptiva.
+
+La secuencia inequívoca es: 03 entrena y calibra por separado cuatro modelos;
+04 selecciona una configuración usando AP raw interna; 05 verifica y reutiliza
+LightGBM completo y su propio Platt del 03; 06 diagnostica estabilidad; 07 fija
+el protocolo y 08 evalúa la versión local explícita. El árbol no consume Platt.
+La comparación final no seleccionó por costos entre los cuatro clasificadores.
+
+No cambiamos celdas de código, salidas ejecutadas, modelos ni tablas de resultados
+durante esta revisión editorial. Algunos mensajes históricos del 03 conservan
+la numeración “NB-05”: su corrección a **04** figura inmediatamente antes de la
+celda afectada, además del informe, para preservar la procedencia sin darles
+vigencia metodológica. Los archivos JSON registran el estado de cada ejecución;
+no se editan sus flags antiguos para simular que todas ocurrieron después de test.
+
+Las definiciones, entradas/salidas y decisiones comunes se consultan en el
+[diccionario de variables y flujo](diccionario_variables_y_flujo_modelo.md).
+La auditoría comprueba consistencia técnica y aritmética; no promete ausencia
+absoluta de errores ni elimina las limitaciones metodológicas declaradas.

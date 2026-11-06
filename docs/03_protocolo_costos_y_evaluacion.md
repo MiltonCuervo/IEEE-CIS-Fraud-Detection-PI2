@@ -6,7 +6,9 @@
 
 Con la partición del notebook 02 buscamos establecer una referencia probabilística y económica reproducible. Seguimos la preparación ordinal y los cuatro predictores incorporados por la profesora: XGBoost, LightGBM, CatBoost y regresión logística. Sus parámetros son fijos; esta etapa no selecciona el predictor final.
 
-La consolidación del 2 de noviembre corrige explicaciones, guarda la imputación en el preprocesador, preserva el monto económico original y recupera las exportaciones. Estos cambios requieren una nueva corrida: no atribuimos las métricas del commit de la profesora a estas fuentes modificadas. Las salidas ejecutadas y su registro son la evidencia numérica vigente.
+La consolidación del 2 de noviembre corrige explicaciones, guarda la imputación en el preprocesador, preserva el monto económico original y recupera las exportaciones. Estos cambios requirieron una nueva corrida, que se completó y cuyos hallazgos
+se presentan en la sección 8; no atribuimos las métricas del commit de la
+profesora a estas fuentes modificadas. Las salidas ejecutadas y su registro son la evidencia numérica vigente.
 
 ## 2. Poblaciones y preparación
 
@@ -43,7 +45,9 @@ El árbol aprende la acción 1[yA>Ca] y pondera cada error por abs(yA−Ca). Esa
 
 ## 5. Comparación y referencias
 
-Comparamos regla fija, BMR y árbol con XGBoost + Platt sobre las mismas filas. No confundimos la comparación de cuatro predictores con una evaluación económica de los cuatro: esa extensión todavía está pendiente.
+Comparamos regla fija, BMR y árbol con XGBoost + Platt sobre las mismas filas. No confundimos la comparación de cuatro predictores con una evaluación económica de los cuatro: esta etapa no realiza esa extensión. El alcance final compara las políticas
+fija y BMR con el LightGBM seleccionado, además de los árboles. No afirmamos
+haber identificado el clasificador de menor costo entre los cuatro algoritmos.
 
 ```text
 C_total = Ca × intervenciones + monto de fraudes aprobados
@@ -56,7 +60,8 @@ mejora_fijo = 1 − C_total/C_fijo
 
 Las referencias son diferentes y pueden producir ahorros negativos. Para Ca=5, intervenir todo cuesta 210.235, menor que el monto fraudulento aproximado de 254.537; para Ca=10, aprobar todo es la mejor referencia trivial. No afirmamos que un rango de Ca sea operativo sin evidencia de costos aplicable al dataset.
 
-Los escenarios 1,5,10,20,50,100 son hipotéticos. Su elección final y justificación quedan pendientes. BMR minimiza riesgo esperado con las probabilidades suministradas; no garantiza el menor costo realizado en toda muestra o periodo.
+Los escenarios 1,5,10,20,50,100 son hipotéticos. Su justificación y fijación se completaron en el 07 como escenarios
+hipotéticos; no como estimaciones operativas. BMR minimiza riesgo esperado con las probabilidades suministradas; no garantiza el menor costo realizado en toda muestra o periodo.
 
 ## 6. Archivos y reproducción
 
@@ -76,7 +81,8 @@ Los nombres y el orden de columnas de la tabla económica proceden de `src/fraud
 
 Retiramos de la estructura activa los notebooks 04–09 del pipeline anterior, sus informes y sus resultados. No borramos CSV originales ni modificamos el manifiesto. Git conserva los archivos retirados en `089df7f`; los modelos locales antiguos siguen ignorados, pero no forman parte del flujo actual. También retiramos los registros automáticos de CatBoost y desactivamos su escritura en nuevas corridas.
 
-Después de esta exploración, el notebook 04 comparó ocho configuraciones de los cuatro modelos con dos ventanas temporales internas de train y seleccionó LightGBM referencia por AP media. La exploración posterior ya fue consultada y forma parte del desarrollo; no afirmamos que las decisiones siguientes sean independientes de ella. La etapa 05 deberá formalizar el predictor seleccionado y diagnosticar su calibración; la comparación económica y estabilidad se reconstruirán sobre sus probabilidades.
+Después de esta exploración, el notebook 04 comparó ocho configuraciones de los cuatro modelos con dos ventanas temporales internas de train y seleccionó LightGBM referencia por AP media. La exploración posterior ya fue consultada y forma parte del desarrollo; no afirmamos que las decisiones siguientes sean independientes de ella. La etapa 05 verificó y adoptó el ajuste LightGBM coincidente y su propio Platt;
+la comparación económica y la estabilidad del 05/06 utilizaron esas probabilidades.
 
 El test permanece sin puntuar y no incluimos una celda para habilitarlo en esta exploración. El EDA y la comparación histórica de gaps consultaron etiquetas agregadas del periodo final: mantenemos esa limitación explícita. La evaluación final requiere congelar primero el protocolo.
 

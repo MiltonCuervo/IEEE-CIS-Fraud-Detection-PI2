@@ -110,4 +110,4 @@ Una reproducción nueva requiere su propia área y versión de experimento; no d
 
 Los informes describen cada etapa en su momento; las referencias a pasos futuros no implican que sigan pendientes. La limpieza retira salidas locales del pipeline descartado, conservado como código histórico en Git, y mantiene toda evidencia utilizada por la versión vigente.
 
-La construcción técnica está concluida. Restan la síntesis en el informe IEEE, el aval docente y la sustentación. El resultado defendible es una reducción observada del costo bajo una matriz explícita, acompañada del compromiso de intervención y las limitaciones; no una garantía de desempeño bancario en producción.
+La construcción técnica está concluida. El [borrador del artículo IEEE](docs/informe_final/README.md) está preparado en PDF de seis páginas con su fuente editable. Restan la revisión del equipo y de la profesora, la incorporación de observaciones, el aval docente y la sustentación. El resultado defendible es una reducción observada del costo bajo una matriz explícita, acompañada del compromiso de intervención y las limitaciones; no una garantía de desempeño bancario en producción.

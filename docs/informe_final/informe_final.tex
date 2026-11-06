@@ -1,0 +1,290 @@
+\documentclass[conference,letterpaper]{IEEEtran}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx,booktabs,url}
+\usepackage{microtype}
+\usepackage[hidelinks]{hyperref}
+\hyphenation{LightGBM XGBoost CatBoost TransactionAmt TransactionDT}
+\newcommand{\Ca}{C_a}
+\newcommand{\ind}{\mathbf{1}}
+\begin{document}
+\renewcommand{\thesubsection}{\Alph{subsection}}
+\renewcommand{\IEEEkeywordsname}{Palabras clave}
+\title{Optimización basada en costos del umbral de decisión para el bloqueo de transacciones sospechosas mediante modelos de aprendizaje automático}
+\author{\IEEEauthorblockN{Milton Alejandro Cuervo Ramírez, Oswald David Gutiérrez Cortina\\
+y Diego Alejandro Rendón Suaza}
+\IEEEauthorblockA{Departamento de Ingeniería de Sistemas, Facultad de Ingeniería\\
+Universidad de Antioquia, Medellín, Colombia\\
+\{milton.cuervo, oswaldd.gutierrez, diego.rendons\}@udea.edu.co}}
+\maketitle
+
+\begin{abstract}
+En detección de fraude, estimar la clase de una transacción no determina por sí solo la acción de menor costo. En este trabajo comparamos una regla fija de 0,5, Bayes Minimum Risk (BMR) y un árbol ponderado por costos sobre IEEE-CIS Fraud Detection. Conservamos 432 atributos ordinales o numéricos y seleccionamos LightGBM entre ocho configuraciones mediante dos ventanas temporales internas de entrenamiento. Verificamos y reutilizamos su calibrador Platt, aprendido en validación temprana, y evaluamos las políticas en 84.233 operaciones posteriores, con 2.960 fraudes. Suponemos un costo administrativo por intervención y el monto original como pérdida potencial del fraude aprobado. BMR obtuvo el menor costo de las tres políticas en los seis escenarios hipotéticos evaluados. Con costo administrativo 10, redujo el costo 50,16\% frente a la regla fija y capturó 77,79\% del monto fraudulento, interviniendo 7,91\% de las operaciones legítimas. Platt empeoró ligeramente Brier y log-loss finales. Los resultados respaldan la utilidad de incorporar probabilidad y monto a la decisión bajo la matriz adoptada, sin demostrar ahorro bancario real ni superioridad universal. Declaramos la consulta histórica de etiquetas agregadas del periodo final.
+\end{abstract}
+
+\begin{IEEEkeywords}
+detección de fraude, costos dependientes del ejemplo, Bayes Minimum Risk, calibración probabilística, validación temporal.
+\end{IEEEkeywords}
+
+\section{Introducción}
+Una transacción fraudulenta aprobada y una compra legítima intervenida producen consecuencias diferentes. La primera expone a la entidad al monto de la operación; la segunda consume recursos de revisión y puede afectar al cliente. Por eso, contar errores no basta para evaluar una política de prevención. También importa qué operaciones se intervienen y cuál es el costo de hacerlo.
+
+Partimos de una separación entre estimación y decisión. El clasificador produce una probabilidad de fraude y conservamos el corte convencional 0,5 para describir su clasificación. La decisión económica compara acciones usando esa probabilidad y los costos. Bajo probabilidades verdaderas y errores simétricos, 0,5 minimiza el error esperado de clasificación; no garantiza el mínimo costo cuando los montos y consecuencias son distintos \cite{elkan}.
+
+La pregunta del proyecto es: ¿en qué medida una regla sensible al costo mejora el ahorro frente a actuar según la etiqueta, y cómo cambia ese beneficio al variar el costo administrativo de revisión? Para responderla desarrollamos un flujo reproducible de exploración, preparación, selección temporal, calibración, comparación de políticas y evaluación posterior. Nuestro aporte es experimental: documentamos ese recorrido sobre datos públicos, conciliamos sus resultados económicos y examinamos el compromiso entre fraude evitado e intervención de legítimas. No proponemos un nuevo algoritmo de clasificación.
+
+\section{Antecedentes y formulación económica}
+Elkan formaliza la elección de acciones mediante costos y probabilidades condicionales \cite{elkan}. Bahnsen et al. aplican BMR al fraude con tarjetas incorporando el monto individual \cite{bmr}, y posteriormente estudian la importancia de estimar probabilidades adecuadas para esa decisión \cite{calibrated}. Su línea de árboles dependientes del ejemplo modifica directamente el criterio de partición y poda \cite{csdt}. Nuestra implementación ponderada es una aproximación diferente y no se presenta como reproducción exacta de ese algoritmo.
+
+Almhaithawi et al. combinan modelos de clasificación, remuestreo y BMR \cite{almhaithawi}. Retomamos la evaluación económica, pero entrenamos sin remuestrear y comprobamos la calidad probabilística en periodos posteriores. Dal Pozzolo et al. motivan una evaluación que respete tiempo, cambios de población y disponibilidad de etiquetas \cite{dalpozzolo}. Su trabajo orienta el diseño cronológico; no prescribe los siete días concretos utilizados aquí.
+
+\subsection{Matriz de costos y condición de intervención}
+Denotamos por $y_i\in\{0,1\}$ la clase observada, por $A_i\geq0$ el monto original y por $\Ca>0$ el costo administrativo de bloquear y revisar. Adoptamos la matriz de la Tabla~\ref{tab:matrix}. Intervenir evita toda la pérdida fraudulenta bajo este supuesto y cuesta lo mismo en ambas clases.
+
+\begin{table}[t]
+\caption{Costo por operación según acción y estado observado}
+\label{tab:matrix}
+\centering
+\begin{tabular}{lcc}\toprule
+Estado & Aprobar & Intervenir\\\midrule
+Fraude ($y_i=1$) & $A_i$ & $\Ca$\\
+Legítima ($y_i=0$) & $0$ & $\Ca$\\\bottomrule
+\end{tabular}
+\end{table}
+
+Si $p_i$ estima $P(y_i=1\mid X_i)$, los riesgos suministrados al decisor son
+\begin{equation}
+R_i(\text{aprobar})=p_i A_i,\qquad R_i(\text{intervenir})=\Ca.
+\label{eq:risk}
+\end{equation}
+Así, BMR interviene si $p_i A_i>\Ca$. Para $A_i>0$, esto equivale a un umbral económico $p_i^*=\Ca/A_i$. Aprobamos en empate y cuando $A_i=0$; si $A_i\leq\Ca$, intervenir no ofrece una reducción estricta del riesgo. Esta regla opera después de estimar probabilidades y no optimiza el corte clasificatorio 0,5.
+
+Los costos son hipotéticos y se expresan en unidades de \texttt{TransactionAmt}: no verificamos una moneda. No incluimos recuperación, límite de revisiones, intervención imperfecta ni daño comercial adicional. Por tanto, el monto es una aproximación de pérdida potencial, no una pérdida bancaria neta observada.
+
+\subsection{Costo realizado y referencias de ahorro}
+Sea $d_i=1$ si intervenimos y $d_i=0$ si aprobamos. Evaluamos
+\begin{equation}
+C(d;\Ca)=\Ca\sum_i d_i+\sum_i y_i A_i(1-d_i).
+\label{eq:cost}
+\end{equation}
+La referencia trivial es $C_{\rm ref}=\min(\sum_i y_iA_i,N\Ca)$, el menor costo entre aprobar todo e intervenir todo. Reportamos
+\begin{equation}
+S_{\rm ref}=1-\frac{C(d;\Ca)}{C_{\rm ref}},\qquad
+M_{\rm fija}=1-\frac{C(d;\Ca)}{C_{\rm fija}}.
+\label{eq:savings}
+\end{equation}
+Estas fracciones tienen denominadores distintos y admiten valores negativos. Se calculan sobre cada población; no sumamos porcentajes ni mínimos de referencias entre subperiodos.
+
+\section{Datos y diseño experimental}
+\subsection{Estructura, desbalance y exploración}
+Usamos los archivos etiquetados de IEEE-CIS, publicados por IEEE Computational Intelligence Society y Vesta en Kaggle \cite{dataset}. \texttt{train\_transaction} contiene 590.540 filas y 394 columnas; \texttt{train\_identity}, 144.233 filas y 41 columnas con la clave compartida. Una unión izquierda uno a uno por \texttt{TransactionID} conserva todas las transacciones y produce 434 columnas. Solo 24,42\% tiene correspondencia de identidad: una unión interna cambiaría la población del estudio.
+
+Encontramos 20.663 fraudes (3,499\%) y 569.877 legítimas. Aprobar todo tendría alta exactitud, pero recall nulo de fraude. Además, el 1\% de fraudes de mayor monto concentra 10,63\% del monto fraudulento. Esta diferencia entre cantidad y exposición justifica evaluar costos y recall ponderado por monto.
+
+Hay 414 columnas con ausencias y 12 superan 90\%. Distinguimos valores no informados dentro de las tablas y falta de correspondencia con identidad, sin diagnosticar mecanismos de ausencia a partir de sus porcentajes. Las familias C, D, V e id están anonimizadas: no atribuimos significados individuales no verificables. Las V son atributos del proveedor, no ingeniería nuestra.
+
+\subsection{Representación y transformaciones aprendidas}
+Excluimos de $X$ el identificador, el tiempo crudo y la etiqueta; conservamos 431 originales y añadimos \texttt{has\_identity}, calculado desde la correspondencia de la unión. \texttt{split} solo controla bloques. Obtenemos 432 entradas: 37 categóricas y 395 numéricas. El monto se usa como atributo predictivo y se conserva aparte en float64 para costos.
+
+La rama categórica comprende ProductCD, card1--card6, addr1--addr2, ambos dominios de correo, M1--M9, DeviceType, DeviceInfo y quince columnas id de texto. Normalizamos ausencias con un token y aprendemos un código ordinal por nivel exclusivamente en el pasado de ajuste; niveles desconocidos reciben $-1$, incluido un token de ausencia no visto al ajustar. Por ejemplo, ProductCD quedó C$\to0$, H$\to1$, R$\to2$, S$\to3$ y W$\to4$. Estos números no son magnitudes ni tasas de fraude. La representación evita expandir una columna por nivel, pero impone un orden artificial.
+
+Sustituimos infinitos numéricos por ausencias y aprendemos medianas por columna solo con entrenamiento. El preprocesador conserva una columna completamente vacía mediante relleno cero y advertencia; no añade indicadores de ausencia por variable. Produce una matriz densa float32, con categóricas seguidas de numéricas. No eliminamos atributos por ausencia, correlación o importancia, ni usamos selección supervisada, agregados históricos o logaritmos.
+
+Doce códigos id declarados categóricos por el proveedor permanecieron numéricos en la implementación adoptada: 13, 14, 17--22, 24--26 y 32. Lo registramos como limitación, sin recodificarlos después de observar resultados. Los cuatro predictores reciben las mismas columnas; logística añade \texttt{StandardScaler} sin centrar, aprendido en su pasado, y CatBoost recibe códigos numéricos, sin categorías nativas. Por ello, la comparación no representa el mejor tratamiento posible de cada algoritmo.
+
+\subsection{Partición temporal y alcance de la reserva}
+\texttt{TransactionDT} expresa segundos relativos sin origen calendario público y cubre unos 182 días. Fijamos cortes al 60\% y 80\% de esa duración, no de las filas, y gaps de siete días después de cada corte. La Tabla~\ref{tab:split} resume la asignación. Los gaps excluyen 41.399 operaciones del ajuste y la evaluación, sin borrar sus registros.
+
+\begin{table}[t]
+\caption{Bloques cronológicos del experimento}
+\label{tab:split}
+\centering
+\begin{tabular}{lrr}\toprule
+Bloque & Operaciones & Fraudes\\\midrule
+Entrenamiento & 380\,815 & 13\,011\\
+Gap 1: siete días & 20\,995 & 1\,015\\
+Validación temprana: Platt & 42\,046 & 1\,558\\
+Validación posterior: diagnóstico & 42\,047 & 1\,517\\
+Gap 2: siete días & 20\,404 & 602\\
+Prueba temporal final & 84\,233 & 2\,960\\\bottomrule
+\end{tabular}
+\end{table}
+
+Dividimos validación en mitades cronológicas manteniendo juntos instantes simultáneos. La mitad temprana ajusta calibradores; la posterior diagnostica probabilidades y políticas. No hay un gap adicional entre estas mitades. El test de la competencia no tiene etiquetas públicas; por eso nuestra prueba se deriva del conjunto etiquetado.
+
+La separación respeta el orden temporal, pero no garantiza independencia ni reproduce un retraso real de etiquetas, que no conocemos. Además, el EDA recorrió todo el conjunto etiquetado y el diseño histórico de gaps consultó conteos agregados de fraude de los periodos candidatos a test. Declaramos esa exposición: la prueba final quedó fuera del ajuste de estimadores, pero no fue una reserva completamente ciega desde el inicio. La validación posterior también influyó en el desarrollo.
+
+\section{Modelos, calibración y políticas}
+\subsection{Comparación y selección interna}
+Comparamos XGBoost \cite{xgb}, LightGBM \cite{lgb}, CatBoost \cite{cat} y regresión logística. Primero entrenamos una referencia de cada uno sobre todo train y ajustamos su propio Platt con validación temprana. Esa comparación externa fue exploratoria. Después contrastamos dos configuraciones por algoritmo mediante dos ventanas expansivas internas de train: 16 ajustes desde cero.
+
+En la primera ventana ajustamos hasta 50\% de la duración de train y evaluamos después de siete días hasta 75\%; en la segunda ajustamos hasta 75\% y evaluamos después del gap hasta el final. Cada pasado aprende sus propios vocabularios, medianas y, en logística, escalador. Los futuros evaluados contienen 62.815 y 68.759 operaciones. El segundo pasado incluye el primer futuro evaluado; los futuros no se superponen, pero no son réplicas independientes.
+
+Los tres métodos de boosting usan 250 iteraciones y tasa 0,05. XGBoost referencia usa profundidad 6 y \texttt{min\_child\_weight}=10; su alternativa, 4, 20 y penalización L2 de 10. LightGBM referencia usa 63 hojas y mínimo 50 muestras por hoja; la alternativa, 31, 100 y penalización L2 de 5. CatBoost cambia profundidad 6 a 4 y regularización de hoja a 10. Logística usa \texttt{saga}, máximo 500 iteraciones y $C=0,1$ o $0,01$. Conservamos semilla 42 y cuatro hilos donde están configurados. LightGBM mantiene fracción de columnas 0,8; su \texttt{subsample}=0,8 no activa muestreo de filas porque \texttt{subsample\_freq}=0.
+
+Seleccionamos la mayor AP media, con igual peso por ventana y desempate lexicográfico exacto. No usamos parada temprana ni calibración en esos ajustes internos. Las configuraciones no igualan capacidad ni tiempo de cómputo; tampoco aíslan el efecto de un hiperparámetro. No aplicamos SMOTE, submuestreo ni pesos de clase a los cuatro clasificadores. Buscamos conservar las frecuencias de ajuste, sin afirmar que eso resuelva el desbalance.
+
+\subsection{Platt propio y reutilización verificada}
+Para cada referencia, transformamos sus probabilidades mediante una regresión logística de una entrada:
+\begin{equation}
+\begin{aligned}
+\widetilde p_i&=\min(1-\epsilon,\max(\epsilon,p_i^{\rm raw})),\\
+p_i^{\rm cal}&=\sigma\!\left(a\log\frac{\widetilde p_i}{1-\widetilde p_i}+b\right),
+\end{aligned}
+\label{eq:platt}
+\end{equation}
+con $\epsilon=10^{-6}$ y $\sigma(z)=(1+e^{-z})^{-1}$. Ajustamos $a,b$ con las 42.046 filas tempranas; usamos \texttt{lbfgs}, $C=10^6$ y máximo 1.000 iteraciones. Es una calibración sigmoidal sobre logits \cite{niculescu}; no emplea $X$ directamente ni reajusta el predictor.
+
+La configuración ganadora coincidió con el LightGBM completo ya entrenado. Verificamos y reutilizamos ese modelo, su preprocesador y su propio Platt: no transferimos el calibrador de XGBoost ni repetimos ajustes idénticos. El 03 calibró cuatro referencias; la selección interna no calibró sus 16 ajustes y la evaluación principal continuó solo con el seleccionado. No comparamos económicamente los cuatro clasificadores para elegir el de menor costo.
+
+\subsection{Tres políticas y sensibilidad administrativa}
+La política fija interviene si $p_i^{\rm cal}\geq0,5$ y BMR si $p_i^{\rm cal}A_i>\Ca$. La tercera política es un árbol por escenario, entrenado solo con train y la misma matriz de atributos. Para cada operación construimos
+\begin{equation}
+t_i=\ind[y_iA_i>\Ca],\qquad w_i=|y_iA_i-\Ca|.
+\label{eq:tree}
+\end{equation}
+El costo realizado equivale al error ponderado respecto a $t_i$ más una constante independiente de la acción. Entrenamos con pesos normalizados por su media, profundidad máxima 12 y mínimo 250 muestras por hoja. El criterio de impureza es voraz y no garantiza el mínimo global de costo. El árbol devuelve acciones y no recibe probabilidades de LightGBM. Sus pesos representan diferencias de costos, no balanceo de clases.
+
+Conservamos $\Ca\in\{1,5,10,20,50,100\}$. Los escenarios pequeños tienen antecedentes en otras empresas: \cite{bmr} estudia 1, 2,5 y 5 euros, y \cite{calibrated} utiliza 10 euros. Esos números orientan sensibilidad, sin convertir moneda ni estimar gastos IEEE-CIS; 20, 50 y 100 amplían la cuadrícula desarrollada. No elegimos $\Ca$ por el resultado final. Usamos 10 como ilustración fijada previamente.
+
+\subsection{Métricas, estabilidad y trazabilidad}
+La métrica predictiva de selección es Average Precision (AP), calculada como suma de precision ponderada por incrementos de recall; no la equiparamos al área trapezoidal de precision--recall. Brier y log-loss evalúan probabilidades y no certifican por sí solos calibración suficiente. Acompañamos costos con recall, precision y tasa de legítimas intervenidas, $FP/(FP+TN)$, además del recall por monto, $\sum_{i:y_i=1}A_id_i/\sum_{i:y_i=1}A_i$. Este último no equivale al ahorro.
+
+En validación posterior analizamos tres subperiodos de igual duración, seis bandas de monto, mayores fraudes aprobados y perturbaciones relativas de $p$ por 0,9 y 1,1. No usamos estos factores como calibradores ni intervalos de confianza. Congelamos después preparación, modelo, Platt, árboles, escenarios y métricas antes de puntuar test. Los diagnósticos finales por periodo y monto no reajustan decisiones.
+
+El repositorio separa datos locales, ocho notebooks, módulos reutilizables, informes y resultados agregados \cite{repo}. Conservamos versiones y huellas de fuentes, manifiesto, modelos y salidas. Ante diferencias entre artefactos originales y reconstruidos en otro equipo, verificamos doce tablas con tolerancias $10^{-8}$ y las mismas decisiones, y congelamos una versión local explícita antes de test. El evaluador registra el intento antes de leer etiquetas y, al recuperar una corrida completa, carga resultados verificados sin predecir de nuevo. La auditoría reconcilió 18 comparaciones globales y 54 costos temporales; 49 pruebas de implementación pasaron. Estas comprobaciones no sustituyen validez estadística ni aval docente.
+
+\section{Resultados y discusión}
+\subsection{Selección del predictor}
+La Tabla~\ref{tab:ranking} conserva las ocho configuraciones. LightGBM referencia lideró ambos futuros internos y obtuvo AP media 0,58812. Elegirlo por AP no demuestra optimalidad económica ni superioridad estadística: solo hay dos ventanas y una búsqueda acotada. CatBoost referencia tuvo mayor precision media a 0,5 (88,59\% frente a 87,25\% de LightGBM), mientras LightGBM tuvo mayor recall medio (34,32\% frente a 29,07\%). No hubo un ganador universal en todas las métricas.
+
+\begin{table}[t]
+\caption{AP raw interna: mínimo, máximo y media de dos ventanas}
+\label{tab:ranking}
+\centering\small
+\begin{tabular}{lrrr}\toprule
+Configuración & Mínimo & Máximo & Media\\\midrule
+LightGBM Ref. & 0,55469 & 0,62154 & 0,58812 \\
+LightGBM Reg. & 0,53171 & 0,60543 & 0,56857 \\
+XGBoost Ref. & 0,51876 & 0,59096 & 0,55486 \\
+XGBoost Reg. & 0,48562 & 0,55844 & 0,52203 \\
+CatBoost Ref. & 0,47283 & 0,55739 & 0,51511 \\
+CatBoost Reg. & 0,45002 & 0,53243 & 0,49123 \\
+Logística Ref. & 0,31666 & 0,42472 & 0,37069 \\
+Logística Reg. & 0,31666 & 0,42470 & 0,37068 \\
+\bottomrule\end{tabular}
+\end{table}
+
+\subsection{Calidad probabilística: validación y test}
+En las 42.047 operaciones posteriores de validación, LightGBM obtuvo AP 0,50440. Platt redujo Brier de 0,02435 a 0,02406 y log-loss de 0,09750 a 0,09645, pero su media 3,03\% quedó por debajo de la prevalencia 3,61\%. La exposición esperada $\sum p_iA_i$ fue 195.725,58 frente a 254.536,81 de fraude observado, una diferencia de 23,11\%. Mejorar métricas globales no eliminó el desajuste por monto.
+
+En prueba encontramos 2.960 fraudes entre 84.233 operaciones (3,514\%). AP fue 0,51780 con raw y Platt: en esta corrida la transformación mantuvo el orden. La Tabla~\ref{tab:prob} muestra que Platt empeoró ligeramente Brier y log-loss finales. Su probabilidad media pasó de 3,39\% raw a 3,73\%, por encima de la prevalencia. Conservamos el calibrador previamente fijado; no elegimos raw después de consultar test.
+
+\begin{table}[t]
+\caption{Calidad probabilística de LightGBM por población}
+\label{tab:prob}
+\centering\small
+\begin{tabular}{llrrr}\toprule
+Bloque & Probabilidad & AP & Brier & Log-loss\\\midrule
+Validación & Raw & 0,50440 & 0,02435 & 0,09750\\
+posterior & Platt & 0,50440 & 0,02406 & 0,09645\\
+Prueba & Raw & 0,51780 & 0,02279 & 0,09471\\
+temporal & Platt & 0,51780 & 0,02300 & 0,09515\\\bottomrule
+\end{tabular}
+\end{table}
+
+La AP final superior a la de validación no mide una mejora del modelo: cambió la población, no el predictor. Tampoco identificamos causalmente cuánto ahorro produjo Platt, pues las políticas principales fija/BMR conservan esa misma transformación y el árbol no la utiliza.
+
+\subsection{Comparación económica final}
+La Tabla~\ref{tab:costs} reporta los seis escenarios sobre las mismas operaciones. BMR tuvo menor costo que las otras dos políticas en todos los escenarios completos. Con $\Ca=1$, el árbol costó 86.169,78, más que intervenir todo (84.233), aunque mejoró frente a fija. Con $\Ca=100$, fija superó el costo de aprobar todo (451.813,18). Esto confirma por qué ambas referencias son necesarias.
+
+\begin{table}[t]
+\caption{Costo final en unidades del dataset; menor valor en negrita}
+\label{tab:costs}
+\centering\small
+\begin{tabular}{rrrr}\toprule
+$\Ca$ & Fija 0,5 & BMR & Árbol ponderado\\\midrule
+1 & 350\,614,63 & \textbf{50\,285,76} & 86\,169,78 \\
+5 & 356\,326,63 & \textbf{126\,957,37} & 167\,704,70 \\
+10 & 363\,466,63 & \textbf{181\,140,26} & 228\,707,97 \\
+20 & 377\,746,63 & \textbf{226\,249,60} & 276\,727,44 \\
+50 & 420\,586,63 & \textbf{309\,995,57} & 357\,072,31 \\
+100 & 491\,986,63 & \textbf{374\,372,19} & 400\,085,92 \\
+\bottomrule\end{tabular}
+\end{table}
+
+Con $\Ca=10$, BMR intervino 8.081 operaciones: 1.653 fraudes y 6.428 legítimas; aprobó 1.307 fraudes y 74.845 legítimas. Su costo 181.140,258 se descompuso en 80.810 por intervención y 100.330,258 de fraude aprobado. Fija costó 363.466,629 y el árbol 228.707,974. La mejora de BMR frente a fija fue 50,16\%; el ahorro frente a aprobar todo, mejor referencia trivial en este escenario, fue 59,91\%.
+
+\begin{table}[t]
+\caption{Compromiso de intervención en prueba con $\Ca=10$}
+\label{tab:operational}
+\centering\small
+\begin{tabular}{lrrrr}\toprule
+Política & Alertas & Recall & FPR & Recall monto\\\midrule
+Fija 0,5 & 1\,428 & 37,26\% & 0,40\% & 22,71\%\\
+BMR & 8\,081 & 55,84\% & 7,91\% & 77,79\%\\
+Árbol & 7\,212 & 42,43\% & 7,33\% & 65,34\%\\\bottomrule
+\end{tabular}
+\end{table}
+
+La Tabla~\ref{tab:operational} muestra que el menor costo se acompaña de más intervenciones. BMR capturó 77,79\% del monto fraudulento con recall por cantidad 55,84\%. Su precision fue 20,46\%, frente a 77,24\% de fija: una alerta más precisa no implica mayor ahorro ni mayor captura total. El 7,91\% usa como denominador todas las legítimas, no todas las alertas. La Fig.~\ref{fig:tradeoff} muestra cómo ese compromiso cambia con $\Ca$.
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{compromiso_operativo.pdf}
+\caption{Compromiso entre intervención de legítimas y captura monetaria en test. Cada punto corresponde a un $\Ca$; los círculos abiertos resaltan $\Ca=10$. Fija produce un solo punto porque su acción no depende de $\Ca$. Las líneas conectan escenarios discretos, sin estimar resultados intermedios.}
+\label{fig:tradeoff}
+\end{figure}
+
+\subsection{Sensibilidad temporal y por monto}
+En validación, BMR ganó los seis escenarios agregados, pero solo 17 de 18 combinaciones periodo/$\Ca$: en el tercer periodo con $\Ca=100$ el árbol costó 60.920,554 frente a 62.314,953 de BMR. Platt mejoró el costo BMR frente a raw en cuatro escenarios y lo empeoró en dos. Es evidencia de que calidad probabilística y costo realizado no son intercambiables.
+
+En test, BMR obtuvo el menor costo en las 18 combinaciones periodo/$\Ca$. La AP de los tres periodos fue 0,53865, 0,42630 y 0,59202; sus prevalencias fueron 3,09\%, 3,38\% y 4,16\%. La variación no demuestra deriva de concepto ni una degradación monótona. Con $\Ca=10$, el costo BMR por operación pasó de 2,0018 en validación a 2,1505 en test; su FPR aumentó de 5,78\% a 7,91\% y su mejora frente a fija bajó de 57,51\% a 50,16\%. No comparamos costos absolutos como si ambas poblaciones tuvieran el mismo tamaño.
+
+La Fig.~\ref{fig:bands} muestra desajustes que las medias globales pueden ocultar. En montos [500,1000), test contiene 2.332 operaciones y 172 fraudes: 7,38\% observado frente a media Platt 5,84\%. Su monto fraudulento fue 128.656,95 y la exposición esperada, 93.714,35. En [100,250) hubo sobreestimación. Globalmente, la exposición esperada 442.475,91 quedó solo 2,07\% por debajo de 451.813,18 observados; esa cercanía combina desajustes de signos distintos y no demuestra calibración por grupo.
+
+\begin{figure}[t]
+\centering\includegraphics[width=\columnwidth]{calibracion_por_monto.pdf}
+\caption{Frecuencia de fraude y probabilidad media Platt por monto en test. Las bandas son [0,50), [50,100), [100,250), [250,500), [500,1000) y [1000,$\infty$). Son comparaciones descriptivas, sin intervalos de confianza.}
+\label{fig:bands}
+\end{figure}
+
+La sensibilidad administrativa no identificó un cambio del ganador global dentro de los seis valores examinados. No inferimos que BMR gane para todo costo posible, ni interpolamos rangos de optimalidad. La excepción temporal de validación y el compromiso de intervención acotan esa conclusión.
+
+\section{Alcance, cambios metodológicos y limitaciones}
+La ejecución amplió el XGBoost previsto inicialmente a cuatro algoritmos y adoptó LightGBM después de la selección interna. Conservó Platt y la alternativa ponderada previstas en la propuesta; retiró agregados históricos y sustituyó la unidad USD por unidades no verificadas del dataset. Estos cambios no alteran la pregunta económica, pero deben distinguirse de lo inicialmente planeado. No presentamos una ablación que aísle el efecto de cambiar one-hot por ordinal.
+
+El resultado depende de una intervención ideal y de costos administrativos exógenos. No prueba viabilidad con capacidad limitada ni incorpora fricción comercial, recuperaciones o revisión imperfecta. La representación ordinal, los doce id numéricos y CatBoost sin categorías nativas condicionan la comparación. AP seleccionó un predictor discriminativo, sin garantizar que fuera el de menor costo entre los cuatro.
+
+La consulta histórica de etiquetas agregadas de test impide afirmar una reserva totalmente ciega; el uso previo de validación posterior también limita independencia. Los subgrupos son descriptivos, sin intervalos de confianza ni pruebas de superioridad estadística. Después de observar test no cambiamos predictor, calibrador, atributos o políticas. Cualquier extensión necesitará un experimento explícito y un periodo nuevo para una evaluación independiente.
+
+\clearpage
+\section{Conclusiones}
+La comparación realizada respondió la pregunta principal del proyecto: bajo la matriz de costos adoptada, decidir con la probabilidad de fraude y el monto de cada operación redujo el costo frente a actuar únicamente con el corte 0,5. BMR obtuvo el menor costo global de las tres políticas en los seis escenarios administrativos evaluados. Con $\Ca=10$, costó 181.140,258 unidades, frente a 363.466,629 de la regla fija: una reducción de 50,16\%. Este es el resultado central del experimento.
+
+El beneficio económico se acompañó de un compromiso operativo. En ese escenario, BMR capturó 77,79\% del monto fraudulento e intervino 7,91\% de las legítimas, frente a 22,71\% y 0,40\% de la regla fija. Bajo nuestra matriz, el menor monto de fraude aprobado compensó el costo de esas intervenciones adicionales. Por ello, una política con menor costo no necesariamente produce menos alertas ni mayor precision.
+
+La calibración dejó un hallazgo diferente: Platt mejoró Brier y log-loss en validación, pero los empeoró ligeramente en test. Esto no contradice la reducción económica observada con BMR; muestra que calidad probabilística y costo realizado evalúan aspectos distintos. Conservamos el calibrador previamente fijado y no atribuimos causalmente el ahorro a Platt.
+
+Concluimos que la decisión sensible al costo fue útil en el periodo y los escenarios estudiados. El alcance está delimitado por los costos hipotéticos, la intervención ideal y la consulta histórica de etiquetas agregadas de test. Los resultados no garantizan el mismo ahorro en una operación real; extenderlos requiere otro diseño temporal y costos operativos verificados.
+
+\section*{Agradecimientos}
+Agradecemos a la profesora María Bernarda Salazar Sánchez por el acompañamiento y la revisión metodológica durante Proyecto Integrador II de Ingeniería de Sistemas, Universidad de Antioquia.
+
+\newpage
+\begin{thebibliography}{12}
+\bibitem{elkan} C. Elkan, ``The foundations of cost-sensitive learning,'' in \emph{Proc. IJCAI}, 2001, pp. 973--978.
+\bibitem{bmr} A. C. Bahnsen, A. Stojanovic, D. Aouada, and B. Ottersten, ``Cost sensitive credit card fraud detection using Bayes minimum risk,'' in \emph{Proc. ICMLA}, vol. 1, 2013, pp. 333--338, doi: 10.1109/ICMLA.2013.68.
+\bibitem{calibrated} A. C. Bahnsen, A. Stojanovic, D. Aouada, and B. Ottersten, ``Improving credit card fraud detection with calibrated probabilities,'' in \emph{Proc. SIAM SDM}, 2014, pp. 677--685, doi: 10.1137/1.9781611973440.78.
+\bibitem{csdt} A. C. Bahnsen, D. Aouada, and B. Ottersten, ``Example-dependent cost-sensitive decision trees,'' \emph{Expert Syst. Appl.}, vol. 42, no. 19, pp. 6609--6619, 2015, doi: 10.1016/j.eswa.2015.04.042.
+\bibitem{almhaithawi} D. Almhaithawi, A. Jafar, and M. Aljnidi, ``Example-dependent cost-sensitive credit cards fraud detection using SMOTE and Bayes minimum risk,'' \emph{SN Appl. Sci.}, vol. 2, art. 1574, 2020, doi: 10.1007/s42452-020-03375-w.
+\bibitem{dalpozzolo} A. Dal Pozzolo, G. Boracchi, O. Caelen, C. Alippi, and G. Bontempi, ``Credit card fraud detection: A realistic modeling and a novel learning strategy,'' \emph{IEEE Trans. Neural Netw. Learn. Syst.}, vol. 29, no. 8, pp. 3784--3797, 2018, doi: 10.1109/TNNLS.2017.2736643.
+\bibitem{dataset} IEEE Computational Intelligence Society and Vesta Corporation, ``IEEE-CIS Fraud Detection,'' Kaggle, 2019. [Online]. Available: \url{https://www.kaggle.com/competitions/ieee-fraud-detection/data}
+\bibitem{xgb} T. Chen and C. Guestrin, ``XGBoost: A scalable tree boosting system,'' in \emph{Proc. ACM SIGKDD}, 2016, pp. 785--794, doi: 10.1145/2939672.2939785.
+\bibitem{lgb} G. Ke \emph{et al.}, ``LightGBM: A highly efficient gradient boosting decision tree,'' in \emph{Adv. Neural Inf. Process. Syst.}, vol. 30, 2017, pp. 3146--3154.
+\bibitem{cat} L. Prokhorenkova, G. Gusev, A. Vorobev, A. V. Dorogush, and A. Gulin, ``CatBoost: Unbiased boosting with categorical features,'' in \emph{Adv. Neural Inf. Process. Syst.}, vol. 31, 2018, pp. 6638--6648.
+\bibitem{niculescu} A. Niculescu-Mizil and R. Caruana, ``Predicting good probabilities with supervised learning,'' in \emph{Proc. ICML}, 2005, pp. 625--632, doi: 10.1145/1102351.1102430.
+\bibitem{repo} M. A. Cuervo Ramírez, O. D. Gutiérrez Cortina, and D. A. Rendón Suaza, ``IEEE-CIS Fraud Detection--PI2: código y evidencia experimental,'' 2026. [Online]. Available: \url{https://github.com/MiltonCuervo/IEEE-CIS-Fraud-Detection-PI2}
+\end{thebibliography}
+\end{document}

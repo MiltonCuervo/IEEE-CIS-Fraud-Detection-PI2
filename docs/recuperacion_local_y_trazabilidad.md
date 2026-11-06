@@ -2,6 +2,13 @@
 
 ## Alcance
 
+> Este documento describe la recuperación histórica en el equipo que la ejecutó,
+> no el entorno universal de todos los colaboradores. La evaluación final ya se
+> completó en el [08](08_evaluacion_temporal_final.md) con otra versión local
+> explícita y verificada. No ejecutar publicaciones de recuperación sobre las
+> dependencias congeladas de una copia cerrada. Para consultarla, usar la auditoría
+> del README; una reproducción nueva requiere su propia área y versión.
+
 Restablecemos los prerrequisitos para continuar después del notebook 04. Conservamos datos originales, manifiesto, parámetros, representación ordinal y selección. La recuperación no introduce otro candidato, no cambia Ca, no puntúa test y no constituye la etapa 05.
 
 ## Diagnóstico observado
