@@ -25,7 +25,7 @@ Verificamos unicidad, tiempo finito ordenado, pertenencia exclusiva a train y pr
 
 ## 3. Representación constante, preparación por ventana
 
-Conservamos las 432 entradas de la profesora: 431 originales permitidas y has_identity; 37 categóricas ordinales y 395 numéricas. No añadimos los quince atributos del experimento anterior ni seleccionamos columnas por correlación, ausencia o importancia.
+Conservamos las 432 entradas definidas en el notebook 03: 431 originales permitidas y has_identity; 37 categóricas ordinales y 395 numéricas. No añadimos los quince atributos del experimento anterior ni seleccionamos columnas por correlación, ausencia o importancia.
 
 Cada pasado aprende sus propias medianas y vocabularios. La categoría desconocida recibe −1 y las ausencias categóricas se normalizan con el token definido. Una columna completamente vacía se conserva con cero y se registra como limitación. La matriz es densa float32. El diagnóstico de categorías desconocidas cubre las 37 variables de la rama categórica; los doce códigos id tratados numéricamente no tienen vocabulario ni reciben −1 por un código nuevo. Las doce discrepancias de códigos id tratados numéricamente permanecen documentadas.
 

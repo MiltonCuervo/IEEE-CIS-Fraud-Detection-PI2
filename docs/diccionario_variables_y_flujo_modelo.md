@@ -1,6 +1,6 @@
 # Diccionario de variables y recorrido hasta la decisión
 
-**Base vigente: notebooks 01–03 de la profesora, consolidada el 2 de noviembre de 2026.** Esta versión reemplaza la descripción del predictor anterior de 447 entradas y one-hot. Conservamos las definiciones verificables del EDA y describimos el tratamiento ordinal realmente implementado.
+**Base vigente: metodología de los notebooks 01–03, consolidada el 2 de noviembre de 2026.** Esta versión reemplaza la descripción del predictor anterior de 447 entradas y one-hot. Conservamos las definiciones verificables del EDA y describimos el tratamiento ordinal realmente implementado.
 
 ## 1. Inventario y procedencia
 
@@ -55,7 +55,7 @@ su propio pasado: no suponemos que los códigos coincidan entre ajustes.
 
 ### Discrepancia de identidad pendiente
 
-La [descripción de Kaggle](https://www.kaggle.com/competitions/ieee-fraud-detection/data) clasifica id_12–id_38 como categóricas. En la implementación conservada de la profesora, id_13, id_14, id_17, id_18, id_19, id_20, id_21, id_22, id_24, id_25, id_26 e id_32 siguen numéricas. Registramos estas doce discrepancias y su efecto potencial: imponer un orden cuantitativo sin justificación semántica. No las recodificamos silenciosamente; hacerlo constituiría otra configuración que exige evaluación.
+La [descripción de Kaggle](https://www.kaggle.com/competitions/ieee-fraud-detection/data) clasifica id_12–id_38 como categóricas. En la implementación vigente, id_13, id_14, id_17, id_18, id_19, id_20, id_21, id_22, id_24, id_25, id_26 e id_32 siguen numéricas. Registramos estas doce discrepancias y su efecto potencial: imponer un orden cuantitativo sin justificación semántica. No las recodificamos silenciosamente; hacerlo constituiría otra configuración que exige evaluación.
 
 ## 4. Qué recibe cada modelo
 

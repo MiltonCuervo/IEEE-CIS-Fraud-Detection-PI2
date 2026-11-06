@@ -102,7 +102,7 @@ Las funciones de partición se encuentran en `src/fraud_cost/split.py`. El noteb
 
 El test no podrá utilizarse repetidamente para corregir el modelo. Si una decisión se toma después de observar sus resultados, esa evaluación deja de ser independiente y deberá declararse.
 
-### 7.1. Integración de la revisión de la profesora
+### 7.1. Consolidación de las comprobaciones y evidencias
 
 Conservamos la ampliación de las explicaciones y la presentación de resultados de los commits del 23 de octubre. La figura distingue el bloque reservado sin atribuirle una tasa ficticia y usa únicamente la prevalencia de train como línea de referencia. No representar una tasa test tampoco borra la consulta histórica descrita arriba.
 
@@ -121,6 +121,6 @@ Las claves compuestas nuevas describen combinaciones no observadas, no el porcen
 
 ## Continuidad metodológica actualizada
 
-La secuencia vigente continúa en el notebook 03 de la profesora con cuatro predictores y preparación ordinal de 432 entradas, y en el nuevo 04 con selección temporal interna completada. La configuración LightGBM elegida fue verificada y adoptada en el 05. La
+La secuencia vigente continúa en el notebook 03 de modelado con cuatro predictores y preparación ordinal de 432 entradas, y en el nuevo 04 con selección temporal interna completada. La configuración LightGBM elegida fue verificada y adoptada en el 05. La
 evaluación ya completada corresponde al 08, bajo la versión local congelada
 allí documentada. Los experimentos del pipeline anterior fueron retirados; las cifras de EDA y la asignación temporal se conservan. Véanse el [protocolo vigente](03_protocolo_costos_y_evaluacion.md) y los [resultados del 04](04_seleccion_temporal_modelos.md).

@@ -86,9 +86,9 @@ Algunas categorías presentan diferencias considerables. `ProductCD=C` registra 
 
 Estas cifras ayudan a comprender el conjunto, pero fueron calculadas con todos los datos y no se utilizarán directamente como codificaciones. Cualquier transformación basada en la etiqueta deberá aprenderse únicamente con el bloque de entrenamiento.
 
-### 3.6. Ampliaciones de la revisión de la profesora
+### 3.6. Ampliación del análisis exploratorio
 
-La revisión del 22 de octubre amplía la lectura de las celdas, el ratio legítimas/fraude, el resumen de ausencia por familias y las gráficas categóricas. Conservamos esos aportes como base del notebook e incorporamos después el diccionario completo. El ratio es aproximadamente 27,58 legítimas por fraude; se añade al resumen calculado junto con la fracción de monto fraudulento y su concentración superior.
+La revisión del 22 de octubre amplía la lectura de las celdas, el ratio legítimas/fraude, el resumen de ausencia por familias y las gráficas categóricas. Conservamos estas ampliaciones como base del notebook e incorporamos después el diccionario completo. El ratio es aproximadamente 27,58 legítimas por fraude; se añade al resumen calculado junto con la fracción de monto fraudulento y su concentración superior.
 
 La nueva figura `eda_tasas_fraude_categoricas.png` compara las categorías de mayor volumen de ProductCD, card4, card6, P_emaildomain y DeviceType, con una referencia de prevalencia global. Es una presentación de asociaciones, no codificación supervisada: el predictor actual usa codificación ordinal aprendida con train y no tasas de fraude como atributos.
 
@@ -153,4 +153,4 @@ results/
 
 ## Continuidad metodológica actualizada
 
-La secuencia vigente continúa en el notebook 03 de la profesora con cuatro predictores y preparación ordinal de 432 entradas. El nuevo notebook 04 completó la selección temporal interna y eligió LightGBM referencia por AP media entre ocho configuraciones; no seleccionamos ese modelo usando este EDA. Los experimentos posteriores del pipeline anterior fueron retirados para reconstruirlos con esta base. Las cifras de EDA y la asignación temporal se conservan. Véanse el [protocolo vigente](03_protocolo_costos_y_evaluacion.md) y los [resultados del 04](04_seleccion_temporal_modelos.md).
+La secuencia vigente continúa en el notebook 03 de modelado con cuatro predictores y preparación ordinal de 432 entradas. El nuevo notebook 04 completó la selección temporal interna y eligió LightGBM referencia por AP media entre ocho configuraciones; no seleccionamos ese modelo usando este EDA. Los experimentos posteriores del pipeline anterior fueron retirados para reconstruirlos con esta base. Las cifras de EDA y la asignación temporal se conservan. Véanse el [protocolo vigente](03_protocolo_costos_y_evaluacion.md) y los [resultados del 04](04_seleccion_temporal_modelos.md).

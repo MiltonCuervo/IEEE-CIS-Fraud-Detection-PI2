@@ -2,8 +2,8 @@
 
 ## Alcance
 
-> Este documento describe la recuperación histórica en el equipo que la ejecutó,
-> no el entorno universal de todos los colaboradores. La evaluación final ya se
+> Este documento describe la recuperación histórica en el entorno de ejecución
+> documentado; no supone una configuración idéntica en todas las instalaciones. La evaluación final ya se
 > completó en el [08](08_evaluacion_temporal_final.md) con otra versión local
 > explícita y verificada. No ejecutar publicaciones de recuperación sobre las
 > dependencias congeladas de una copia cerrada. Para consultarla, usar la auditoría

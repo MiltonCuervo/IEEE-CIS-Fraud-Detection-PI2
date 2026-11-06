@@ -4,11 +4,10 @@
 
 ## 1. Pregunta y alcance
 
-Con la partición del notebook 02 buscamos establecer una referencia probabilística y económica reproducible. Seguimos la preparación ordinal y los cuatro predictores incorporados por la profesora: XGBoost, LightGBM, CatBoost y regresión logística. Sus parámetros son fijos; esta etapa no selecciona el predictor final.
+Con la partición del notebook 02 buscamos establecer una referencia probabilística y económica reproducible. Utilizamos preparación ordinal y comparamos cuatro predictores: XGBoost, LightGBM, CatBoost y regresión logística. Sus parámetros son fijos; esta etapa no selecciona el predictor final.
 
 La consolidación del 2 de noviembre corrige explicaciones, guarda la imputación en el preprocesador, preserva el monto económico original y recupera las exportaciones. Estos cambios requirieron una nueva corrida, que se completó y cuyos hallazgos
-se presentan en la sección 8; no atribuimos las métricas del commit de la
-profesora a estas fuentes modificadas. Las salidas ejecutadas y su registro son la evidencia numérica vigente.
+se presentan en la sección 8; no atribuimos las métricas de una versión anterior a estas fuentes modificadas. Las salidas ejecutadas y su registro son la evidencia numérica vigente.
 
 ## 2. Poblaciones y preparación
 
@@ -16,7 +15,7 @@ Train contiene 380.815 operaciones y 13.011 fraudes. Validación temprana tiene 
 
 El preprocesador aprende exclusivamente en train. Conserva 432 entradas: 431 originales permitidas y has_identity; 37 se codifican ordinalmente y 395 se imputan numéricamente. Categorías desconocidas reciben −1; la ausencia categórica usa un token explícito. No agregamos indicadores ni los quince atributos del experimento anterior. Las medianas se calculan vector por vector para reducir memoria y se guardan para su reutilización. El [diccionario](diccionario_variables_y_flujo_modelo.md) detalla familias, exclusiones, orden, vocabularios y las doce discrepancias de tipos pendientes.
 
-CatBoost recibe códigos como números, sin categorías nativas. La regresión logística añade escalado aprendido en train. Esta representación condiciona la comparación: sus resultados no prueban el desempeño máximo de cada algoritmo. Conservamos la configuración de LightGBM de la profesora; `subsample=0.8` con `subsample_freq=0` no activa muestreo de filas. No afirmamos que los presupuestos o las capacidades sean idénticos entre bibliotecas.
+CatBoost recibe códigos como números, sin categorías nativas. La regresión logística añade escalado aprendido en train. Esta representación condiciona la comparación: sus resultados no prueban el desempeño máximo de cada algoritmo. Conservamos la configuración de referencia de LightGBM; `subsample=0.8` con `subsample_freq=0` no activa muestreo de filas. No afirmamos que los presupuestos o las capacidades sean idénticos entre bibliotecas.
 
 ## 3. Aprendizaje y calibración
 

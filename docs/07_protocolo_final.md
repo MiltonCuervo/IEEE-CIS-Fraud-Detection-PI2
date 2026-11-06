@@ -92,7 +92,7 @@ documenta el control previo a puntuar; no es el comando de consulta de una copia
 ya evaluada y debe detenerse si encuentra el registro final existente. Para
 consultarla se ejecuta `scripts/audit_project.py`, como explica el README.
 
-El protocolo recibido conserva sus dependencias reconstruidas en otro equipo.
+El protocolo inicial conserva sus dependencias reconstruidas en un entorno de ejecución diferente.
 El 08 no sustituyó sus hashes: verificó equivalencia de las doce tablas y de las
 decisiones y congeló una versión local explícita antes de evaluar. La ruta y la
 huella de esa versión activa están en `protocolo_ejecucion_local_v2.json`.

@@ -73,7 +73,7 @@ tests/             Contratos de preparación, tiempo, costos, protocolo y ejecuc
 
 ## Consultar y verificar el proyecto cerrado
 
-En otro equipo se pueden abrir los notebooks ejecutados y las tablas versionadas. Con el entorno instalado, la auditoría publicada verifica estructura, enlaces, inventario, código, resultados y aritmética sin necesitar CSV originales o modelos:
+En otro computador se pueden abrir los notebooks ejecutados y las tablas versionadas. Con el entorno instalado, la auditoría publicada verifica estructura, enlaces, inventario, código, resultados y aritmética sin necesitar CSV originales o modelos:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/audit_project.py
