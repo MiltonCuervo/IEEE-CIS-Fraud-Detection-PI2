@@ -106,6 +106,8 @@ Una reproducción nueva requiere su propia área y versión de experimento; no d
 
 ## Informes y trabajo restante
 
+El [informe consolidado de resultados](docs/informe_resultados_consolidados.md) reúne los hallazgos de las etapas 01–08, la comparación económica final, las diferencias de calibración y los límites de las conclusiones. Es el punto de entrada para revisar los resultados completos.
+
 [01 EDA](docs/01_informe_eda.md) · [02 Partición](docs/02_particion_temporal.md) · [03 Modelos y costos](docs/03_protocolo_costos_y_evaluacion.md) · [04 Selección](docs/04_seleccion_temporal_modelos.md) · [05 LightGBM](docs/05_lightgbm_calibracion_y_costos.md) · [06 Estabilidad](docs/06_estabilidad_y_errores_economicos.md) · [07 Protocolo](docs/07_protocolo_final.md) · [08 Evaluación final](docs/08_evaluacion_temporal_final.md).
 
 Los informes describen cada etapa en su momento; las referencias a pasos futuros no implican que sigan pendientes. La limpieza retira salidas locales del pipeline descartado, conservado como código histórico en Git, y mantiene toda evidencia utilizada por la versión vigente.

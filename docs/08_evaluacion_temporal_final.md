@@ -160,3 +160,8 @@ Las definiciones, entradas/salidas y decisiones comunes se consultan en el
 [diccionario de variables y flujo](diccionario_variables_y_flujo_modelo.md).
 La auditoría comprueba consistencia técnica y aritmética; no promete ausencia
 absoluta de errores ni elimina las limitaciones metodológicas declaradas.
+
+
+## Consulta consolidada de resultados
+
+El [informe consolidado de resultados](informe_resultados_consolidados.md) integra esta evaluación con los hallazgos de datos, selección, calibración y estabilidad de las etapas anteriores. Conserva las poblaciones y referencias por separado y enlaza las tablas originales; no corresponde a otra ejecución ni modifica el protocolo.
