@@ -1,5 +1,7 @@
 # Etapa 06 — Estabilidad temporal y errores económicos
 
+> Alcance de etapa: este informe conserva la metodología y resultados al cerrar esta fase. La secuencia completa y el test ya evaluado se consolidan en el [informe 08](08_evaluacion_temporal_final.md). Los pasos futuros aquí descritos se leen en ese orden histórico.
+
 ## 1. Pregunta y alcance
 
 Después de seleccionar y adoptar LightGBM, necesitamos comprender si las métricas agregadas del 05 representan de manera similar todos los momentos del bloque, qué fraude seguimos aprobando y qué tan sensibles son las acciones a las probabilidades. Este análisis utiliza exclusivamente las 42.047 operaciones de validación posterior, con 1.517 fraudes, sus probabilidades y las acciones verificadas del 05.

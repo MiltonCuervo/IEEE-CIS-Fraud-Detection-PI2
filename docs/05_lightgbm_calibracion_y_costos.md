@@ -1,5 +1,7 @@
 # Etapa 05 — Adopción de LightGBM, calibración y decisiones por costos
 
+> Alcance de etapa: este informe conserva la metodología y resultados al cerrar esta fase. La secuencia completa y el test ya evaluado se consolidan en el [informe 08](08_evaluacion_temporal_final.md). Los pasos futuros aquí descritos se leen en ese orden histórico.
+
 ## 1. Pregunta y alcance
 
 Después de seleccionar `lightgbm_referencia` por AP media interna (0,588117), necesitamos disponer de un predictor completo, comprobar sus probabilidades y evaluar acciones económicas. La configuración coincide con el LightGBM ya entrenado en el 03; reutilizamos ese modelo y su propio Platt tras verificar su procedencia. No repetimos ajustes idénticos ni presentamos la reproducción de sus métricas como una confirmación independiente.

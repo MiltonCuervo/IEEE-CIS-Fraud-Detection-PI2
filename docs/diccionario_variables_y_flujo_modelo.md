@@ -72,7 +72,7 @@ El archivo local `validation_scores.parquet` identifica operaciones y conserva m
 
 ## 6. Selección actual y recuperación local
 
-El notebook 04 conserva exactamente esta representación y seleccionó `lightgbm_referencia` entre ocho configuraciones mediante AP media de dos ventanas internas de train (0,588117). La selección no cambia las 432 entradas ni corrige las doce discrepancias. Sus parámetros coinciden con el LightGBM del 03; el siguiente notebook deberá verificar la procedencia antes de reutilizar su ajuste y su propio Platt.
+El notebook 04 conserva exactamente esta representación y seleccionó `lightgbm_referencia` entre ocho configuraciones mediante AP media de dos ventanas internas de train (0,588117). La selección no cambia las 432 entradas ni corrige las doce discrepancias. Sus parámetros coinciden con el LightGBM del 03; la etapa 05 verificó la procedencia y reutilizó ese ajuste y su propio Platt.
 
 Un paquete reconstruido tiene hashes nuevos y un recibo separado en `recuperacion_03_config.json`. Usamos `verify_reference_artifacts` antes de cargarlo. El recibo prueba integridad y equivalencia numérica dentro de tolerancias declaradas, sin reemplazar las huellas históricas del 03/04. `validation_scores.parquet` sigue identificando scores XGBoost: no se convierte en LightGBM por haber seleccionado ese algoritmo. Véase [recuperación y trazabilidad](recuperacion_local_y_trazabilidad.md).
 
@@ -84,3 +84,7 @@ La etapa 05 reutiliza el LightGBM seleccionado, el preprocesador completo y su p
 El paquete local lightgbm_seleccionado_platt.joblib contiene preprocessor, model y calibrator; el Platt recibe el logit recortado de p_raw, no X directamente. lightgbm_validation_scores.parquet contiene ID, tiempo, monto original, etiqueta observada, probabilidad raw, probabilidad calibrada y acción fija a 0,5. La etiqueta allí sirve para medir; no entra al predictor. lightgbm_validation_actions.parquet identifica cada operación/Ca y las acciones fija, BMR y árbol.
 
 validation_scores.parquet continúa siendo XGBoost. Los árboles reutilizados predicen acciones con la misma matriz transformada; no consumen p de LightGBM. Los costos se evalúan con TransactionAmt original, no con su representación predictiva float32. Los archivos por operación y el modelo permanecen locales e ignorados por Git.
+
+## 8. Cierre del recorrido en test
+
+El notebook 08 aplicó esa misma representación a 84.233 operaciones de test. No añadió ni seleccionó variables después de observar resultados. El Platt recibe una columna de logits y las políticas usan probabilidades y montos originales; los árboles conservan sus entradas numéricas de 432 columnas. Los scores guardan siete columnas de control/salida y las acciones registran una fila por operación/Ca. Los conteos y costos se agregan en las tablas test; el informe 08 describe sus resultados y limitaciones.

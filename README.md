@@ -2,106 +2,112 @@
 
 **Proyecto Integrador II — Ingeniería de Sistemas, Universidad de Antioquia, 2026-2.**
 
-Estudiamos cómo cambia el costo de intervenir transacciones cuando pasamos del corte convencional 0,5 a una decisión económica por operación. Comparamos regla fija, Bayes Minimum Risk (BMR) y árbol ponderado por costos. El predictor estima fraude; la política determina la acción.
+Estudiamos cómo convertir una probabilidad de fraude en una decisión económica por transacción. Comparamos el corte fijo 0,5, Bayes Minimum Risk (BMR) y un árbol ponderado por costos. El clasificador estima fraude; la política decide aprobar o intervenir. Conservamos el corte clasificatorio 0,5 y diferenciamos la frontera económica por monto.
 
-## Estado metodológico
+## Resultado consolidado
 
-Seguimos los notebooks 01–03 revisados por la profesora. El 03 compara XGBoost, LightGBM, CatBoost y regresión logística sobre una representación ordinal de 432 entradas. Los cuatro reciben su propio calibrador Platt. CatBoost utiliza códigos numéricos, sin tratamiento nativo de categorías.
+La secuencia **01–08 está ejecutada**. Seleccionamos LightGBM referencia mediante AP media de dos ventanas temporales internas de train: **0,5881** entre ocho configuraciones. Conservamos su Platt propio y evaluamos el bloque final de **84.233 operaciones y 2.960 fraudes** sin reajustar estimadores.
 
-El notebook 04 completó la selección temporal interna: ocho configuraciones, dos ventanas expansivas y 16 ajustes. Seleccionamos `lightgbm_referencia` con AP media raw de **0,5881**. La etapa 05 ya verificó y adoptó su ajuste y su propio Platt del 03, sin reentrenar. Reconstruyó probabilidades y las tres políticas en validación posterior: con Ca=10, BMR cuesta 84,169.73 unidades y mejora 57.51% frente al corte fijo de LightGBM. Son resultados exploratorios del bloque de desarrollo. Los costos administrativos siguen siendo hipotéticos y el test permanece sin puntuar.
+Con **Ca=10 hipotético**, obtuvimos:
 
-El 06 completó el diagnóstico de estabilidad y errores. El **07 ya congeló técnicamente el protocolo académico**: LightGBM, Platt propio, preparación, tres políticas, seis Ca y métricas. La siguiente etapa será la evaluación temporal final. La congelación conserva las limitaciones históricas y no acredita aval docente ni costos operativos.
+| Política | Costo total | Recall de fraude | Legítimas intervenidas | Monto fraudulento capturado |
+|---|---:|---:|---:|---:|
+| Regla fija 0,5 | 363.466,629 | 37,26% | 0,40% | 22,71% |
+| BMR | **181.140,258** | **55,84%** | 7,91% | **77,79%** |
+| Árbol ponderado | 228.707,974 | 42,43% | 7,33% | 65,34% |
 
-El 2 de noviembre de 2026 retiramos de la secuencia activa los notebooks 04–09, sus informes, módulos y resultados del procesamiento anterior. Git conserva ese trabajo en el commit `089df7f` y sus antecedentes. Sus 447 entradas, atributos históricos y matriz one-hot de 2.642 columnas no describen la metodología actual. Los artefactos locales antiguos no autorizan reutilizar sus conclusiones.
+BMR mejora el costo **50,16% frente a fija** y ahorra **59,91% frente a la mejor referencia trivial** en este escenario; son denominadores diferentes. Tiene menor costo en los seis Ca evaluados. No elegimos Ca retrospectivamente ni promediamos ahorros entre escenarios.
+
+La AP final es **0,5178**. Platt mejora Brier/log-loss en validación, pero los empeora ligeramente en test: conservamos el calibrador fijado y documentamos el resultado. Las métricas no prueban una superioridad universal, calibración perfecta o ahorro bancario real. El detalle está en el [informe final de evaluación](docs/08_evaluacion_temporal_final.md).
+
+## Flujo metodológico
+
+La tabla describe el orden del experimento. En una copia con evaluación terminada, **no se deben reejecutar etapas de entrenamiento o generación de registros sobre las mismas rutas congeladas**.
+
+| Etapa | Pregunta y operación | Salida |
+|---|---|---|
+| [01 EDA](notebooks/01_exploracion_datos.ipynb) | Qué datos, variables, ausencias, montos y variación temporal tenemos | Inventario de 434 originales; tablas y figuras descriptivas |
+| [02 Partición](notebooks/02_particion_temporal.ipynb) | Cómo aprender del pasado y evaluar el futuro | Train → gap 7 días → validación → gap 7 días → test |
+| [03 Modelos](notebooks/03_modelado_y_decisiones_costos.ipynb) | Comparar cuatro clasificadores con sus propios Platt | Matriz ordinal de 432 entradas; comparación predictiva y referencia económica XGBoost |
+| [04 Selección](notebooks/04_seleccion_temporal_modelos.ipynb) | Elegir configuración con ventanas internas de train | 16 ajustes; seis métricas raw y ranking por AP media |
+| [05 Adopción](notebooks/05_lightgbm_calibracion_y_costos.ipynb) | Verificar LightGBM seleccionado y evaluar sus acciones | Platt propio, probabilidades y tres políticas en validación posterior |
+| [06 Estabilidad](notebooks/06_estabilidad_y_errores_economicos.ipynb) | Explicar variación, pérdida residual y frontera económica | Tres subperiodos, concentración de pérdidas y sensibilidad de probabilidades |
+| [07 Protocolo](notebooks/07_protocolo_final.ipynb) | Fijar decisiones antes de test | Modelo, preparación, calibrador, políticas, costos y métricas congelados |
+| [08 Evaluación](notebooks/08_evaluacion_temporal_final.ipynb) | Medir las decisiones fijadas en el periodo final | Siete tablas, dos figuras y registro exclusivo de ejecución completa |
+
+Train tiene 380.815 operaciones. La mitad temprana de validación, 42.046, ajusta Platt; las 42.047 posteriores diagnostican probabilidades y políticas. Los gaps no participan en ajuste ni evaluación. La selección del 04 usa únicamente pasados y futuros internos de train, aunque estuvo precedida por exploración externa ya consultada.
+
+## Datos y preparación de variables
+
+Usamos `train_transaction.csv` y `train_identity.csv` de [IEEE-CIS en Kaggle](https://www.kaggle.com/competitions/ieee-fraud-detection/data). La unión izquierda uno a uno conserva 590.540 transacciones y produce 434 columnas originales. El test de la competencia carece de etiquetas públicas; nuestro test se separa temporalmente de los datos etiquetados.
+
+Excluimos ID, tiempo crudo y etiqueta de X: quedan 431 atributos originales. Añadimos `has_identity` y obtenemos **432 entradas: 37 categóricas y 395 numéricas**. `split` solo controla las poblaciones. Las medianas y vocabularios se aprenden con el pasado autorizado; categorías desconocidas reciben −1. Logística añade escalado. CatBoost recibe ordinal, sin categorías nativas.
+
+Las doce variables id tratadas numéricamente pese a su clasificación categórica del proveedor están documentadas. No añadimos los atributos históricos, one-hot ni el calibrador isotónico del pipeline retirado. El [diccionario y recorrido de variables](docs/diccionario_variables_y_flujo_modelo.md) identifica cada tratamiento; las tablas `eda_diccionario_variables`, `modelo_variables_ordinal` y `modelo_vocabulario_ordinal` registran el inventario real.
+
+## Matriz económica y alcance
+
+Intervenir cuesta Ca tanto en fraude como en legítimas. Aprobar fraude cuesta su monto original A y aprobar una legítima cuesta cero. BMR interviene si `p_calibrada × A > Ca`; en empate aprueba. Los árboles aprenden acciones ponderadas por arrepentimiento de costo y su ajuste por impureza es aproximado.
+
+Conservamos Ca = **1, 5, 10, 20, 50 y 100**, hipotéticos y en unidades de TransactionAmt, sin moneda verificada. La literatura del [protocolo 07](docs/07_protocolo_final.md) fundamenta escenarios, pero no estima gastos IEEE-CIS. No modelamos recuperación, capacidad, revisión imperfecta ni perjuicio comercial adicional.
+
+El EDA y el diseño histórico de gaps consultaron etiquetas agregadas del periodo final; test no fue estrictamente ciego desde el inicio. Declaramos también la consulta de validación durante desarrollo, el orden artificial de ordinal y la variación temporal. Esas limitaciones forman parte del resultado consolidado.
 
 ## Organización
 
 ```text
-data/raw/          CSV originales locales, sin modificaciones
-data/interim/      Manifiesto y probabilidades reproducibles, locales
-data/processed/    Reservado para datos preparados
-notebooks/         Preguntas, parámetros, ejecución y lectura de resultados
-src/fraud_cost/    Carga, partición, preparación, inventario y costos reutilizables
-docs/              Informes y decisiones metodológicas
-results/tables/    Tablas seleccionadas y registro de la corrida
-results/figures/   Figuras utilizadas en los informes
-results/models/    Predictores y calibradores locales, ignorados por Git
-tests/             Preparación, costos, selección temporal y recuperación de artefactos
+data/raw/          CSV originales locales e inmutables
+data/interim/      Manifiesto, scores, acciones y copia de ejecución congelada
+data/processed/    Reserva de estructura; no contiene otra matriz activa
+notebooks/         Ocho etapas con preguntas, parámetros y lectura de resultados
+src/fraud_cost/    Operaciones reutilizables, sin duplicar lógica en cada notebook
+docs/              Informes de etapa, diccionario y recuperación
+results/tables/    Evidencia agregada y registros de procedencia
+results/figures/   Figuras usadas para interpretar resultados
+results/models/    Modelos locales verificados, ignorados por Git
+scripts/           Instalación, adquisición, recuperación y auditoría
+tests/             Contratos de preparación, tiempo, costos, protocolo y ejecución
 ```
 
-## Preparación y ejecución
+`reference.py` prepara la matriz; `split.py` controla el tiempo; `costs.py` define una sola matriz económica; selección, adopción y estabilidad tienen módulos propios. `artifacts.py`, `final_protocol.py`, `execution_workspace.py` y `final_evaluation.py` mantienen la procedencia y evitan repetir test accidentalmente. Los módulos que aparecen en una congelación se conservan incluso si no son puntos de entrada.
 
-Desde la raíz, en PowerShell:
+## Consultar y verificar el proyecto cerrado
+
+En otro equipo se pueden abrir los notebooks ejecutados y las tablas versionadas. Con el entorno instalado, la auditoría publicada verifica estructura, enlaces, inventario, código, resultados y aritmética sin necesitar CSV originales o modelos:
 
 ```powershell
-scripts/setup.ps1 -ConstraintsFile .\requirements-reproduction.txt
+.\.venv\Scripts\python.exe scripts/audit_project.py
 ```
 
-Descargamos `train_transaction.csv` y `train_identity.csv` desde [IEEE-CIS en Kaggle](https://www.kaggle.com/competitions/ieee-fraud-detection/data) y los ubicamos en `data/raw/`. No subimos datos, modelos ni credenciales a GitHub. No necesitamos las etiquetas desconocidas del test de la competencia: nuestro test temporal se separa dentro del conjunto etiquetado.
-
-Utilizamos Python 3.11 o 3.12. Si el launcher `py` no encuentra uno, indicamos su ruta con `-PythonExecutable <ruta-a-python.exe>`. El script conserva un entorno anterior incompatible en `.venv.backup.*` y registra el kernel `ieee-cis-pi2`. Un error de acceso dentro de un entorno restringido no demuestra que Python esté dañado: primero comprobamos el mismo intérprete desde una terminal autorizada.
+Con las dependencias locales conservadas, la comprobación completa incluye CSV originales, manifiesto, identidad de operaciones, scores, acciones y protocolo activo:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/data_provenance.py
+.\.venv\Scripts\python.exe scripts/audit_project.py --local --output results/tables/auditoria_proyecto.json
 .\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m jupyter lab
 ```
 
-Seleccionamos el kernel `ieee-cis-pi2` y ejecutamos en orden:
+Estos comandos no entrenan ni generan nuevas predicciones. El 08 recupera una corrida completa verificando sus salidas; una incompleta se detiene para auditarla. Los flags `test_evaluated=False` de etapas previas describen sus momentos históricos; `evaluacion_test_config.json` acredita la evaluación completada.
 
-| Notebook | Propósito | Evidencia |
-|---|---|---|
-| 01_exploracion_datos | Estructura, objetivo, ausencia, montos y tiempo | Tablas y figuras EDA; catálogo de 434 originales |
-| 02_particion_temporal | Separar pasado, gaps, validación y test | Manifiesto temporal y resúmenes |
-| 03_modelado_y_decisiones_costos | Comparar cuatro predictores con preparación ordinal y Platt; explorar tres políticas con XGBoost | Métricas, inventario, costos hipotéticos, figuras y registro de corrida |
-| 04_seleccion_temporal_modelos | Comparar ocho configuraciones solo dentro de train, sin calibrar | 16 ajustes; seis métricas raw, conteos y entradas por ajuste; ranking por AP media y configuración LightGBM seleccionada |
-| 05_lightgbm_calibracion_y_costos | Adoptar LightGBM y su Platt verificados; diagnosticar probabilidades y comparar tres políticas | Métricas, grupos y montos; 18 costos/escenarios; modelo y scores LightGBM locales |
-| 06_estabilidad_y_errores_economicos | Diagnosticar subperiodos, concentración de pérdida y frontera BMR sin nuevos ajustes | Seis métricas por periodo, 54 costos, sensibilidad, siete tablas agregadas y dos figuras |
-| 07_protocolo_final | Verificar prerrequisitos y fijar el experimento antes de test | Protocolo técnico congelado, comprobaciones y decisiones; test sin puntuar |
+## Instalar y reproducir
 
-La ejecución completa del 03 requiere memoria para una matriz densa de 380.815 × 432 y los predictores. La matriz de train ocupa aproximadamente 627,6 MiB en float32; las copias y estructuras internas aumentan el consumo. Los cuatro modelos se ajustan de manera secuencial y utilizan hasta cuatro hilos cada uno; la regresión logística tiene sus propias reglas de paralelización.
-
-`requirements.txt` declara rangos de versiones. `requirements-reproduction.txt` fija las siete versiones principales registradas en 03/04; no es un lockfile de todas las dependencias. Los registros de cada corrida identifican versiones, parámetros, advertencias y hashes. La reconstrucción local guarda además `pip freeze`. Si se modifica el procesamiento, se regenera la corrida completa; no se actualizan hashes para atribuir resultados anteriores a otra fuente.
-
-### Artefactos locales y reconstrucción verificada
-
-Hacer pull no descarga modelos ni scores ignorados por Git. Antes de cargar un artefacto comprobamos su procedencia:
+Usamos Python 3.11/3.12. Desde la raíz, en PowerShell:
 
 ```powershell
-.\.venv\Scripts\python.exe scripts/recover_reference_artifacts.py --verify-only
+.\scripts\setup.ps1 -ConstraintsFile .\requirements-reproduction.txt
 ```
 
-Si faltan o pertenecen al procesamiento anterior, podemos reconstruir la corrida 03 manteniendo los registros históricos de 03/04:
+Si el launcher no encuentra Python, indicamos `-PythonExecutable <ruta>`. Obtenemos los dos CSV desde Kaggle tras aceptar sus reglas y los colocamos en `data/raw/`; `scripts/download_data.ps1` admite la CLI autenticada. Los datos, credenciales, modelos y archivos por operación no se suben a Git. `requirements-reproduction.txt` fija siete paquetes principales, no todas las dependencias transitivas.
 
-```powershell
-.\.venv\Scripts\python.exe scripts/recover_reference_artifacts.py
-```
+Una matriz train de 380.815 × 432 en float32 ocupa unos 627,6 MiB, además de copias y modelos. El EDA carga las tablas completas. Los registros guardan parámetros, versiones y hashes; no atribuimos resultados anteriores a fuentes nuevas actualizando solo las huellas.
 
-El script ejecuta el 03 en una copia aislada, contrasta cinco tablas con tolerancias declaradas antes de entrenar y verifica inferencia sobre las 42.047 operaciones posteriores. Solo después publica scores XGBoost, baseline, paquete ordinal de cuatro modelos y árboles, respaldando sus destinos anteriores. No puntúa test ni selecciona nuevamente. El recibo `results/tables/recuperacion_03_config.json` distingue los hashes reconstruidos de los originales; la evidencia detallada queda local en `data/interim/reference_recovery/`.
+El protocolo 07 recibido referencia artefactos reconstruidos en otra máquina. Para 08 se creó una **versión local explícita y aislada antes de test**, se contrastaron doce tablas y se conservaron las decisiones. La copia de `data/interim/final_evaluation_v2/` es evidencia de esa versión, no un experimento sobrante. Hacer pull no la descarga.
 
-Para continuar desde código usamos `fraud_cost.artifacts.verify_reference_artifacts(PROJECT_ROOT)` antes de deserializar. Un consumidor que compare únicamente los hashes binarios originales debe detenerse si los archivos fueron reconstruidos. Véase [recuperación local y trazabilidad](docs/recuperacion_local_y_trazabilidad.md).
+Una reproducción nueva requiere su propia área y versión de experimento; no debe sobrescribir las dependencias congeladas ni presentarse como un test independiente nuevo. Las herramientas históricas de [recuperación](docs/recuperacion_local_y_trazabilidad.md) explican cómo contrastar artefactos. Tras observar test, cambiar modelos, calibración o atributos exige declarar otro experimento.
 
-Si solo cambió el 04 y el ajuste del 03 reconstruido sigue idéntico, `scripts/revalidate_reference_recovery.py` puede revalidar el vínculo y conservar el recibo previo. Antes de congelar, `scripts/reproduce_validation.py` regenera 05/06 con respaldo y comparación de sus doce tablas. Ya se ejecutaron en esta copia. Después de la congelación no se regeneran sus dependencias sobre las mismas rutas; una reproducción nueva requiere una versión de experimento propia.
+## Informes y trabajo restante
 
-## Variables, probabilidades y costos
+[01 EDA](docs/01_informe_eda.md) · [02 Partición](docs/02_particion_temporal.md) · [03 Modelos y costos](docs/03_protocolo_costos_y_evaluacion.md) · [04 Selección](docs/04_seleccion_temporal_modelos.md) · [05 LightGBM](docs/05_lightgbm_calibracion_y_costos.md) · [06 Estabilidad](docs/06_estabilidad_y_errores_economicos.md) · [07 Protocolo](docs/07_protocolo_final.md) · [08 Evaluación final](docs/08_evaluacion_temporal_final.md).
 
-Conservamos 431 columnas originales como predictores y añadimos `has_identity`: 432 entradas, 37 categóricas y 395 numéricas. Excluimos `TransactionID`, `TransactionDT`, `isFraud` y `split` de X. El tiempo organiza las particiones; el identificador alinea operaciones y la etiqueta sirve para ajustar o evaluar exclusivamente en los bloques permitidos.
+Los informes describen cada etapa en su momento; las referencias a pasos futuros no implican que sigan pendientes. La limpieza retira salidas locales del pipeline descartado, conservado como código histórico en Git, y mantiene toda evidencia utilizada por la versión vigente.
 
-Las categorías se representan con ordinal, desconocidas con −1 y ausencia con un token explícito. Las numéricas se imputan con medianas de train. No creamos one-hot, indicadores adicionales de ausencia, atributos históricos ni variables logarítmicas. Para la regresión logística también aprendemos un escalador en train. Se mantiene documentada la discrepancia de doce códigos de identidad tratados numéricamente.
-
-Intervenir cuesta Ca en ambas clases. Aprobar fraude cuesta el monto original y aprobar una operación legítima cuesta cero. BMR interviene cuando `p × A > Ca`; en empate aprueba. Reportamos costo total y ahorro frente a la mejor política trivial y, por separado, mejora frente a la regla fija. No presentamos Ca como costo bancario real ni asignamos una moneda no verificada.
-
-## Documentación y límites
-
-- [Informe EDA](docs/01_informe_eda.md).
-- [Partición temporal](docs/02_particion_temporal.md).
-- [Protocolo y reporte de la etapa 03](docs/03_protocolo_costos_y_evaluacion.md).
-- [Selección temporal interna y resultados del 04](docs/04_seleccion_temporal_modelos.md).
-- [Adopción LightGBM, calibración y costos](docs/05_lightgbm_calibracion_y_costos.md).
-- [Estabilidad temporal y errores económicos](docs/06_estabilidad_y_errores_economicos.md).
-- [Protocolo final congelado y plan de evaluación](docs/07_protocolo_final.md).
-- [Diccionario y recorrido de variables](docs/diccionario_variables_y_flujo_modelo.md).
-
-Los resultados del 03 son exploratorios sobre validación posterior. La selección interna del 04 utilizó solo train para ajustar y calcular su ranking, pero sus decisiones de desarrollo estuvieron precedidas por aquella exploración. El EDA y la comparación histórica de gaps consultaron etiquetas agregadas del periodo final; declaramos esta limitación y no presentamos el test como estrictamente ciego desde el inicio.
-
-El 03 conserva su comparación económica con XGBoost. El 05 usa probabilidades LightGBM y los mismos árboles verificados, montos y escenarios; sus diferencias de costo son descriptivas sobre validación de desarrollo. El 06 mostró menor costo BMR en 17 de 18 combinaciones periodo/Ca; el árbol lo supera en el periodo 3 con Ca=100. El 07 fijó el protocolo antes de puntuar test y conserva esas limitaciones. El siguiente evaluador deberá verificarlo y crear un registro exclusivo de ejecución antes de producir predicciones.
+La construcción técnica está concluida. Restan la síntesis en el informe IEEE, el aval docente y la sustentación. El resultado defendible es una reducción observada del costo bajo una matriz explícita, acompañada del compromiso de intervención y las limitaciones; no una garantía de desempeño bancario en producción.

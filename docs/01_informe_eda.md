@@ -1,5 +1,7 @@
 # Informe de exploración de datos
 
+> Alcance de etapa: este informe conserva la metodología y resultados al cerrar esta fase. La secuencia completa y el test ya evaluado se consolidan en el [informe 08](08_evaluacion_temporal_final.md). Los pasos futuros aquí descritos se leen en ese orden histórico.
+
 ## 1. Propósito de la etapa
 
 Esta etapa tuvo como objetivo conocer la estructura del conjunto IEEE-CIS Fraud Detection antes de definir transformaciones o entrenar modelos. Nos concentramos en los aspectos que afectan directamente la pregunta del proyecto: disponibilidad de la etiqueta, desbalance, distribución del monto, orden temporal, cobertura de la información de identidad y ausencia de datos.

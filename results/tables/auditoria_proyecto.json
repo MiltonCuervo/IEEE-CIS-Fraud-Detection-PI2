@@ -1,0 +1,52 @@
+{
+  "status": "passed",
+  "scope": "local_full",
+  "created_utc": "2026-11-06T03:51:38.262776+00:00",
+  "test_evaluated_previously": true,
+  "new_predictions_generated": false,
+  "new_models_fitted": false,
+  "checks": [
+    {
+      "check": "secuencia_y_sintaxis",
+      "status": "passed",
+      "detail": "Ocho notebooks ejecutados sin errores; código parseable"
+    },
+    {
+      "check": "codigo_evaluado",
+      "status": "passed",
+      "detail": "Las celdas ejecutables 03–08 coinciden con sus registros"
+    },
+    {
+      "check": "enlaces_documentacion",
+      "status": "passed",
+      "detail": "58 enlaces locales válidos"
+    },
+    {
+      "check": "congelacion_y_salidas",
+      "status": "passed",
+      "detail": "Protocolo original conservado; versión explícita; siete tablas y dos figuras íntegras"
+    },
+    {
+      "check": "linaje_variables",
+      "status": "passed",
+      "detail": "434 originales → 431 predictores + has_identity → 432 entradas; 12 discrepancias declaradas"
+    },
+    {
+      "check": "matriz_y_metricas",
+      "status": "passed",
+      "detail": "18 comparaciones y 54 costos temporales: conteos, componentes, tasas y referencias reconciliados"
+    },
+    {
+      "check": "interpretacion_probabilidades",
+      "status": "passed",
+      "detail": "Raw y Platt conservados; deterioro global de Platt en test documentado: True"
+    },
+    {
+      "check": "datos_y_protocolo_local",
+      "status": "passed",
+      "detail": "CSV originales, unión, manifiesto, scores y acciones consistentes; versión activa verificada sin inferencia"
+    }
+  ],
+  "local_dependencies_checked": true,
+  "final_record_sha256": "a49b086bbbdc8277fcd97244beb5754ef520cb0a22e5278302ea7a820addea72"
+}

@@ -1,5 +1,7 @@
 # Etapa 07 — Protocolo final de evaluación temporal
 
+> Alcance de etapa: este informe conserva la metodología y resultados al cerrar esta fase. La secuencia completa y el test ya evaluado se consolidan en el [informe 08](08_evaluacion_temporal_final.md). Los pasos futuros aquí descritos se leen en ese orden histórico.
+
 ## 1. Propósito y resultado
 
 Congelamos técnicamente el experimento académico después de seleccionar LightGBM en el 04, adoptarlo en el 05 y diagnosticar estabilidad en el 06. El [notebook 07](../notebooks/07_protocolo_final.ipynb) fue ejecutado: produjo ocho comprobaciones satisfactorias, seis decisiones explícitas y un protocolo con estado `frozen_for_academic_evaluation`.

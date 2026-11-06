@@ -1,5 +1,7 @@
 # Informe de partición temporal
 
+> Alcance de etapa: este informe conserva la metodología y resultados al cerrar esta fase. La secuencia completa y el test ya evaluado se consolidan en el [informe 08](08_evaluacion_temporal_final.md). Los pasos futuros aquí descritos se leen en ese orden histórico.
+
 ## 1. Propósito de la etapa
 
 En esta etapa definimos los bloques de entrenamiento, validación y prueba que se utilizarán durante el resto del proyecto. El objetivo fue construir una evaluación que represente el orden real de operación: aprender con transacciones pasadas, tomar decisiones metodológicas con un periodo posterior y reservar el periodo más reciente para la comparación final.

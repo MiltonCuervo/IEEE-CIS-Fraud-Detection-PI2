@@ -1,5 +1,7 @@
 # Etapa 03 — Comparación de modelos y decisiones basadas en costos
 
+> Alcance de etapa: este informe conserva la metodología y resultados al cerrar esta fase. La secuencia completa y el test ya evaluado se consolidan en el [informe 08](08_evaluacion_temporal_final.md). Los pasos futuros aquí descritos se leen en ese orden histórico.
+
 ## 1. Pregunta y alcance
 
 Con la partición del notebook 02 buscamos establecer una referencia probabilística y económica reproducible. Seguimos la preparación ordinal y los cuatro predictores incorporados por la profesora: XGBoost, LightGBM, CatBoost y regresión logística. Sus parámetros son fijos; esta etapa no selecciona el predictor final.

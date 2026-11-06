@@ -1,5 +1,7 @@
 # Etapa 04 — Selección temporal interna de modelos
 
+> Alcance de etapa: este informe conserva la metodología y resultados al cerrar esta fase. La secuencia completa y el test ya evaluado se consolidan en el [informe 08](08_evaluacion_temporal_final.md). Los pasos futuros aquí descritos se leen en ese orden histórico.
+
 ## 1. Propósito y alcance
 
 Comparamos ocho configuraciones de XGBoost, LightGBM, CatBoost y regresión logística dentro del bloque train. La exploración del notebook 03 ya fue consultada; esta selección no se presenta como independiente de todas las decisiones de desarrollo. No utiliza las probabilidades ni las métricas externas para calcular el ranking actual.
