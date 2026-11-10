@@ -6,7 +6,7 @@
 
 **Título:** Optimización basada en costos del umbral de decisión para el bloqueo de transacciones sospechosas mediante modelos de aprendizaje automático.
 
-**Corte de consolidación:** 6 de noviembre de 2026. Este documento integra la evidencia de los notebooks 01–08. No representa una ejecución adicional ni modifica el protocolo, las predicciones o las tablas originales. Complementa los informes de etapa y el [artículo IEEE para revisión](informe_final/README.md).
+**Corte de consolidación:** 6 de noviembre de 2026. **Actualización de la unidad monetaria:** 10 de noviembre de 2026; la [aclaración oficial de Vesta](https://www.kaggle.com/competitions/ieee-fraud-detection/discussion/100304) confirma que TransactionAmt fue convertido a USD. Los montos se presentan en dólares estadounidenses sin modificar sus valores; Ca conserva su carácter hipotético. Este documento integra la evidencia de los notebooks 01–08. No representa una ejecución adicional ni modifica el protocolo, las predicciones o las tablas originales. Complementa los informes de etapa y el [artículo IEEE para revisión](informe_final/README.md).
 
 ## 1. Resultado principal y respuesta a la pregunta del proyecto
 
@@ -81,7 +81,7 @@ El resultado probabilístico no contradice el económico: **la calidad probabil�
 | Fraude | A: monto original | Ca |
 | Legítima | 0 | Ca |
 
-Intervenir significa bloquear y revisar; suponemos que evita toda la pérdida fraudulenta. Ca se cobra en ambas clases. Todos los valores son hipotéticos en unidades de `TransactionAmt`, sin moneda verificada.
+Intervenir significa bloquear y revisar; suponemos que evita toda la pérdida fraudulenta. Ca se cobra en ambas clases. Los montos originales están expresados en USD. Los valores de Ca son escenarios administrativos hipotéticos en esa misma moneda, no gastos operativos estimados para una entidad.
 
 - **Fija:** interviene si p calibrada ≥ 0,5. El corte no se optimiza.
 - **BMR:** interviene si p calibrada × A > Ca; aprueba en empate. Para A>0, la frontera económica es p*=Ca/A. Si A≤Ca, intervenir no reduce estrictamente el riesgo esperado.
@@ -210,7 +210,7 @@ El compromiso también quedó cuantificado: más legítimas intervenidas y menor
 
 Para defender el resultado conservamos estos límites:
 
-1. Ca es hipotético y no hay moneda verificada ni pérdidas bancarias netas medidas.
+1. Aunque los montos están documentados en USD, Ca es hipotético y no se midieron pérdidas bancarias netas.
 2. Suponemos intervención eficaz; no modelamos capacidad limitada, recuperación, revisión imperfecta o perjuicio comercial adicional.
 3. Ordinal impone orden artificial; doce id permanecen numéricos y CatBoost no usa categorías nativas.
 4. Seleccionamos el predictor por AP, no por costo entre los cuatro clasificadores.

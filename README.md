@@ -49,7 +49,7 @@ Las doce variables id tratadas numéricamente pese a su clasificación categóri
 
 Intervenir cuesta Ca tanto en fraude como en legítimas. Aprobar fraude cuesta su monto original A y aprobar una legítima cuesta cero. BMR interviene si `p_calibrada × A > Ca`; en empate aprueba. Los árboles aprenden acciones ponderadas por arrepentimiento de costo y su ajuste por impureza es aproximado.
 
-Conservamos Ca = **1, 5, 10, 20, 50 y 100**, hipotéticos y en unidades de TransactionAmt, sin moneda verificada. La literatura del [protocolo 07](docs/07_protocolo_final.md) fundamenta escenarios, pero no estima gastos IEEE-CIS. No modelamos recuperación, capacidad, revisión imperfecta ni perjuicio comercial adicional.
+Conservamos Ca = **1, 5, 10, 20, 50 y 100 USD** como costos administrativos hipotéticos. La [aclaración oficial de Vesta](https://www.kaggle.com/competitions/ieee-fraud-detection/discussion/100304), incorporada en la revisión del 10 de noviembre, confirma que TransactionAmt fue convertido a USD; esta precisión documental no cambia los valores ni aplica una nueva conversión. La literatura del [protocolo 07](docs/07_protocolo_final.md) fundamenta escenarios, pero no estima gastos IEEE-CIS. No modelamos recuperación, capacidad, revisión imperfecta ni perjuicio comercial adicional.
 
 El EDA y el diseño histórico de gaps consultaron etiquetas agregadas del periodo final; test no fue estrictamente ciego desde el inicio. Declaramos también la consulta de validación durante desarrollo, el orden artificial de ordinal y la variación temporal. Esas limitaciones forman parte del resultado consolidado.
 

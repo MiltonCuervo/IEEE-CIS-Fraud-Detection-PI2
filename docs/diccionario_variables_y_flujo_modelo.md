@@ -2,6 +2,8 @@
 
 **Base vigente: metodología de los notebooks 01–03, consolidada el 2 de noviembre de 2026.** Esta versión reemplaza la descripción del predictor anterior de 447 entradas y one-hot. Conservamos las definiciones verificables del EDA y describimos el tratamiento ordinal realmente implementado.
 
+> Actualización del 10 de noviembre de 2026: la [aclaración oficial de Vesta](https://www.kaggle.com/competitions/ieee-fraud-detection/discussion/100304) confirma que TransactionAmt fue convertido a USD. Esta identificación documental de la unidad no altera los montos, los escenarios hipotéticos ni los registros históricos congelados.
+
 ## 1. Inventario y procedencia
 
 `train_transaction` tiene 394 columnas y `train_identity`, 41. Comparten TransactionID, por lo que la unión izquierda uno a uno tiene 434 columnas y conserva 590.540 transacciones. Retiramos ID, tiempo crudo y etiqueta de X: quedan 431 atributos originales. Añadimos `has_identity`, que indica correspondencia en la unión y no una identidad personal verificada. `split` controla los bloques y tampoco entra en X.
@@ -20,7 +22,7 @@ Los perfiles globales del EDA describen el dataset; no se utilizan para aprender
 | Familia | Variables | Interpretación verificable |
 |---|---|---|
 | Control | TransactionID, TransactionDT, isFraud | Identificador, segundos relativos y etiqueta de fraude |
-| Monto | TransactionAmt | Magnitud original, sin moneda verificada |
+| Monto | TransactionAmt | Monto original en USD, según la aclaración oficial de Vesta |
 | Producto | ProductCD | Código de producto |
 | Tarjeta | card1–card6 | Códigos de información de tarjeta, sin reconstrucción de titular |
 | Dirección y distancia | addr1–addr2, dist1–dist2 | Códigos de dirección y descriptores numéricos de distancia |
