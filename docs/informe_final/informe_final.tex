@@ -235,11 +235,6 @@ El desajuste monetario de [500,1000) equivale a 93.714,35 USD esperados frente a
 La sensibilidad examinada no identificó un cambio de ganador global entre los seis costos administrativos. La excepción temporal de validación impide extender esa estabilidad a toda subpoblación, y la cuadrícula discreta no permite establecer rangos continuos de optimalidad. La evidencia responde al análisis de escenarios previsto, sin forzar la existencia de una transición que los datos no mostraron.
 
 \clearpage
-\section{Limitaciones}
-La matriz supone intervención totalmente eficaz y excluye capacidad de revisión, recuperaciones y perjuicio comercial adicional; aunque los montos están en USD, los costos administrativos no fueron estimados para una entidad real. La selección por AP, la representación ordinal, los doce id numéricos y CatBoost sin categorías nativas también condicionan el alcance de la comparación, sin que se haya realizado una ablación que separe esos efectos.
-
-La evaluación conserva orden cronológico, pero el EDA y la selección histórica de gaps consultaron etiquetas agregadas del periodo final; por ello, no constituye una reserva completamente ciega desde el diseño. La validación posterior se usó como desarrollo y los dos futuros internos no son réplicas independientes. Los subgrupos y el boxplot son diagnósticos descriptivos, sin intervalos de confianza ni pruebas de superioridad estadística. Las políticas finales permanecieron fijas después de consultar test; cualquier selección posterior requerirá otro experimento y una población nueva.
-
 \section{Conclusiones}
 La formalización de costos permitió establecer que el monto modifica la acción conveniente aun cuando la etiqueta del clasificador sea la misma. La condición $p_iA_i>\Ca$ ofrece una interpretación operativa del primer objetivo: intervenir depende de cuánto riesgo económico se evita y no solo de que una transacción supere un umbral de fraude. Cuando el monto no supera el costo administrativo, la propia matriz descarta una intervención con ganancia esperada estricta.
 
@@ -248,6 +243,11 @@ La referencia temporal mostró que discriminación y confiabilidad probabilísti
 La comparación de políticas respondió favorablemente al objetivo económico: incorporar riesgo y monto mediante BMR resultó más conveniente que actuar según la etiqueta en los escenarios estudiados. El mecanismo observado fue la compensación de revisiones adicionales con una menor exposición a fraude aprobado, de modo que una caída en precisión no implicó por sí misma una peor decisión. La utilidad demostrada en esta muestra corresponde a la matriz asumida y no sustituye la evaluación de capacidad o de efectos sobre clientes.
 
 La sensibilidad no reveló una transición del ganador global dentro de los seis costos examinados, aunque sí variación temporal del beneficio y una excepción de desarrollo favorable al árbol. El cuarto objetivo queda respondido en términos de escenarios discretos: la permanencia de BMR como mejor alternativa global es un hallazgo, mientras que los rangos continuos de cambio de estrategia permanecen sin identificar. La continuidad requiere costos administrativos observados y otra evaluación temporal independiente.
+
+\section{Limitaciones}
+La matriz supone intervención totalmente eficaz y excluye capacidad de revisión, recuperaciones y perjuicio comercial adicional; aunque los montos están en USD, los costos administrativos no fueron estimados para una entidad real. La selección por AP, la representación ordinal, los doce id numéricos y CatBoost sin categorías nativas también condicionan el alcance de la comparación, sin que se haya realizado una ablación que separe esos efectos.
+
+La evaluación conserva orden cronológico, pero el EDA y la selección histórica de gaps consultaron etiquetas agregadas del periodo final; por ello, no constituye una reserva completamente ciega desde el diseño. La validación posterior se usó como desarrollo y los dos futuros internos no son réplicas independientes. Los subgrupos y el boxplot son diagnósticos descriptivos, sin intervalos de confianza ni pruebas de superioridad estadística. Las políticas finales permanecieron fijas después de consultar test; cualquier selección posterior requerirá otro experimento y una población nueva.
 
 \noindent\begin{minipage}{\columnwidth}
 \section*{Agradecimientos}
